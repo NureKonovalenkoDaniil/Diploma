@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp" android:background="#f4f4f4">
+
+    <LinearLayout android:orientation="vertical"
+        android:layout_width="match_parent" android:layout_height="wrap_content">
+
+        <EditText android:id="@+id/inputName"
+            android:hint="@string/name" android:layout_marginBottom="16dp"
+            android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <EditText android:id="@+id/inputType"
+            android:hint="@string/type" android:layout_marginBottom="16dp"
+            android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <EditText android:id="@+id/inputCategory"
+            android:hint="@string/category" android:layout_marginBottom="16dp"
+            android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <EditText android:id="@+id/inputQuantity"
+            android:hint="@string/quantity" android:inputType="number"
+            android:layout_marginBottom="16dp"
+            android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <EditText android:id="@+id/inputExpiry"
+            android:hint="@string/expiry_date"
+            android:layout_marginBottom="24dp"
+            android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <Button android:id="@+id/btnCreate"
+            android:text="@string/create"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:backgroundTint="#6200EE" android:textColor="@android:color/white"/>
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp" android:background="#f4f4f4">
+
+    <LinearLayout android:orientation="vertical"
+        android:layout_width="match_parent" android:layout_height="wrap_content">
+
+        <EditText android:id="@+id/editName"
+            android:hint="@string/name" android:layout_marginBottom="16dp"
+            android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <EditText android:id="@+id/editType"
+            android:hint="@string/type" android:layout_marginBottom="16dp"
+            android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <EditText android:id="@+id/editCategory"
+            android:hint="@string/category" android:layout_marginBottom="16dp"
+            android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <EditText android:id="@+id/editQuantity"
+            android:hint="@string/quantity" android:inputType="number"
+            android:layout_marginBottom="16dp"
+            android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <EditText android:id="@+id/editExpiry"
+            android:hint="@string/expiry_date"
+            android:layout_marginBottom="24dp"
+            android:layout_width="match_parent" android:layout_height="wrap_content"/>
+
+        <Button android:id="@+id/saveBtn"
+            android:text="@string/save_changes"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:backgroundTint="#4CAF50" android:textColor="@android:color/white"/>
+    </LinearLayout>
+</ScrollView>

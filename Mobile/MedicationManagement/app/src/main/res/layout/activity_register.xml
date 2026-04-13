@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#f0f2f5">
+
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="32dp"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:text="@string/register"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <EditText android:id="@+id/emailInput"
+            android:hint="@string/email" android:inputType="textEmailAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginBottom="16dp"/>
+
+        <EditText android:id="@+id/passwordInput"
+            android:hint="@string/password" android:inputType="textPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginBottom="24dp"/>
+
+        <Button android:id="@+id/registerBtn"
+            android:text="@string/register"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#6200EE"
+            android:textColor="@android:color/white" />
+
+        <TextView android:id="@+id/backToLogin"
+            android:text="@string/hint_log"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#6200EE"
+            android:layout_marginTop="16dp"/>
+    </LinearLayout>
+</ScrollView>

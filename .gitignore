@@ -1,0 +1,6 @@
+.vscode
+.vs
+bin
+obj
+WebApp\MedicationManagement\bin
+WebApp\MedicationManagement\obj
