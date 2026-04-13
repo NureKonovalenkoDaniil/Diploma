@@ -1,6 +1,7 @@
-﻿# AUDIT_AND_DIPLOMA_PLAN.md
+# AUDIT_AND_DIPLOMA_PLAN.md
 > Технічний аудит і план розвитку дипломного проєкту  
 > Дата аудиту: 2026-04-09  
+> Останнє оновлення: 2026-04-13 (Фаза 1 виконана)  
 > Проведено: Antigravity AI  
 
 ---
@@ -35,14 +36,14 @@
 ## Головні слабкі сторони
 
 1. Предметна модель неповна: Medicine не пов'язана з StorageCondition, IoTDevice не прив'язаний до місця зберігання, відсутні StorageLocation і StorageIncident.
-2. Жорстко зашиті секрети: JWT-ключ і JWT-токени прямо в коді (appsettings.json, main.cpp, тести).
+2. ~~Жорстко зашиті секрети: JWT-ключ і JWT-токени прямо в коді (appsettings.json, main.cpp, тести).~~ **[ВИПРАВЛЕНО 2026-04-13]** JWT-ключ перенесено у User Secrets, appsettings.json очищено. *Залишок: IoT-токен у main.cpp та токени у LoadTests — буде вирішено у Фазі 4-5.*
 3. Токен зберігається в localStorage — XSS-вразливість.
 4. Frontend вбудований у backend (wwwroot): немає окремого SPA-проєкту.
 5. Ніяких тестів (unit / integration).
-6. StorageConditionController — не захищений JWT! [Authorize] відсутній на рівні класу.
+6. ~~StorageConditionController — не захищений JWT! [Authorize] відсутній на рівні класу.~~ **[ВИПРАВЛЕНО 2026-04-13]** Додано `[Authorize(JwtBearerDefaults.AuthenticationScheme)]`.
 7. Перший зареєстрований користувач = Administrator — небезпечна логіка.
-8. Термін JWT = 1 рік (рядок 179 AuthController): DateTime.UtcNow.AddYears(1) — критично.
-9. IoT-код: температура і вологість захардкоджені (float temperature = 3; float humidity = 30;) — датчик DHT22 не читається реально.
+8. ~~Термін JWT = 1 рік (рядок 179 AuthController): DateTime.UtcNow.AddYears(1) — критично.~~ **[ВИПРАВЛЕНО 2026-04-13]** Термін читається з `Jwt:ExpireDays` (default 30 днів). Також виправлено `.Result` → `await` і `ASCII` → `UTF8`.
+9. ~~IoT-код: температура і вологість захардкоджені (float temperature = 3; float humidity = 30;) — датчик DHT22 не читається реально.~~ **[ВИПРАВЛЕНО 2026-04-13]** Замінено на `dht.readTemperature()` / `dht.readHumidity()`, додано `dht.begin()` у `setup()`.
 10. Відсутній docker-compose.
 
 ---
@@ -90,8 +91,8 @@ Diploma/
 - Статична роздача файлів (UseStaticFiles)
 
 Що реалізовано частково або слабо:
-- StorageConditionController не має [Authorize] на рівні класу
-- GenerateJwtToken використовує .Result замість await
+- ~~StorageConditionController не має [Authorize] на рівні класу~~ **[ВИПРАВЛЕНО 2026-04-13]**
+- ~~GenerateJwtToken використовує .Result замість await~~ **[ВИПРАВЛЕНО 2026-04-13]**
 - ReplenishmentRecommendation — логіка рекомендацій примітивна: 100 - quantity
 - Немає DTO-рівня: контролери приймають і повертають entity-моделі напряму
 
@@ -124,9 +125,9 @@ Diploma/
 
 | Контролер | Endpoints | Авторизація | Стан |
 |---|---|---|---|
-| AuthController | POST register, login, create-role, assign-role | Частково | Баги: термін токена 1 рік |
+| AuthController | POST register, login, create-role, assign-role | Частково | ~~Баги: термін токена 1 рік~~ **[ВИПРАВЛЕНО 2026-04-13]** |
 | MedicineController | GET, GET{id}, POST, PATCH{id}, DELETE{id}, low-stock, expiring, replenishment | JWT + Role | Добре |
-| StorageConditionController | GET, GET{id}, POST, PATCH{id}, DELETE{id}, checkCondition | НЕ ЗАХИЩЕНИЙ | КРИТИЧНО |
+| StorageConditionController | GET, GET{id}, POST, PATCH{id}, DELETE{id}, checkCondition | ~~НЕ ЗАХИЩЕНИЙ~~ **[ВИПРАВЛЕНО 2026-04-13]** JWT | Виправлено |
 | IoTDeviceController | GET, GET{id}, POST, PATCH{id}, DELETE{id}, setstatus, conditions/{id} | JWT + Role | Добре |
 | AuditLogController | GET (filters: from, to, user, action) | Administrator only | Добре |
 
@@ -149,16 +150,16 @@ Diploma/
 
 ## 3.5 Authentication / Authorization / Roles
 
-Критичні проблеми:
-1. Термін JWT-токена — 1 рік (DateTime.UtcNow.AddYears(1), рядок 179), незважаючи на "ExpireDays": 30 у appsettings.json
-2. JWT-ключ у appsettings.json відкритим текстом: "Key": "A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6"
+~~Критичні проблеми:~~
+1. ~~Термін JWT-токена — 1 рік~~ **[ВИПРАВЛЕНО 2026-04-13]** — тепер `AddDays(ExpireDays)`, default 30 днів
+2. ~~JWT-ключ у appsettings.json відкритим текстом~~ **[ВИПРАВЛЕНО 2026-04-13]** — перенесено у User Secrets
 3. Перший зареєстрований = Administrator (usersCount == 1) — race condition і неявна семантика
 4. Немає Refresh Token
 5. Токен у localStorage (XSS)
-6. GenerateJwtToken використовує .Result замість await
+6. ~~GenerateJwtToken використовує .Result замість await~~ **[ВИПРАВЛЕНО 2026-04-13]** — тепер async/await + UTF8
 7. Немає /api/auth/me
 
-Висновок: частково переробити.
+Висновок: частково виправлено. Залишились пп. 3, 4, 5, 7.
 
 ## 3.6 Audit / Logging
 
@@ -193,13 +194,13 @@ Diploma/
 - JWT-автентифікація у запитах
 - Buzzer-сигнал при порушенні
 
-КРИТИЧНІ ПРОБЛЕМИ:
-1. Рядки 150-151 і 172-173: float temperature = 3; float humidity = 30; — DHT22 НЕ ЧИТАЄТЬСЯ!
-2. JWT-токен захардкоджений у main.cpp рядок 22
-3. URL захардкоджений: http://192.168.100.2:5000
-4. deviceID = 4 захардкоджений
+~~КРИТИЧНІ ПРОБЛЕМИ:~~
+1. ~~Рядки 150-151 і 172-173: float temperature = 3; float humidity = 30; — DHT22 НЕ ЧИТАЄТЬСЯ!~~ **[ВИПРАВЛЕНО 2026-04-13]** — замінено на `dht.readTemperature()` / `dht.readHumidity()`, додано `dht.begin()` у `setup()`
+2. JWT-токен захардкоджений у main.cpp рядок 22 *(залишається, буде вирішено у Фазі 4-5)*
+3. URL захардкоджений: http://192.168.100.2:5000 *(залишається, буде вирішено у Фазі 4-5)*
+4. deviceID = 4 захардкоджений *(залишається, буде вирішено у Фазі 4-5)*
 
-Висновок: доробити (виправити DHT22, параметризувати URL і deviceID).
+Висновок: DHT22 виправлено. JWT-токен/URL/deviceID — залишаються на пізніші фази.
 
 ## 3.9 Web Frontend
 
@@ -285,15 +286,15 @@ Android тести: папки є, вміст невідомий.
 
 | Компонент | Що конкретно змінити |
 |---|---|
-| AuthController.GenerateJwtToken | Замінити .Result на await, читати ExpireDays з config |
-| StorageConditionController | Додати [Authorize] або API-ключ для IoT |
+| ~~AuthController.GenerateJwtToken~~ | ~~Замінити .Result на await, читати ExpireDays з config~~ **[ВИКОНАНО 2026-04-13]** |
+| ~~appsettings.json~~ | ~~Перенести JWT-ключ у User Secrets або env~~ **[ВИКОНАНО 2026-04-13]** |
+| ~~StorageConditionController~~ | ~~Додати [Authorize] або API-ключ для IoT~~ **[ВИКОНАНО 2026-04-13]** |
+| ~~IoTEmulate/src/main.cpp (рядки 150-151, 172-173)~~ | ~~dht.readTemperature() / dht.readHumidity() замість hardcode~~ **[ВИКОНАНО 2026-04-13]** |
 | AuditLog entity | Додати EntityType, EntityId, Severity + міграція |
 | ExpiryNotificationService | Зберігати Notification entity |
 | StorageConditionMonitoringService | Зберігати StorageIncident + Notification, збільшити інтервал, debounce |
-| IoTEmulate/src/main.cpp (рядки 150-151, 172-173) | dht.readTemperature() / dht.readHumidity() замість hardcode |
-| IoTEmulate/src/main.cpp (рядки 20-22) | Параметризувати URL і JWT-токен |
-| LoadTest.GET/POST | Перенести токен і URL у конфіг |
-| appsettings.json | Перенести JWT-ключ у User Secrets або env |
+| IoTEmulate/src/main.cpp (рядки 20-22) | Параметризувати URL і JWT-токен *(Фаза 4-5)* |
+| LoadTest.GET/POST | Перенести токен і URL у конфіг *(Фаза 6)* |
 
 ---
 
@@ -434,11 +435,11 @@ AuditLog (ДОПОВНИТИ):
 
 # 9. Рекомендований порядок розробки
 
-## Фаза 1 — Виправлення критичних проблем (1-2 дні)
-1. Виправити GenerateJwtToken: .Result → await, читати ExpireDays з config
-2. Перенести JWT-ключ у User Secrets / env
-3. Вирішити авторизацію StorageConditionController ([Authorize] або API-ключ)
-4. Виправити main.cpp рядки 150-151, 172-173: dht.readTemperature() / dht.readHumidity()
+## Фаза 1 — ~~Виправлення критичних проблем (1-2 дні)~~ ✅ ВИКОНАНО (2026-04-13)
+1. ~~Виправити GenerateJwtToken: .Result → await, читати ExpireDays з config~~ ✅
+2. ~~Перенести JWT-ключ у User Secrets / env~~ ✅
+3. ~~Вирішити авторизацію StorageConditionController ([Authorize] або API-ключ)~~ ✅
+4. ~~Виправити main.cpp рядки 150-151, 172-173: dht.readTemperature() / dht.readHumidity()~~ ✅
 
 ## Фаза 2 — Розширення предметної моделі (3-5 днів)
 5. StorageLocation entity + міграція + Controller + Service
@@ -481,14 +482,14 @@ AuditLog (ДОПОВНИТИ):
 | Компонент | Поточний стан | Дія |
 |---|---|---|
 | ASP.NET Core 8 backend (каркас) | Є, працює | Залишити і розширити |
-| JWT + ASP.NET Identity | Є, є критичні баги | Доробити / виправити |
+| JWT + ASP.NET Identity | ~~Є, є критичні баги~~ Виправлено (термін, ключ, .Result) | Залишилось: Refresh Token, /api/auth/me |
 | Medicine entity + CRUD | Є, неповна модель | Доробити |
 | StorageCondition entity + CRUD | Є | Залишити |
 | IoTDevice entity + CRUD | Є | Залишити |
 | AuditLog entity + service | Є, спрощений | Доробити |
 | ExpiryNotificationService | Є, тільки логує | Доробити |
 | StorageConditionMonitoringService | Є, 5 сек, тільки логує | Переробити |
-| StorageConditionController безпека | КРИТИЧНА ПРОБЛЕМА | Виправити |
+| ~~StorageConditionController безпека~~ | ~~КРИТИЧНА ПРОБЛЕМА~~ | ✅ Виправлено 2026-04-13 |
 | StorageLocation | Відсутній | Додати |
 | StorageIncident | Відсутній | Додати |
 | MedicineLifecycleEvent | Відсутній | Додати |
@@ -501,7 +502,7 @@ AuditLog (ДОПОВНИТИ):
 | Web frontend (wwwroot) | Є, Bootstrap + Vanilla JS | Перенести у SPA |
 | Frontend SPA (Frontend/) | Відсутній | Додати (Vue.js або React) |
 | Android Mobile (Kotlin+Compose) | Є, 26 файлів | Доробити (нові екрани) |
-| IoT (ESP32 + Wokwi) | Є, DHT22 НЕ ЧИТАЄТЬСЯ | Доробити |
+| IoT (ESP32 + Wokwi) | ~~Є, DHT22 НЕ ЧИТАЄТЬСЯ~~ DHT22 виправлено | Залишилось: URL/токен/deviceID hardcoded |
 | LoadTest GET/POST (NBomber) | Є, hardcoded токен і URL | Доробити |
 | Unit / Integration тести backend | Відсутні | Додати (обов'язково) |
 | docker-compose.yml | Відсутній | Додати |
@@ -512,4 +513,5 @@ AuditLog (ДОПОВНИТИ):
 ---
 
 *Документ підготовлено за результатами повного технічного аудиту workspace станом на 2026-04-09.*  
-*Наступне оновлення — після завершення Фази 1 (виправлення критичних проблем).*
+*Оновлено 2026-04-13: Фаза 1 завершена — виправлено JWT (термін, ключ, async), [Authorize] у StorageConditionController, DHT22 у IoT main.cpp.*  
+*Наступне оновлення — після завершення Фази 2 (розширення предметної моделі).*

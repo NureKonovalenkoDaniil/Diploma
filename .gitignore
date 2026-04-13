@@ -4,3 +4,12 @@ bin
 obj
 WebApp\MedicationManagement\bin
 WebApp\MedicationManagement\obj
+
+# Secrets and sensitive config
+.env
+.env.*
+secrets.json
+appsettings.Production.json
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
