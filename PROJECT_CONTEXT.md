@@ -141,6 +141,14 @@
 - Основні висновки: Спостережено інконсистентність кодування ASCII vs UTF8 (виправлено на UTF8). dht.begin() взагалі не викликався. Збірка 0 помилок, 0 попереджень.
 - Що потрібно робити далі: Фаза 2 — розширення предметної моделі
 
+### Запис 3
+
+- Дата: 2026-04-13
+- Завдання: Фаза 2 — розширення предметної моделі
+- Переглянуті файли / модулі: Models/, Enums/, Services/, Controllers/, DBContext/, Migrations/, Program.cs
+- Основні висновки: Створено 6 enum-типів, 4 нові entity, розширено 2 існуючі, 4 нові сервіси, 4 нові контролери, міграція успішно застосована, 0 помилок збірки
+- Що потрібно робити далі: Фаза 3 — рефакторинг Background Services (зберігати StorageIncident, Notification; debounce; інтервал 30-60 сек)
+
 ## 10. Журнал змін і рішень
 
 ### Запис шаблону
@@ -166,9 +174,29 @@
 - Ризики / наслідки: JWT-ключ зберігається локально у User Secrets; для Production потрібно env-змінну Jwt__Key. IoT-токен у main.cpp все одно hardcoded (це залишається на Фазу 4-5)
 - Наступний крок: Фаза 2 — розширення предметної моделі (StorageLocation, StorageIncident, MedicineLifecycleEvent, Notification)
 
-## 11. Поточний план найближчих дій (оновлено 2026-04-09)
+### Запис 2 — Фаза 2 (виконано 2026-04-13)
 
-**Аудит завершено.** Результати у AUDIT_AND_DIPLOMA_PLAN.md.
+- Дата: 2026-04-13
+- Що змінено:
+  - Створено `Enums/` з 6 enum-типами (StorageLocationType, IncidentType, IncidentStatus, LifecycleEventType, NotificationType, AuditSeverity)
+  - Створено `Models/StorageLocation.cs`, `StorageIncident.cs`, `MedicineLifecycleEvent.cs`, `Notification.cs`
+  - Розширено `Medicine.cs`: +Manufacturer, +BatchNumber, +Description, +MinStorageTemp, +MaxStorageTemp, +StorageLocationId FK
+  - Розширено `AuditLog.cs`: +EntityType, +EntityId, +Severity (enum as string)
+  - Оновлено `MedicineStorageContext`: 4 нові DbSet + Fluent API (enum as string, FK cascade rules)
+  - Міграція `DiplomaPhase2_DomainModel`: 4 нові таблиці, 6 нових колонок, 6 індексів
+  - Створено `ServiceStorageLocation`, `ServiceStorageIncident`, `ServiceMedicineLifecycle`, `ServiceNotification`
+  - Створено `StorageLocationController`, `StorageIncidentController`, `MedicineLifecycleController`, `NotificationController`
+  - Оновлено `ServiceAuditLog`: +entityType, +entityId, +severity параметри (дефолти → зворотна сумісність)
+  - Додано `GET /api/auth/me` до `AuthController`
+  - Зареєстровано 4 нові сервіси у `Program.cs`
+- Які файли змінено: Enums/ (6 нових), Models/ (4 нових, 2 оновлених), Services/ (4 нових, 1 оновлений), Controllers/ (4 нових, 1 оновлений), DBContext/MedicineStorageContext.cs, Program.cs, Migrations/
+- Причина: Розширення предметної моделі до дипломного рівня
+- Ризики / наслідки: Контролери повертають entity напряму (без DTO) — технічний борг для наступних фаз. Enum as string у БД — читабельніше, але без перекладу.
+- Наступний крок: Фаза 3 — рефакторинг Background Services (StorageIncident + Notification + debounce)
+
+## 11. Поточний план найближчих дій (оновлено 2026-04-13)
+
+**Аудит завершено. Фаза 1 виправлено. Фаза 2 виконано.** Результати у AUDIT_AND_DIPLOMA_PLAN.md.
 
 **Наступні кроки (пріоритетний порядок):**
 
@@ -178,31 +206,34 @@
    - ✅ [Authorize] до StorageConditionController
    - ✅ dht.begin() + dht.readTemperature()/readHumidity() у IoT main.cpp
 
-2. **[ПОТОЧНА]** ФАЗА 2 — Розширення предметної моделі:
-   - StorageLocation entity + міграція + CRUD API
-   - Medicine: нові поля + FK до StorageLocation
-   - AuditLog: EntityType, EntityId, Severity
-   - StorageIncident entity + міграція + API
-   - MedicineLifecycleEvent entity + міграція + API
-   - Notification entity + міграція + API
+2. **[ВИКОНАНО 2026-04-13]** ФАЗА 2 — Розширення предметної моделі:
+   - ✅ 6 enum-типів у `Enums/`
+   - ✅ `StorageLocation` entity + міграція + CRUD API
+   - ✅ `Medicine`: +6 полів + FK до StorageLocation
+   - ✅ `AuditLog`: +EntityType, +EntityId, +Severity
+   - ✅ `StorageIncident` entity + міграція + API (вкл. resolve)
+   - ✅ `MedicineLifecycleEvent` entity + міграція + API
+   - ✅ `Notification` entity + міграція + API
+   - ✅ `GET /api/auth/me`
+   - ✅ `ServiceAuditLog` оновлено (EntityType/EntityId/Severity)
 
-3. ФАЗА 3-7 — (відповідно до AUDIT_AND_DIPLOMA_PLAN.md)
+3. **[ПОТОЧНА]** ФАЗА 3 — Рефакторинг Background Services:
 
-## 12. Підтверджені нові сутності для диплома (після аудиту 2026-04-09)
+## 12. Підтверджені нові сутності для диплома (реалізовано 2026-04-13)
 
-Після аудиту реального коду підтверджено необхідність таких нових сутностей:
+Стан на 2026-04-13 — всі заплановані сутності реалізовано:
 
-**НОВІ (відсутні в БД):**
-- `StorageLocation` — місце зберігання (Name, Address, LocationType, FK→IoTDevice)
-- `StorageIncident` — інцидент порушення умов (DeviceID, IncidentType, DetectedValue, Status)
-- `MedicineLifecycleEvent` — подія препарату (MedicineID, EventType, PerformedBy, PerformedAt)
-- `Notification` — сповіщення (Type, Title, Message, TargetRole, IsRead)
+**РЕАЛІЗОВАНО (Enum as string у БД):**
+- ✅ `StorageLocation` — місце зберігання (Name, Address, LocationType, FK→IoTDevice)
+- ✅ `StorageIncident` — інцидент порушення умов (DeviceId, IncidentType, DetectedValue, Status)
+- ✅ `MedicineLifecycleEvent` — подія препарату (MedicineId, EventType, PerformedBy, PerformedAt)
+- ✅ `Notification` — сповіщення (Type, Title, Message, TargetRole, IsRead)
 
-**РОЗШИРЕННЯ ІСНУЮЧИХ:**
-- `Medicine`: + Manufacturer, BatchNumber, Description, MinStorageTemp, MaxStorageTemp, StorageLocationId (FK)
-- `AuditLog`: + EntityType, EntityId, Severity
+**РОЗШИРЕНО у Пазі 2:**
+- ✅ `Medicine`: +Manufacturer, +BatchNumber, +Description, +MinStorageTemp, +MaxStorageTemp, +StorageLocationId (FK)
+- ✅ `AuditLog`: +EntityType, +EntityId, +Severity
 
-**ВЖЕ ІСНУЮТЬ (залишити):**
+**ІСНУЮТЬ з курсової (залишити):**
 - `Medicine`, `StorageCondition`, `IoTDevice`, `AuditLog`
 
 **НЕ ПОТРІБНО (не входить у план):**

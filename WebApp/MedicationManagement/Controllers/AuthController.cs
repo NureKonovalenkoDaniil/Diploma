@@ -1,5 +1,6 @@
 using MedicationManagement.Models;
 using MedicationManagement.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -159,6 +160,28 @@ namespace MedicationManagement.Controllers
                 _logger.LogError(ex, "Error assigning role to user");
                 return StatusCode(500, "Internal server error");
             }
+        }
+
+        /// <summary>Отримати дані поточного авторизованого користувача</summary>
+        [HttpGet("me")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> GetMe()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId is null) return Unauthorized();
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null) return NotFound();
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            return Ok(new
+            {
+                user.Id,
+                user.UserName,
+                user.Email,
+                Roles = roles
+            });
         }
 
         private async Task<string> GenerateJwtToken(IdentityUser user)

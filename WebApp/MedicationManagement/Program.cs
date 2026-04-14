@@ -62,6 +62,11 @@ namespace MedicationManagement
             builder.Services.AddScoped<IServiceStorageCondition, ServiceStorageCondition>();
             builder.Services.AddScoped<IServiceIoTDevice, ServiceIoTDevice>();
             builder.Services.AddScoped<IServiceAuditLog, ServiceAuditLog>();
+            // --- Нові сервіси (Фаза 2) ---
+            builder.Services.AddScoped<IServiceStorageLocation, ServiceStorageLocation>();
+            builder.Services.AddScoped<IServiceStorageIncident, ServiceStorageIncident>();
+            builder.Services.AddScoped<IServiceMedicineLifecycle, ServiceMedicineLifecycle>();
+            builder.Services.AddScoped<IServiceNotification, ServiceNotification>();
 
             // Register database contexts
             builder.Services.AddDbContext<MedicineStorageContext>(options =>

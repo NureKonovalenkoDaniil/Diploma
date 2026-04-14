@@ -1,13 +1,15 @@
-﻿using MedicationManagement.DBContext;
+using MedicationManagement.DBContext;
+using MedicationManagement.Enums;
 using MedicationManagement.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace MedicationManagement.Services
 {
     // Interface for the audit log service
     public interface IServiceAuditLog
     {
-        Task LogAction(string action, string user, string details, bool isSensor);
+        Task LogAction(string action, string user, string details, bool isSensor,
+            string? entityType = null, int? entityId = null,
+            AuditSeverity severity = AuditSeverity.Info);
     }
     // Implementation of the audit log service
     public class ServiceAuditLog : IServiceAuditLog
@@ -21,17 +23,22 @@ namespace MedicationManagement.Services
         }
 
         // Method to log an action to the audit log
-        public async Task LogAction(string action, string userOrDevice, string details, bool isSensor = false)
+        public async Task LogAction(string action, string user, string details, bool isSensor,
+            string? entityType = null, int? entityId = null,
+            AuditSeverity severity = AuditSeverity.Info)
         {
-            var log = new AuditLog
+            var auditLog = new AuditLog
             {
                 Action = action,
-                User = isSensor ? $"Sensor {userOrDevice}" : userOrDevice,
+                User = isSensor ? $"[Sensor] {user}" : user,
                 Timestamp = DateTime.UtcNow,
-                Details = details
+                Details = details,
+                EntityType = entityType,
+                EntityId = entityId,
+                Severity = severity
             };
 
-            _context.AuditLogs.Add(log);
+            _context.AuditLogs.Add(auditLog);
             await _context.SaveChangesAsync();
         }
 

@@ -1,7 +1,7 @@
 # AUDIT_AND_DIPLOMA_PLAN.md
 > Технічний аудит і план розвитку дипломного проєкту  
 > Дата аудиту: 2026-04-09  
-> Останнє оновлення: 2026-04-13 (Фаза 1 виконана)  
+> Останнє оновлення: 2026-04-14 (Фаза 2 виконана)  
 > Проведено: Antigravity AI  
 
 ---
@@ -82,13 +82,17 @@ Diploma/
 
 Файли: WebApp/MedicationManagement/
 
-Що вже реалізовано:
+Що реалізовано:
 - DI для всіх сервісів
 - JWT Bearer authentication
 - ASP.NET Identity для управління користувачами
 - Swagger/OpenAPI (Swashbuckle 7.1.0)
 - JSON Patch для часткового оновлення (PATCH endpoints)
 - Статична роздача файлів (UseStaticFiles)
+- **[ДОДАНО Фаза 2]** 4 нові контролери: StorageLocationController, StorageIncidentController, MedicineLifecycleController, NotificationController
+- **[ДОДАНО Фаза 2]** 4 нові сервіси: ServiceStorageLocation, ServiceStorageIncident, ServiceMedicineLifecycle, ServiceNotification
+- **[ДОДАНО Фаза 2]** `GET /api/auth/me` у AuthController
+- **[ДОДАНО Фаза 2]** 6 enum-типів у `Enums/`
 
 Що реалізовано частково або слабо:
 - ~~StorageConditionController не має [Authorize] на рівні класу~~ **[ВИПРАВЛЕНО 2026-04-13]**
@@ -97,56 +101,62 @@ Diploma/
 - Немає DTO-рівня: контролери приймають і повертають entity-моделі напряму
 
 Що відсутнє:
-- StorageLocation, StorageIncident, MedicineLifecycleEvent, Notification
-- Зв'язок Medicine із StorageLocation
+- ~~StorageLocation, StorageIncident, MedicineLifecycleEvent, Notification~~ **[ДОДАНО Фаза 2]**
+- ~~Зв'язок Medicine із StorageLocation~~ **[ДОДАНО Фаза 2]**
 - Unit / integration тести, docker-compose
 
-Висновок: частково переробити.
+Висновок: основний рефакторинг виконано. Залишилось: DTO, тести, docker-compose.
 
 ## 3.2 Database / Models / Entities / Migrations
 
-Поточні сутності:
+Стан схеми БД станом на 2026-04-14:
 
-| Сутність | Поля | Проблеми |
+| Сутність | Поля | Стан |
 |---|---|---|
-| Medicine | MedicineID, Name, Type, ExpiryDate, Quantity, Category | Немає FK до StorageLocation, Manufacturer, BatchNumber |
-| StorageCondition | ConditionID, Temperature, Humidity, Timestamp, DeviceID | Немає FK до Medicine або StorageLocation |
-| IoTDevice | DeviceID, Location(string), Type, Parameters, IsActive, Min/Max Temp/Humidity | Location — рядок, не FK |
-| AuditLog | Id, Action, User, Timestamp, Details | Немає EntityType, EntityId, Severity |
-| ReplenishmentRecommendation | MedicineId, MedicineName, RecommendedQuantity | Не сутність БД — тільки DTO |
+| Medicine | MedicineID, Name, Type, ExpiryDate, Quantity, Category, **+Manufacturer, +BatchNumber, +Description, +MinStorageTemp, +MaxStorageTemp, +StorageLocationId** | ✅ Розширено Фаза 2 |
+| StorageCondition | ConditionID, Temperature, Humidity, Timestamp, DeviceID | Залишити |
+| IoTDevice | DeviceID, Location(string), Type, Parameters, IsActive, Min/Max Temp/Humidity | Залишити |
+| AuditLog | Id, Action, User, Timestamp, Details, **+EntityType, +EntityId, +Severity** | ✅ Розширено Фаза 2 |
+| ReplenishmentRecommendation | MedicineId, MedicineName, RecommendedQuantity | Тільки DTO |
+| **StorageLocation** | LocationId, Name, Address, LocationType (enum), IoTDeviceId FK | ✅ ДОДАНО Фаза 2 |
+| **StorageIncident** | IncidentId, DeviceId FK, LocationId FK, IncidentType (enum), DetectedValue, ExpectedMin/Max, StartTime, EndTime, Status (enum), CreatedAt | ✅ ДОДАНО Фаза 2 |
+| **MedicineLifecycleEvent** | EventId, MedicineId FK, EventType (enum), Description, Quantity, PerformedBy, PerformedAt, RelatedLocationId FK | ✅ ДОДАНО Фаза 2 |
+| **Notification** | NotificationId, Type (enum), Title, Message, TargetRole, IsRead, CreatedAt, RelatedEntityType, RelatedEntityId | ✅ ДОДАНО Фаза 2 |
 
 Два DbContext: MedicineStorageContext і UserContext — правильне рішення, залишити.
 
-Чого не вистачає: StorageLocations, StorageIncidents, MedicineLifecycleEvents, Notifications.
-
-Висновок: переробити схему БД, додати 4 нові таблиці.
+Висновок: схема БД розширена до дипломного рівня.
 
 ## 3.3 Controllers / API
 
 | Контролер | Endpoints | Авторизація | Стан |
 |---|---|---|---|
-| AuthController | POST register, login, create-role, assign-role | Частково | ~~Баги: термін токена 1 рік~~ **[ВИПРАВЛЕНО 2026-04-13]** |
+| AuthController | POST register, login, create-role, assign-role, **GET me** | Частково | ✅ оновлено Фаза 2 |
 | MedicineController | GET, GET{id}, POST, PATCH{id}, DELETE{id}, low-stock, expiring, replenishment | JWT + Role | Добре |
 | StorageConditionController | GET, GET{id}, POST, PATCH{id}, DELETE{id}, checkCondition | ~~НЕ ЗАХИЩЕНИЙ~~ **[ВИПРАВЛЕНО 2026-04-13]** JWT | Виправлено |
 | IoTDeviceController | GET, GET{id}, POST, PATCH{id}, DELETE{id}, setstatus, conditions/{id} | JWT + Role | Добре |
 | AuditLogController | GET (filters: from, to, user, action) | Administrator only | Добре |
+| **StorageLocationController** | GET, GET{id}, POST, PUT{id}, DELETE{id} | JWT (запис/видалення — Admin) | ✅ ДОДАНО Фаза 2 |
+| **StorageIncidentController** | GET, GET active, GET{id}, POST, PATCH resolve | JWT (POST/resolve — Admin) | ✅ ДОДАНО Фаза 2 |
+| **MedicineLifecycleController** | GET all, GET medicine/{id}, GET{id}, POST | JWT | ✅ ДОДАНО Фаза 2 |
+| **NotificationController** | GET, GET unread, POST, PATCH read, PATCH read-all | JWT | ✅ ДОДАНО Фаза 2 |
 
-Відсутні: StorageLocationController, StorageIncidentController, MedicineLifecycleController, NotificationController, GET /api/auth/me
-
-Висновок: доробити.
+Висновок: усі заплановані контролери реалізовано.
 
 ## 3.4 Services / Business Logic
 
-| Сервіс | Інтерфейс | Проблеми |
+| Сервіс | Інтерфейс | Стан |
 |---|---|---|
 | ServiceMedicine | IServiceMedicine | RecommendedQuantity = 100 - quantity — hardcoded |
-| ServiceStorageCondition | IServiceStorageCondition | CheckConditionsForAllDevices повертає List<string> |
-| ServiceIoTDevice | IServiceIoTDevice | — |
-| ServiceAuditLog | IServiceAuditLog | — |
+| ServiceStorageCondition | IServiceStorageCondition | CheckConditionsForAllDevices повертає List\<string\> |
+| ServiceIoTDevice | IServiceIoTDevice | Добре |
+| ServiceAuditLog | IServiceAuditLog | ✅ оновлено Фаза 2: +EntityType, +EntityId, +Severity |
+| **ServiceStorageLocation** | IServiceStorageLocation | ✅ ДОДАНО Фаза 2 |
+| **ServiceStorageIncident** | IServiceStorageIncident | ✅ ДОДАНО Фаза 2 |
+| **ServiceMedicineLifecycle** | IServiceMedicineLifecycle | ✅ ДОДАНО Фаза 2 |
+| **ServiceNotification** | IServiceNotification | ✅ ДОДАНО Фаза 2 |
 
-Відсутні: ServiceStorageLocation, ServiceStorageIncident, ServiceMedicineLifecycle, ServiceNotification.
-
-Висновок: частково переробити.
+Висновок: всі заплановані сервіси реалізовано.
 
 ## 3.5 Authentication / Authorization / Roles
 
@@ -163,15 +173,15 @@ Diploma/
 
 ## 3.6 Audit / Logging
 
-Що є: таблиця AuditLogs, сервіс LogAction(action, user, details, isSensor), контролер із фільтрацією.
+Що є: таблиця AuditLogs, сервіс LogAction, контролер із фільтрацією.
 
-Проблеми:
-- Немає EntityType і EntityId — нема прив'язки до конкретних об'єктів
-- Немає Severity
-- Update-операції не покриті аудитом
+~~Проблеми:~~
+- ~~Немає EntityType і EntityId~~ **[ДОДАНО Фаза 2]**
+- ~~Немає Severity~~ **[ДОДАНО Фаза 2]**
+- Update-операції не покриті аудитом (нові контролери логують)
 - Немає пагінації
 
-Висновок: доробити.
+Висновок: частково покращено. Залишилось: пагінація, покриття update-операцій.
 
 ## 3.7 Background Services
 
@@ -441,13 +451,15 @@ AuditLog (ДОПОВНИТИ):
 3. ~~Вирішити авторизацію StorageConditionController ([Authorize] або API-ключ)~~ ✅
 4. ~~Виправити main.cpp рядки 150-151, 172-173: dht.readTemperature() / dht.readHumidity()~~ ✅
 
-## Фаза 2 — Розширення предметної моделі (3-5 днів)
-5. StorageLocation entity + міграція + Controller + Service
-6. Medicine: нові поля + FK до StorageLocation + міграція
-7. AuditLog: EntityType, EntityId, Severity + міграція
-8. StorageIncident entity + міграція + Controller + Service
-9. MedicineLifecycleEvent entity + міграція + Controller
-10. Notification entity + міграція + Controller
+## Фаза 2 — ~~Розширення предметної моделі (3-5 днів)~~ ✅ ВИКОНАНО (2026-04-13)
+5. ~~StorageLocation entity + міграція + Controller + Service~~ ✅
+6. ~~Medicine: нові поля + FK до StorageLocation + міграція~~ ✅
+7. ~~AuditLog: EntityType, EntityId, Severity + міграція~~ ✅
+8. ~~StorageIncident entity + міграція + Controller + Service~~ ✅
+9. ~~MedicineLifecycleEvent entity + міграція + Controller~~ ✅
+10. ~~Notification entity + міграція + Controller~~ ✅
+11. ~~GET /api/auth/me~~ ✅
+12. ~~6 enum-типів у Enums/~~ ✅
 
 ## Фаза 3 — Рефакторинг Background Services (1-2 дні)
 11. StorageConditionMonitoringService: StorageIncident + Notification, debounce, інтервал 30-60 сек
@@ -482,36 +494,37 @@ AuditLog (ДОПОВНИТИ):
 | Компонент | Поточний стан | Дія |
 |---|---|---|
 | ASP.NET Core 8 backend (каркас) | Є, працює | Залишити і розширити |
-| JWT + ASP.NET Identity | ~~Є, є критичні баги~~ Виправлено (термін, ключ, .Result) | Залишилось: Refresh Token, /api/auth/me |
-| Medicine entity + CRUD | Є, неповна модель | Доробити |
+| JWT + ASP.NET Identity | ~~Є, є критичні баги~~ Виправлено (термін, ключ, .Result) | Залишилось: Refresh Token |
+| Medicine entity + CRUD | ~~Є, неповна модель~~ Розширено Фаза 2 (+6 полів, FK) | Залишилось: DTO-рівень |
 | StorageCondition entity + CRUD | Є | Залишити |
 | IoTDevice entity + CRUD | Є | Залишити |
-| AuditLog entity + service | Є, спрощений | Доробити |
-| ExpiryNotificationService | Є, тільки логує | Доробити |
-| StorageConditionMonitoringService | Є, 5 сек, тільки логує | Переробити |
+| AuditLog entity + service | ~~Є, спрощений~~ Розширено Фаза 2 (+EntityType, +EntityId, +Severity) | Залишилось: пагінація |
+| ExpiryNotificationService | Є, тільки логує | Доробити (Фаза 3) |
+| StorageConditionMonitoringService | Є, 5 сек, тільки логує | Переробити (Фаза 3) |
 | ~~StorageConditionController безпека~~ | ~~КРИТИЧНА ПРОБЛЕМА~~ | ✅ Виправлено 2026-04-13 |
-| StorageLocation | Відсутній | Додати |
-| StorageIncident | Відсутній | Додати |
-| MedicineLifecycleEvent | Відсутній | Додати |
-| Notification entity | Відсутній | Додати |
-| StorageLocationController + service | Відсутні | Додати |
-| StorageIncidentController + service | Відсутні | Додати |
-| MedicineLifecycleController + service | Відсутні | Додати |
-| NotificationController + service | Відсутні | Додати |
-| GET /api/auth/me | Відсутній | Додати |
-| Web frontend (wwwroot) | Є, Bootstrap + Vanilla JS | Перенести у SPA |
-| Frontend SPA (Frontend/) | Відсутній | Додати (Vue.js або React) |
-| Android Mobile (Kotlin+Compose) | Є, 26 файлів | Доробити (нові екрани) |
+| ~~StorageLocation~~ | ~~Відсутній~~ | ✅ Додано Фаза 2 |
+| ~~StorageIncident~~ | ~~Відсутній~~ | ✅ Додано Фаза 2 |
+| ~~MedicineLifecycleEvent~~ | ~~Відсутній~~ | ✅ Додано Фаза 2 |
+| ~~Notification entity~~ | ~~Відсутній~~ | ✅ Додано Фаза 2 |
+| ~~StorageLocationController + service~~ | ~~Відсутні~~ | ✅ Додано Фаза 2 |
+| ~~StorageIncidentController + service~~ | ~~Відсутні~~ | ✅ Додано Фаза 2 |
+| ~~MedicineLifecycleController + service~~ | ~~Відсутні~~ | ✅ Додано Фаза 2 |
+| ~~NotificationController + service~~ | ~~Відсутні~~ | ✅ Додано Фаза 2 |
+| ~~GET /api/auth/me~~ | ~~Відсутній~~ | ✅ Додано Фаза 2 |
+| Web frontend (wwwroot) | Є, Bootstrap + Vanilla JS | Перенести у SPA (Фаза 4) |
+| Frontend SPA (Frontend/) | Відсутній | Додати (Vue.js або React) (Фаза 4) |
+| Android Mobile (Kotlin+Compose) | Є, 26 файлів | Доробити (нові екрани) (Фаза 5) |
 | IoT (ESP32 + Wokwi) | ~~Є, DHT22 НЕ ЧИТАЄТЬСЯ~~ DHT22 виправлено | Залишилось: URL/токен/deviceID hardcoded |
-| LoadTest GET/POST (NBomber) | Є, hardcoded токен і URL | Доробити |
-| Unit / Integration тести backend | Відсутні | Додати (обов'язково) |
-| docker-compose.yml | Відсутній | Додати |
-| README.md | Відсутній | Додати |
-| ER-діаграма, C4-діаграма | Відсутні | Додати |
-| IMPLEMENTATION_ROADMAP.md | Відсутній | Додати |
+| LoadTest GET/POST (NBomber) | Є, hardcoded токен і URL | Доробити (Фаза 6) |
+| Unit / Integration тести backend | Відсутні | Додати (Фаза 6) |
+| docker-compose.yml | Відсутній | Додати (Фаза 7) |
+| README.md | Відсутній | Додати (Фаза 7) |
+| ER-діаграма, C4-діаграма | Відсутні | Додати (Фаза 7) |
+| IMPLEMENTATION_ROADMAP.md | Відсутній | Додати (Фаза 7) |
 
 ---
 
 *Документ підготовлено за результатами повного технічного аудиту workspace станом на 2026-04-09.*  
 *Оновлено 2026-04-13: Фаза 1 завершена — виправлено JWT (термін, ключ, async), [Authorize] у StorageConditionController, DHT22 у IoT main.cpp.*  
-*Наступне оновлення — після завершення Фази 2 (розширення предметної моделі).*
+*Оновлено 2026-04-14: Фаза 2 завершена — предметна модель розширена (4 нові entity, 6 enum, 4 сервіси, 4 контролери, міграція).*  
+*Наступне оновлення — після завершення Фази 3 (рефакторинг Background Services).*
