@@ -143,11 +143,19 @@
 
 ### Запис 3
 
-- Дата: 2026-04-13
+- Дата: 2026-04-14
 - Завдання: Фаза 2 — розширення предметної моделі
 - Переглянуті файли / модулі: Models/, Enums/, Services/, Controllers/, DBContext/, Migrations/, Program.cs
 - Основні висновки: Створено 6 enum-типів, 4 нові entity, розширено 2 існуючі, 4 нові сервіси, 4 нові контролери, міграція успішно застосована, 0 помилок збірки
-- Що потрібно робити далі: Фаза 3 — рефакторинг Background Services (зберігати StorageIncident, Notification; debounce; інтервал 30-60 сек)
+- Що потрібно робити далі: Фаза 3 — рефакторинг Background Services
+
+### Запис 4
+
+- Дата: 2026-04-18
+- Завдання: Фаза 3 — рефакторинг Background Services
+- Переглянуті файли / модулі: BackgroundServices/, appsettings.json
+- Основні висновки: `StorageConditionMonitoringService` повністю перероблено — інтервал з config, debounce через `StorageIncident.Status`, auto-resolve, `Notification` + `AuditLog`. `ExpiryNotificationService` оновлено — дедуплікація, `Notification` у БД, `ExpiryWarningDays` з config. 0 помилок.
+- Що потрібно робити далі: Фаза 4 — новий SPA Frontend
 
 ## 10. Журнал змін і рішень
 
@@ -192,7 +200,27 @@
 - Які файли змінено: Enums/ (6 нових), Models/ (4 нових, 2 оновлених), Services/ (4 нових, 1 оновлений), Controllers/ (4 нових, 1 оновлений), DBContext/MedicineStorageContext.cs, Program.cs, Migrations/
 - Причина: Розширення предметної моделі до дипломного рівня
 - Ризики / наслідки: Контролери повертають entity напряму (без DTO) — технічний борг для наступних фаз. Enum as string у БД — читабельніше, але без перекладу.
-- Наступний крок: Фаза 3 — рефакторинг Background Services (StorageIncident + Notification + debounce)
+- Наступний крок: Фаза 3 — рефакторинг Background Services
+
+### Запис 3 — Фаза 3 (виконано 2026-04-18)
+
+- Дата: 2026-04-18
+- Що змінено:
+  - `appsettings.json`: додано секцію `Monitoring` (`IntervalSeconds=60`, `ExpiryWarningDays=7`)
+  - `StorageConditionMonitoringService`: повний рефакторинг:
+    - інтервал з `appsettings.json` (замість 5 сек — 60)
+    - debounce через `StorageIncident.Status == Active`
+    - при порушенні: створюємо `StorageIncident` + `Notification` + `AuditLog(Warning)`
+    - при відновленні норми: auto-resolve `StorageIncident` + `Notification` + `AuditLog(Info)`
+    - окремі методи для temperature і humidity
+  - `ExpiryNotificationService`: оновлено:
+    - дедуплікація: не надсилає повторне сповіщення за той самий день
+    - зберігає `Notification` у БД (замість логування)
+    - `ExpiryWarningDays` з `appsettings.json`
+- Які файли змінено: BackgroundServices/StorageConditionMonitoringService.cs, BackgroundServices/ExpiryNotificationService.cs, appsettings.json
+- Причина: Рефакторинг Background Services до дипломного рівня
+- Ризики / наслідки: debounce працює на рівні БД (один інцидент на пристрій+тип). Якщо IoT-дані нехть до БД — останній `StorageCondition` може бути старим. Це прийнятно для диплому.
+- Наступний крок: Фаза 4 — новий SPA Frontend
 
 ## 11. Поточний план найближчих дій (оновлено 2026-04-13)
 
@@ -217,7 +245,35 @@
    - ✅ `GET /api/auth/me`
    - ✅ `ServiceAuditLog` оновлено (EntityType/EntityId/Severity)
 
-3. **[ПОТОЧНА]** ФАЗА 3 — Рефакторинг Background Services:
+## 11. Поточний план найближчих дій (оновлено 2026-04-18)
+
+**Аудит завершено. Фаза 1 виправлено. Фаза 2 виконано. Фаза 3 виконано.** Результати у AUDIT_AND_DIPLOMA_PLAN.md.
+
+**Наступні кроки (пріоритетний порядок):**
+
+1. **[ВИКОНАНО 2026-04-13]** ФАЗА 1 — Виправлення критичних проблем:
+   - ✅ GenerateJwtToken: .Result → await, ASCII → UTF8, термін з config
+   - ✅ JWT-ключ у User Secrets
+   - ✅ [Authorize] до StorageConditionController
+   - ✅ dht.begin() + dht.readTemperature()/readHumidity() у IoT main.cpp
+
+2. **[ВИКОНАНО 2026-04-13]** ФАЗА 2 — Розширення предметної моделі:
+   - ✅ 6 enum-типів у `Enums/`
+   - ✅ `StorageLocation` entity + міграція + CRUD API
+   - ✅ `Medicine`: +6 полів + FK до StorageLocation
+   - ✅ `AuditLog`: +EntityType, +EntityId, +Severity
+   - ✅ `StorageIncident` entity + міграція + API (вкл. resolve)
+   - ✅ `MedicineLifecycleEvent` entity + міграція + API
+   - ✅ `Notification` entity + міграція + API
+   - ✅ `GET /api/auth/me`
+   - ✅ `ServiceAuditLog` оновлено (EntityType/EntityId/Severity)
+
+3. **[ВИКОНАНО 2026-04-18]** ФАЗА 3 — Рефакторинг Background Services:
+   - ✅ `appsettings.json`: секція `Monitoring` (IntervalSeconds=60, ExpiryWarningDays=7)
+   - ✅ `StorageConditionMonitoringService`: debounce, `StorageIncident`, auto-resolve, `Notification`, `AuditLog`
+   - ✅ `ExpiryNotificationService`: дедуплікація, `Notification` у БД, конфіг з appsettings
+
+4. **[ПОТОЧНА]** ФАЗА 4 — Новий SPA Frontend
 
 ## 12. Підтверджені нові сутності для диплома (реалізовано 2026-04-13)
 

@@ -1,7 +1,7 @@
 # AUDIT_AND_DIPLOMA_PLAN.md
 > Технічний аудит і план розвитку дипломного проєкту  
 > Дата аудиту: 2026-04-09  
-> Останнє оновлення: 2026-04-14 (Фаза 2 виконана)  
+> Останнє оновлення: 2026-04-18 (Фаза 3 виконана)  
 > Проведено: Antigravity AI  
 
 ---
@@ -185,14 +185,14 @@ Diploma/
 
 ## 3.7 Background Services
 
-| Служба | Інтервал | Проблема |
+| Служба | Інтервал | Стан |
 |---|---|---|
-| ExpiryNotificationService | 1 день | Тільки логує, не зберігає Notification entity |
-| StorageConditionMonitoringService | 5 секунд | Тільки логує, не створює StorageIncident; 5 сек = 17000 записів/добу при порушенні |
+| ExpiryNotificationService | 1 доба | ✅ Оновлено Фаза 3: дедуплікація, `Notification` у БД, `ExpiryWarningDays` з config |
+| StorageConditionMonitoringService | 60 сек (з config) | ✅ Оновлено Фаза 3: debounce, `StorageIncident`, auto-resolve, `Notification`, `AuditLog` |
 
-Немає debounce/dedup-логіки.
+~~Немає debounce/dedup-логіки.~~ **[ДОДАНО Фаза 3]**
 
-Висновок: переробити.
+Висновок: рефакторинг виконано. Залишилось: інтеграція з реальним IoT та push-сповіщення (optional).
 
 ## 3.8 IoT / Sensor Integration / Emulation
 
@@ -461,9 +461,10 @@ AuditLog (ДОПОВНИТИ):
 11. ~~GET /api/auth/me~~ ✅
 12. ~~6 enum-типів у Enums/~~ ✅
 
-## Фаза 3 — Рефакторинг Background Services (1-2 дні)
-11. StorageConditionMonitoringService: StorageIncident + Notification, debounce, інтервал 30-60 сек
-12. ExpiryNotificationService: зберігати Notification entity
+## Фаза 3 — ~~Рефакторинг Background Services (1-2 дні)~~ ✅ ВИКОНАНО (2026-04-18)
+11. ~~`StorageConditionMonitoringService`: `StorageIncident` + `Notification`, debounce, інтервал 60 сек~~ ✅
+12. ~~`ExpiryNotificationService`: зберігати `Notification` entity, дедуплікація~~ ✅
+13. ~~`appsettings.json`: секція `Monitoring` (`IntervalSeconds`, `ExpiryWarningDays`)~~ ✅
 
 ## Фаза 4 — Новий Frontend SPA (5-7 днів)
 13. Ініціалізувати Vue.js або React проєкт у Frontend/
@@ -527,4 +528,5 @@ AuditLog (ДОПОВНИТИ):
 *Документ підготовлено за результатами повного технічного аудиту workspace станом на 2026-04-09.*  
 *Оновлено 2026-04-13: Фаза 1 завершена — виправлено JWT (термін, ключ, async), [Authorize] у StorageConditionController, DHT22 у IoT main.cpp.*  
 *Оновлено 2026-04-14: Фаза 2 завершена — предметна модель розширена (4 нові entity, 6 enum, 4 сервіси, 4 контролери, міграція).*  
-*Наступне оновлення — після завершення Фази 3 (рефакторинг Background Services).*
+*Оновлено 2026-04-18: Фаза 3 завершена — рефакторинг Background Services (дебаунс, auto-resolve, Notification в БД, дедуплікація, конфіг з appsettings).*  
+*Наступне оновлення — після завершення Фази 4 (SPA Frontend).*
