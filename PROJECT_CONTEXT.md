@@ -229,9 +229,32 @@
 - Ключові висновки: CORS відсутній (критично), 34 готових ендпоінти, 15 позицій техборгу, 2 критичні (хардкод IoT-токен, логіка першого admin)
 - Наступний крок: Фаза 4 — SPA Frontend (перша дія: CORS + DTO + React/Vue)
 
-## 11. Поточний план найближчих дій (оновлено 2026-04-20)
+### Запис 5 — Фаза 3.5: виправлення техборгу (2026-04-21)
 
-**Аудит завершено. Фаза 1 виправлено. Фаза 2 виконано. Фаза 3 виконано. Проміжний аудит створено.** Див.  `INTERMEDIATE_AUDIT_PHASE_1_3.md`.
+- Дата: 2026-04-21
+- Що змінено: Виправлено 13 позицій техборгу (з 15 з INTERMEDIATE_AUDIT_PHASE_1_3.md), екскл.
+  двох що відносяться виключно до Фази 4 (Уніфікований CORS, DTO для SPA)
+- Ключові зміни:
+  - **TD-01**: IoTEmulate/src/config.h (новий файл) + main.cpp очищено від живого JWT + .gitignore
+  - **TD-02**: AuthController: `Count()` → `AnyAsync()` + існує ДО створення користувача
+  - **TD-03**: `AsNoTracking()` в 7 сервісах (Read, ReadById, GetAll, GetActive, GetUnread)
+  - **TD-06**: `IServiceAuditLog.GetLogs()` метод + рефакторинг AuditLogController
+  - **TD-07**: Коментар debounce-обмеження в StorageConditionMonitoringService
+  - **TD-08**: GetExpiringMedicines: `m.ExpiryDate > DateTime.Now && ≤ thresholdDate`
+  - **TD-09**: Business:LowStockThreshold/ReplenishToQuantity з appsettings.json
+  - **TD-10**: IoTDevice: [Required] + [StringLength] + XML-документація
+  - **TD-11**: ILogger + try/catch в 4 нових сервісах
+  - **TD-12**: Models/DTOs/RoleDto.cs (вилучено з AuthController)
+  - **TD-13**: Swagger:Enabled в appsettings (Program.cs оновлено)
+  - **TD-14**: Видалено Cookie auth з Program.cs
+  - **TD-15**: Прибрано дублювання app.Run() в ConfigureMiddleware
+  - **+bonus**: Nullable warnings (CS8603/CS8604) знижено з 31 до 0
+- Результат збірки: `dotnet build` — 0 помилок, **0 попереджень**
+- Наступний крок: Фаза 4 — SPA Frontend (всі виправлено, CORS + DTO — перші дії)
+
+## 11. Поточний план найближчих дій (оновлено 2026-04-21)
+
+**Фази 1-3 виконано. Проміжний аудит створено. Фаза 3.5 (виправлення 13 з 15 техборгів) виконано.** Dotnet build: **0 помилок, 0 попереджень**.
 
 **Наступні кроки (пріоритетний порядок):**
 

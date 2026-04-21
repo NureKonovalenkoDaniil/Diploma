@@ -16,56 +16,100 @@ namespace MedicationManagement.Services
     public class ServiceStorageLocation : IServiceStorageLocation
     {
         private readonly MedicineStorageContext _context;
+        private readonly ILogger<ServiceStorageLocation> _logger;
 
-        public ServiceStorageLocation(MedicineStorageContext context)
+        public ServiceStorageLocation(MedicineStorageContext context, ILogger<ServiceStorageLocation> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<StorageLocation>> GetAll()
         {
-            return await _context.StorageLocations
-                .Include(l => l.IoTDevice)
-                .ToListAsync();
+            try
+            {
+                return await _context.StorageLocations
+                    .AsNoTracking()
+                    .Include(l => l.IoTDevice)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving storage locations");
+                return Enumerable.Empty<StorageLocation>();
+            }
         }
 
         public async Task<StorageLocation?> GetById(int id)
         {
-            return await _context.StorageLocations
-                .Include(l => l.IoTDevice)
-                .Include(l => l.Medicines)
-                .FirstOrDefaultAsync(l => l.LocationId == id);
+            try
+            {
+                return await _context.StorageLocations
+                    .AsNoTracking()
+                    .Include(l => l.IoTDevice)
+                    .Include(l => l.Medicines)
+                    .FirstOrDefaultAsync(l => l.LocationId == id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving storage location with ID {Id}", id);
+                return null;
+            }
         }
 
         public async Task<StorageLocation> Create(StorageLocation location)
         {
-            _context.StorageLocations.Add(location);
-            await _context.SaveChangesAsync();
-            return location;
+            try
+            {
+                _context.StorageLocations.Add(location);
+                await _context.SaveChangesAsync();
+                return location;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating storage location");
+                throw;
+            }
         }
 
         public async Task<StorageLocation?> Update(int id, StorageLocation updated)
         {
-            var existing = await _context.StorageLocations.FindAsync(id);
-            if (existing is null) return null;
+            try
+            {
+                var existing = await _context.StorageLocations.FindAsync(id);
+                if (existing is null) return null;
 
-            existing.Name = updated.Name;
-            existing.Address = updated.Address;
-            existing.LocationType = updated.LocationType;
-            existing.IoTDeviceId = updated.IoTDeviceId;
+                existing.Name = updated.Name;
+                existing.Address = updated.Address;
+                existing.LocationType = updated.LocationType;
+                existing.IoTDeviceId = updated.IoTDeviceId;
 
-            await _context.SaveChangesAsync();
-            return existing;
+                await _context.SaveChangesAsync();
+                return existing;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating storage location with ID {Id}", id);
+                throw;
+            }
         }
 
         public async Task<bool> Delete(int id)
         {
-            var location = await _context.StorageLocations.FindAsync(id);
-            if (location is null) return false;
+            try
+            {
+                var location = await _context.StorageLocations.FindAsync(id);
+                if (location is null) return false;
 
-            _context.StorageLocations.Remove(location);
-            await _context.SaveChangesAsync();
-            return true;
+                _context.StorageLocations.Remove(location);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting storage location with ID {Id}", id);
+                throw;
+            }
         }
     }
 }

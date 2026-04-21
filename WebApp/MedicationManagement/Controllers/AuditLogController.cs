@@ -1,8 +1,6 @@
-﻿using MedicationManagement.Models;
-using MedicationManagement.DBContext;
+using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace MedicationManagement.Controllers
 {
@@ -11,36 +9,29 @@ namespace MedicationManagement.Controllers
     [Authorize(Roles = "Administrator")]
     public class AuditLogController : ControllerBase
     {
-        private readonly MedicineStorageContext _context;
+        private readonly IServiceAuditLog _auditLogService;
         private readonly ILogger<AuditLogController> _logger;
 
-        public AuditLogController(MedicineStorageContext context, ILogger<AuditLogController> logger)
+        public AuditLogController(IServiceAuditLog auditLogService, ILogger<AuditLogController> logger)
         {
-            _context = context;
+            _auditLogService = auditLogService;
             _logger = logger;
         }
 
+        /// <summary>
+        /// Отримати журнал аудиту з опціональними фільтрами.
+        /// Доступно лише для Administrator.
+        /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetLogs([FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null, [FromQuery] string? user = null, [FromQuery] string? action = null)
+        public async Task<IActionResult> GetLogs(
+            [FromQuery] DateTime? from = null,
+            [FromQuery] DateTime? to = null,
+            [FromQuery] string? user = null,
+            [FromQuery] string? action = null)
         {
             try
             {
-                var query = _context.AuditLogs.AsQueryable();
-
-                if (from.HasValue)
-                    query = query.Where(log => log.Timestamp >= from);
-
-                if (to.HasValue)
-                    query = query.Where(log => log.Timestamp <= to);
-
-                if (!string.IsNullOrWhiteSpace(user))
-                    query = query.Where(log => log.User.Contains(user));
-
-                if (!string.IsNullOrWhiteSpace(action))
-                    query = query.Where(log => log.Action.Contains(action));
-
-                var logs = await query.OrderByDescending(log => log.Timestamp).ToListAsync();
-
+                var logs = await _auditLogService.GetLogs(from, to, user, action);
                 return Ok(logs);
             }
             catch (Exception ex)

@@ -1,13 +1,13 @@
+using MedicationManagement.BackgroundServices;
 using MedicationManagement.DBContext;
 using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.Diagnostics;
-using MedicationManagement.BackgroundServices;
+using System.Text;
 
 namespace MedicationManagement
 {
@@ -17,64 +17,47 @@ namespace MedicationManagement
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Configure logging
             builder.Logging.ClearProviders();
             builder.Logging.AddConsole();
             builder.Logging.AddDebug();
 
-            // Register services
             RegisterServices(builder);
-
-            // Configure authentication and authorization
             ConfigureAuthentication(builder);
-
-            // Configure Swagger for API documentation
             ConfigureSwagger(builder);
 
-            // Add hosted services
             builder.Services.AddHostedService<ExpiryNotificationService>();
             builder.Services.AddHostedService<StorageConditionMonitoringService>();
 
             builder.WebHost.ConfigureKestrel(options =>
             {
                 options.ListenAnyIP(5000);
-                //options.ListenLocalhost(7069, listenOptions =>
-                //{
-                //    listenOptions.UseHttps(); // Использует dev-сертификат
-                //});
             });
 
             var app = builder.Build();
 
-            // Ensure roles are created
             await EnsureRolesCreated(app);
-
-            // Configure middleware
             ConfigureMiddleware(app);
 
+            // TD-15: single app.Run() call
             app.Run();
         }
 
         private static void RegisterServices(WebApplicationBuilder builder)
         {
-            // Register application services
             builder.Services.AddScoped<IServiceMedicine, ServiceMedicine>();
             builder.Services.AddScoped<IServiceStorageCondition, ServiceStorageCondition>();
             builder.Services.AddScoped<IServiceIoTDevice, ServiceIoTDevice>();
             builder.Services.AddScoped<IServiceAuditLog, ServiceAuditLog>();
-            // --- Нові сервіси (Фаза 2) ---
             builder.Services.AddScoped<IServiceStorageLocation, ServiceStorageLocation>();
             builder.Services.AddScoped<IServiceStorageIncident, ServiceStorageIncident>();
             builder.Services.AddScoped<IServiceMedicineLifecycle, ServiceMedicineLifecycle>();
             builder.Services.AddScoped<IServiceNotification, ServiceNotification>();
 
-            // Register database contexts
             builder.Services.AddDbContext<MedicineStorageContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
             builder.Services.AddDbContext<UserContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // Configure Identity
             builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
             {
                 options.SignIn.RequireConfirmedEmail = true;
@@ -92,19 +75,13 @@ namespace MedicationManagement
             builder.Services.AddEndpointsApiExplorer();
         }
 
+        // TD-14: Cookie auth removed - system uses JWT Bearer only
         private static void ConfigureAuthentication(WebApplicationBuilder builder)
         {
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddCookie(options =>
-            {
-                options.LoginPath = "/Account/Login";
-                options.AccessDeniedPath = "/Account/AccessDenied";
-                options.ExpireTimeSpan = TimeSpan.FromDays(30); // Set cookie expiration to 30 days
-                options.SlidingExpiration = true; // Enable sliding expiration
             })
             .AddJwtBearer(options =>
             {
@@ -116,20 +93,23 @@ namespace MedicationManagement
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],
                     ValidAudience = builder.Configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? string.Empty))
                 };
 
                 options.Events = new JwtBearerEvents
                 {
                     OnAuthenticationFailed = context =>
                     {
-                        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                        var logger = context.HttpContext.RequestServices
+                            .GetRequiredService<ILogger<Program>>();
                         logger.LogError("Authentication failed: {Message}", context.Exception.Message);
                         return Task.CompletedTask;
                     },
                     OnTokenValidated = context =>
                     {
-                        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                        var logger = context.HttpContext.RequestServices
+                            .GetRequiredService<ILogger<Program>>();
                         logger.LogInformation("Token validated successfully.");
                         return Task.CompletedTask;
                     }
@@ -146,8 +126,8 @@ namespace MedicationManagement
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Version = "v1",
-                    Title = "API Documentation",
-                    Description = "This is the Swagger documentation for your API.",
+                    Title = "Medication Management API",
+                    Description = "API for managing medicines, storage conditions and IoT monitoring.",
                 });
             });
         }
@@ -158,19 +138,18 @@ namespace MedicationManagement
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
             string[] roles = { "Administrator", "User", "Sensor" };
-
             foreach (var role in roles)
             {
                 if (!await roleManager.RoleExistsAsync(role))
-                {
                     await roleManager.CreateAsync(new IdentityRole(role));
-                }
             }
         }
 
         private static void ConfigureMiddleware(WebApplication app)
         {
-            if (app.Environment.IsDevelopment())
+            // TD-13: Swagger enabled via appsettings.json Swagger:Enabled
+            var swaggerEnabled = app.Configuration.GetValue<bool>("Swagger:Enabled", false);
+            if (swaggerEnabled)
             {
                 app.UseSwagger();
                 app.UseSwaggerUI(c =>
@@ -198,14 +177,12 @@ namespace MedicationManagement
                     context.Response.Redirect("/login.html", permanent: false);
                     return;
                 }
-
                 await next();
             });
 
             app.UseStaticFiles();
             app.MapControllers();
-
-            app.Run();
+            // TD-15: app.Run() removed from here - called once in Main()
         }
     }
 }

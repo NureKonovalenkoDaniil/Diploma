@@ -1,4 +1,4 @@
-﻿using MedicationManagement.DBContext;
+using MedicationManagement.DBContext;
 using MedicationManagement.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.EntityFrameworkCore;
@@ -9,10 +9,10 @@ namespace MedicationManagement.Services
     {
         Task<bool> SetSensorStatus(int deviceId, bool isActive);
         Task<List<StorageCondition>> GetConditionsByDeviceId(int deviceId);
-        Task<IoTDevice> Create(IoTDevice IoTDevice);
+        Task<IoTDevice?> Create(IoTDevice IoTDevice);
         Task<IEnumerable<IoTDevice>> Read();
-        Task<IoTDevice> ReadById(int id);
-        Task<IoTDevice> Update(int id, JsonPatchDocument<IoTDevice> patchDocument);
+        Task<IoTDevice?> ReadById(int id);
+        Task<IoTDevice?> Update(int id, JsonPatchDocument<IoTDevice> patchDocument);
         Task<bool> Delete(int id);
     }
 
@@ -55,6 +55,7 @@ namespace MedicationManagement.Services
             try
             {
                 return await _context.StorageConditions
+                    .AsNoTracking()
                     .Where(sc => sc.DeviceID == deviceId)
                     .Include(sc => sc.IoTDevice)
                     .ToListAsync();
@@ -66,7 +67,7 @@ namespace MedicationManagement.Services
             }
         }
 
-        public async Task<IoTDevice> Create(IoTDevice IoTDevice)
+        public async Task<IoTDevice?> Create(IoTDevice IoTDevice)
         {
             if (IoTDevice == null)
             {
@@ -91,7 +92,7 @@ namespace MedicationManagement.Services
         {
             try
             {
-                return await _context.IoTDevices.ToListAsync();
+                return await _context.IoTDevices.AsNoTracking().ToListAsync();
             }
             catch (Exception ex)
             {
@@ -100,11 +101,12 @@ namespace MedicationManagement.Services
             }
         }
 
-        public async Task<IoTDevice> ReadById(int id)
+        public async Task<IoTDevice?> ReadById(int id)
         {
             try
             {
-                var device = await _context.IoTDevices.FindAsync(id);
+                var device = await _context.IoTDevices.AsNoTracking()
+                    .FirstOrDefaultAsync(d => d.DeviceID == id);
                 if (device == null)
                 {
                     _logger.LogWarning($"IoTDevice with ID {id} not found");
@@ -118,7 +120,7 @@ namespace MedicationManagement.Services
             }
         }
 
-        public async Task<IoTDevice> Update(int id, JsonPatchDocument<IoTDevice> patchDocument)
+        public async Task<IoTDevice?> Update(int id, JsonPatchDocument<IoTDevice> patchDocument)
         {
             if (patchDocument == null)
             {

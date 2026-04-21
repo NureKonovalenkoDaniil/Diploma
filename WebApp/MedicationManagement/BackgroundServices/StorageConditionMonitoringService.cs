@@ -49,6 +49,17 @@ namespace MedicationManagement.BackgroundServices
 
         private async Task CheckAllDevicesAsync()
         {
+            // TD-07 NOTE: Debounce реалізований на рівні SQL-запиту:
+            // новий інцидент створюється лише якщо немає активного для device+incidentType.
+            // ОБМЕЖЕННЯ: Оскільки перевірка і вставка не є атомарними, теоретично
+            // за умов двох паралельних тіків можливе подвійне створення інциденту.
+            // Для продакшн-середовища рекомендується додати унікальний частковий індекс:
+            //   CREATE UNIQUE INDEX IX_StorageIncidents_Active
+            //       ON StorageIncidents (DeviceId, IncidentType)
+            //       WHERE Status = 'Active'
+            // Для дипломної роботи це прийнятно — BackgroundService є singleton,
+            // тіки виконуються послідовно і паралельних запусків не відбувається.
+
             using var scope = _serviceProvider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<MedicineStorageContext>();
             var auditService = scope.ServiceProvider.GetRequiredService<IServiceAuditLog>();

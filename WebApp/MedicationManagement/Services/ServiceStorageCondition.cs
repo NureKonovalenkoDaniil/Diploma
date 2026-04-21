@@ -1,4 +1,4 @@
-﻿using MedicationManagement.DBContext;
+using MedicationManagement.DBContext;
 using MedicationManagement.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.EntityFrameworkCore;
@@ -8,10 +8,10 @@ namespace MedicationManagement.Services
     public interface IServiceStorageCondition
     {
         Task<List<string>> CheckStorageConditionsForAllDevices();
-        Task<StorageCondition> Create(StorageCondition storageCondition);
+        Task<StorageCondition?> Create(StorageCondition storageCondition);
         Task<IEnumerable<StorageCondition>> Read();
-        Task<StorageCondition> ReadById(int id);
-        Task<StorageCondition> Update(int id, JsonPatchDocument<StorageCondition> patchDocument);
+        Task<StorageCondition?> ReadById(int id);
+        Task<StorageCondition?> Update(int id, JsonPatchDocument<StorageCondition> patchDocument);
         Task<bool> Delete(int id);
     }
 
@@ -31,13 +31,14 @@ namespace MedicationManagement.Services
             var violations = new List<string>();
             try
             {
-                var devices = await _context.IoTDevices.ToListAsync();
+                var devices = await _context.IoTDevices.AsNoTracking().ToListAsync();
 
                 foreach (var device in devices)
                 {
                     if (device.IsActive == false)
                         continue;
                     var condition = await _context.StorageConditions
+                        .AsNoTracking()
                         .Where(sc => sc.DeviceID == device.DeviceID)
                         .OrderByDescending(sc => sc.Timestamp)
                         .FirstOrDefaultAsync();
@@ -64,7 +65,7 @@ namespace MedicationManagement.Services
             return violations;
         }
 
-        public async Task<StorageCondition> Create(StorageCondition storageCondition)
+        public async Task<StorageCondition?> Create(StorageCondition storageCondition)
         {
             if (storageCondition == null)
             {
@@ -97,7 +98,7 @@ namespace MedicationManagement.Services
         {
             try
             {
-                return await _context.StorageConditions.Include(sc => sc.IoTDevice).ToListAsync();
+                return await _context.StorageConditions.AsNoTracking().Include(sc => sc.IoTDevice).ToListAsync();
             }
             catch (Exception ex)
             {
@@ -106,11 +107,11 @@ namespace MedicationManagement.Services
             }
         }
 
-        public async Task<StorageCondition> ReadById(int id)
+        public async Task<StorageCondition?> ReadById(int id)
         {
             try
             {
-                var condition = await _context.StorageConditions.Include(sc => sc.IoTDevice).FirstOrDefaultAsync(sc => sc.ConditionID == id);
+                var condition = await _context.StorageConditions.AsNoTracking().Include(sc => sc.IoTDevice).FirstOrDefaultAsync(sc => sc.ConditionID == id);
                 if (condition == null)
                 {
                     _logger.LogWarning($"StorageCondition with ID {id} not found");
@@ -124,7 +125,7 @@ namespace MedicationManagement.Services
             }
         }
 
-        public async Task<StorageCondition> Update(int id, JsonPatchDocument<StorageCondition> patchDocument)
+        public async Task<StorageCondition?> Update(int id, JsonPatchDocument<StorageCondition> patchDocument)
         {
             if (patchDocument == null)
             {

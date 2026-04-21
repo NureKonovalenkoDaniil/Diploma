@@ -1,9 +1,11 @@
 using MedicationManagement.Models;
+using MedicationManagement.Models.DTOs;
 using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -49,6 +51,9 @@ namespace MedicationManagement.Controllers
                 if (userExists != null)
                     return Conflict("User already exists!");
 
+                // Перевіряємо ДО CreateAsync, щоб уникнути race condition
+                var isFirstUser = !await _userManager.Users.AnyAsync();
+
                 var user = new IdentityUser
                 {
                     UserName = model.Email,
@@ -61,8 +66,7 @@ namespace MedicationManagement.Controllers
                 if (!result.Succeeded)
                     return BadRequest(result.Errors);
 
-                var usersCount = _userManager.Users.Count();
-                var role = usersCount == 1 ? "Administrator" : "User";
+                var role = isFirstUser ? "Administrator" : "User";
                 await _userManager.AddToRoleAsync(user, role);
 
                 await _auditLogService.LogAction("Register", model.Email, $"Registered new user with role {role}.", false);
@@ -187,7 +191,7 @@ namespace MedicationManagement.Controllers
         private async Task<string> GenerateJwtToken(IdentityUser user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? string.Empty);
             var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
             var expireDays = _configuration.GetValue<int>("Jwt:ExpireDays", 30);
 
@@ -195,9 +199,9 @@ namespace MedicationManagement.Controllers
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id),
-                    new Claim(ClaimTypes.Name, user.UserName),
-                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim(ClaimTypes.NameIdentifier, user.Id ?? string.Empty),
+                    new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
+                    new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
                     new Claim(ClaimTypes.Role, role ?? "User")
                 }),
                 Expires = DateTime.UtcNow.AddDays(expireDays),
@@ -208,12 +212,6 @@ namespace MedicationManagement.Controllers
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
-        }
-
-        public class RoleDto
-        {
-            public string Email { get; set; }
-            public string RoleName { get; set; }
         }
     }
 }

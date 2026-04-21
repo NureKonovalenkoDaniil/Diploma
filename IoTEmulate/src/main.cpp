@@ -5,6 +5,7 @@
 #include <Adafruit_Sensor.h>
 #include <ArduinoJson.h>
 #include <DHT.h>
+#include "config.h"  // <-- Всі чутливі константи тут (не в VCS)
 
 // DHT Pin and Type
 #define DHTPIN 33
@@ -12,40 +13,35 @@
 
 DHT dht(DHTPIN, DHTTYPE);
 
-// Wi-Fi credentials
-const char* ssid = "Wokwi-GUEST";
-const char* password = "";
-
-// Server URLs and JWT token
-const String deviceConfigUrl = "http://192.168.100.2:5000/api/iotdevice/4";
-const String dataSendUrl = "http://192.168.100.2:5000/api/storagecondition";
-const String jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI2OGE2N2I1Mi1jZjc3LTQwY2ItYjk0Yy05MTAyYjlmOGZlOTYiLCJ1bmlxdWVfbmFtZSI6ImFkbWluQGdtYWlsLmNvbSIsImVtYWlsIjoiYWRtaW5AZ21haWwuY29tIiwicm9sZSI6IkFkbWluaXN0cmF0b3IiLCJuYmYiOjE3NTA1MjU2NDQsImV4cCI6MTc4MjA2MTY0NCwiaWF0IjoxNzUwNTI1NjQ0LCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjUwMDAiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjUwMDAifQ.NpAquCWZXkgKwzIlNpy5USWrGa44F5Q2ypoYDY-4bPI";
+// Server URLs — будуються з config.h
+const String deviceConfigUrl = String(SERVER_BASE_URL) + "/api/iotdevice/" + String(DEVICE_ID);
+const String dataSendUrl     = String(SERVER_BASE_URL) + "/api/storagecondition";
+const String jwtToken        = JWT_TOKEN;
 
 // Sensor parameters
-int deviceID = 4;
-const int buzzerPin = 12; // GPIO для п'єзодинаміка
+int deviceID = DEVICE_ID;
+const int buzzerPin = 12; // GPIO-пін бузера
 
-// Граничні значення, які прийдуть із сервера
+// Порогові значення — завантажуються з сервера via fetchDeviceConfig()
 float minTemperature = 0.0;
 float maxTemperature = 0.0;
-float minHumidity = 0.0;
-float maxHumidity = 0.0;
+float minHumidity    = 0.0;
+float maxHumidity    = 0.0;
 
-WiFiClient client; // HTTPS клієнт
+WiFiClient client;
 
 unsigned long lastCheckTime = 0;
-unsigned long lastSendTime = 0;
+unsigned long lastSendTime  = 0;
 
 const unsigned long checkInterval = 5000;
-const unsigned long sendInterval = 10000; // 10 секунд
+const unsigned long sendInterval  = 10000; // 10 секунд
 
-// Функція для отримання порогових значень із сервера
+// Отримати конфігурацію пристрою: порогові значення з сервера
 void fetchDeviceConfig() {
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
     http.begin(client, deviceConfigUrl);
-    http.addHeader("Authorization", "Bearer " + jwtToken); // JWT токен
-    //http.addHeader("ngrok-skip-browser-warning", "1");
+    http.addHeader("Authorization", "Bearer " + jwtToken);
 
     int httpCode = http.GET();
     if (httpCode == 200) {
@@ -53,14 +49,13 @@ void fetchDeviceConfig() {
       Serial.println("Device config received:");
       Serial.println(payload);
 
-      // Парсимо JSON
       JsonDocument doc;
       deserializeJson(doc, payload);
 
       minTemperature = doc["minTemperature"];
       maxTemperature = doc["maxTemperature"];
-      minHumidity = doc["minHumidity"];
-      maxHumidity = doc["maxHumidity"];
+      minHumidity    = doc["minHumidity"];
+      maxHumidity    = doc["maxHumidity"];
 
       Serial.printf("Min Temp: %.2f, Max Temp: %.2f, Min Humidity: %.2f, Max Humidity: %.2f\n",
                     minTemperature, maxTemperature, minHumidity, maxHumidity);
@@ -74,16 +69,14 @@ void fetchDeviceConfig() {
   }
 }
 
-// Функція для відправки даних на сервер
+// Надіслати дані датчика на сервер
 void sendDataToServer(float temperature, float humidity) {
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
     http.begin(client, dataSendUrl);
     http.addHeader("Content-Type", "application/json");
-    http.addHeader("Authorization", "Bearer " + jwtToken); // JWT токен
-    //http.addHeader("ngrok-skip-browser-warning", "1");
+    http.addHeader("Authorization", "Bearer " + jwtToken);
 
-    // Перевірка, чи значення коректні
     if (isnan(temperature) || isnan(humidity)) {
       Serial.println("Invalid sensor data, skipping HTTP POST.");
       return;
@@ -91,8 +84,8 @@ void sendDataToServer(float temperature, float humidity) {
 
     String jsonPayload = "{";
     jsonPayload += "\"Temperature\": " + String(temperature) + ", ";
-    jsonPayload += "\"Humidity\": " + String(humidity) + ", ";
-    jsonPayload += "\"DeviceID\": " + String(deviceID);
+    jsonPayload += "\"Humidity\": "    + String(humidity)    + ", ";
+    jsonPayload += "\"DeviceID\": "    + String(deviceID);
     jsonPayload += "}";
 
     Serial.println("Sending payload:");
@@ -119,16 +112,16 @@ void sendDataToServer(float temperature, float humidity) {
 
 void setup() {
   Serial.begin(115200);
-  dht.begin(); // Ініціалізація DHT22 датчика
+  dht.begin();
 
-  pinMode(buzzerPin, OUTPUT); // Налаштування п'єзодинаміка
-  digitalWrite(buzzerPin, LOW); // Вимкнути сигнал
+  pinMode(buzzerPin, OUTPUT);
+  digitalWrite(buzzerPin, LOW);
 
   // Ініціалізація LEDC (канал 0, частота 800 Гц, 8-бітний PWM)
   ledcSetup(0, 800, 8);
-  ledcAttachPin(buzzerPin, 0); // Підключаємо GPIO12 до каналу 0
+  ledcAttachPin(buzzerPin, 0);
 
-  WiFi.begin(ssid, password);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
@@ -137,9 +130,7 @@ void setup() {
 
   Serial.println("\nWiFi connected!");
 
-  //client.setInsecure(); // Встановлення ненадійного з'єднання
-
-  // Отримання порогових значень із сервера
+  // Завантажити конфігурацію порогів з сервера
   fetchDeviceConfig();
 }
 
@@ -149,18 +140,18 @@ void loop() {
   if (currentTime - lastCheckTime >= checkInterval) {
     lastCheckTime = currentTime;
 
-    float temperature = dht.readTemperature(); // Читання температури з DHT22
-    float humidity = dht.readHumidity();        // Читання вологості з DHT22
+    float temperature = dht.readTemperature();
+    float humidity    = dht.readHumidity();
 
     if (isnan(temperature) || isnan(humidity)) {
       Serial.println("Failed to read from DHT sensor!");
       return;
     }
 
-    Serial.printf("Temperature: %.2f°C, Humidity: %.2f%%\n", temperature, humidity);
+    Serial.printf("Temperature: %.2fC, Humidity: %.2f%%\n", temperature, humidity);
 
-    if (temperature < minTemperature || temperature > maxTemperature || 
-        humidity < minHumidity || humidity > maxHumidity) {
+    if (temperature < minTemperature || temperature > maxTemperature ||
+        humidity    < minHumidity    || humidity    > maxHumidity) {
       Serial.println("Storage conditions violated!");
       ledcWriteTone(0, 800);
       delay(800);
@@ -171,8 +162,8 @@ void loop() {
   if (currentTime - lastSendTime >= sendInterval) {
     lastSendTime = currentTime;
 
-    float temperature = dht.readTemperature(); // Читання температури з DHT22
-    float humidity = dht.readHumidity();        // Читання вологості з DHT22
+    float temperature = dht.readTemperature();
+    float humidity    = dht.readHumidity();
 
     if (!isnan(temperature) && !isnan(humidity)) {
       sendDataToServer(temperature, humidity);

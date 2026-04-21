@@ -1,4 +1,4 @@
-﻿using MedicationManagement.DBContext;
+using MedicationManagement.DBContext;
 using MedicationManagement.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +11,10 @@ namespace MedicationManagement.Services
         Task<List<ReplenishmentRecommendation>> GetReplenishmentRecommendations();
         Task<IEnumerable<Medicine>> GetExpiringMedicines(DateTime thresholdDate);
         Task<List<Medicine>> GetLowStockMedicines(int threshold);
-        Task<Medicine> Create(Medicine medicine);
+        Task<Medicine?> Create(Medicine medicine);
         Task<IEnumerable<Medicine>> Read();
-        Task<Medicine> ReadById(int id);
-        Task<Medicine> Update(int id, JsonPatchDocument<Medicine> patchDocument);
+        Task<Medicine?> ReadById(int id);
+        Task<Medicine?> Update(int id, JsonPatchDocument<Medicine> patchDocument);
         Task<bool> Delete(int id);
     }
     // Implementation of the medicine service
@@ -22,12 +22,14 @@ namespace MedicationManagement.Services
     {
         private readonly MedicineStorageContext _context;
         private readonly ILogger<ServiceMedicine> _logger;
+        private readonly IConfiguration _configuration;
 
-        // Constructor to inject the database context and logger
-        public ServiceMedicine(MedicineStorageContext context, ILogger<ServiceMedicine> logger)
+        // Constructor to inject the database context, logger and configuration
+        public ServiceMedicine(MedicineStorageContext context, ILogger<ServiceMedicine> logger, IConfiguration configuration)
         {
             _context = context;
             _logger = logger;
+            _configuration = configuration;
         }
 
         // Method to get medicines with low stock
@@ -36,6 +38,7 @@ namespace MedicationManagement.Services
             try
             {
                 return await _context.Medicines
+                    .AsNoTracking()
                     .Where(m => m.Quantity < threshold)
                     .ToListAsync();
             }
@@ -52,7 +55,8 @@ namespace MedicationManagement.Services
             try
             {
                 return await _context.Medicines
-                    .Where(m => m.ExpiryDate <= thresholdDate)
+                    .AsNoTracking()
+                    .Where(m => m.ExpiryDate > DateTime.Now && m.ExpiryDate <= thresholdDate)
                     .ToListAsync();
             }
             catch (Exception ex)
@@ -67,12 +71,15 @@ namespace MedicationManagement.Services
         {
             try
             {
-                var lowStockMedicines = await GetLowStockMedicines(10);
+                var threshold = _configuration.GetValue<int>("Business:LowStockThreshold", 10);
+                var replenishTo = _configuration.GetValue<int>("Business:ReplenishToQuantity", 100);
+
+                var lowStockMedicines = await GetLowStockMedicines(threshold);
                 return lowStockMedicines.Select(m => new ReplenishmentRecommendation
                 {
                     MedicineId = m.MedicineID,
                     MedicineName = m.Name,
-                    RecommendedQuantity = 100 - m.Quantity
+                    RecommendedQuantity = replenishTo - m.Quantity
                 }).ToList();
             }
             catch (Exception ex)
@@ -83,7 +90,7 @@ namespace MedicationManagement.Services
         }
 
         // Method to create a new medicine
-        public async Task<Medicine> Create(Medicine medicine)
+        public async Task<Medicine?> Create(Medicine medicine)
         {
             if (medicine == null)
             {
@@ -109,7 +116,7 @@ namespace MedicationManagement.Services
         {
             try
             {
-                return await _context.Medicines.ToListAsync();
+                return await _context.Medicines.AsNoTracking().ToListAsync();
             }
             catch (Exception ex)
             {
@@ -119,15 +126,15 @@ namespace MedicationManagement.Services
         }
 
         // Method to read a medicine by ID
-        public async Task<Medicine> ReadById(int id)
+        public async Task<Medicine?> ReadById(int id)
         {
             try
             {
-                var medicine = await _context.Medicines.FindAsync(id);
+                var medicine = await _context.Medicines.AsNoTracking()
+                    .FirstOrDefaultAsync(m => m.MedicineID == id);
                 if (medicine == null)
                 {
                     _logger.LogWarning($"Medicine with ID {id} not found");
-                    return null;
                 }
                 return medicine;
             }
@@ -139,7 +146,7 @@ namespace MedicationManagement.Services
         }
 
         // Method to update an existing medicine
-        public async Task<Medicine> Update(int id, JsonPatchDocument<Medicine> patchDocument)
+        public async Task<Medicine?> Update(int id, JsonPatchDocument<Medicine> patchDocument)
         {
             if (patchDocument == null)
             {
