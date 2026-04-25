@@ -338,3 +338,24 @@
 - документованому технічному результаті.
 
 Optional-функції не повинні шкодити реалізації основної частини диплома.
+
+## 14. Новий запис: передфазовий звіт для керівника (2026-04-25)
+
+- Дата: 2026-04-25
+- Що проаналізовано:
+  - всі `.md` у корені (`PROJECT_CONTEXT.md`, `AUDIT_AND_DIPLOMA_PLAN.md`, `INTERMEDIATE_AUDIT_PHASE_1_3.md`, `AGENTS.md`);
+  - backend-код (`Program.cs`, `Controllers/`, `Services/`, `DBContext/`, `Models/`, `Enums/`, `Migrations/`);
+  - web-код у `wwwroot/`;
+  - `IoTEmulate/` і `WebApp/LoadTest.GET`, `WebApp/LoadTest.POST`.
+- Що змінено:
+  - створено новий файл звіту: `DIPLOMA_SUPERVISOR_REPORT_BEFORE_PHASE4.md`.
+- Які рішення зафіксовано:
+  - Фази 1–3 + 3.5 підтверджені кодом як завершені;
+  - перед стартом Фази 4 критично: CORS і винесення frontend у окремий SPA.
+- Виявлені технічні борги/ризики (підтверджено поточним кодом):
+  - frontend досі у `wwwroot`, токен у `localStorage`;
+  - CORS-політика відсутня;
+  - `LoadTest` містить захардкоджені URL/токен;
+  - відсутні unit/integration тести, docker-compose, README, roadmap, діаграми.
+- Наступний крок:
+  - старт Фази 4: підготувати SPA-проєкт і підключити його до існуючого API.
