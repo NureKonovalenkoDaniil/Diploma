@@ -1,4 +1,5 @@
 using MedicationManagement.Models;
+using MedicationManagement.Models.DTOs;
 using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -23,7 +24,7 @@ namespace MedicationManagement.Controllers
         public async Task<IActionResult> GetAll([FromQuery] string? role = null)
         {
             var notifications = await _notificationService.GetAll(role);
-            return Ok(notifications);
+            return Ok(notifications.Select(n => n.ToDto()));
         }
 
         /// <summary>Отримати непрочитані сповіщення</summary>
@@ -31,18 +32,25 @@ namespace MedicationManagement.Controllers
         public async Task<IActionResult> GetUnread([FromQuery] string? role = null)
         {
             var notifications = await _notificationService.GetUnread(role);
-            return Ok(notifications);
+            return Ok(notifications.Select(n => n.ToDto()));
         }
 
         /// <summary>Створити сповіщення (тільки Administrator)</summary>
         [HttpPost]
         [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> Create([FromBody] Notification notification)
+        public async Task<IActionResult> Create([FromBody] CreateNotificationDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var created = await _notificationService.Create(notification);
-            return Ok(created);
+            var created = await _notificationService.Create(
+                dto.Type, 
+                dto.Title, 
+                dto.Message, 
+                dto.TargetRole, 
+                dto.RelatedEntityType, 
+                dto.RelatedEntityId);
+
+            return Ok(created.ToDto());
         }
 
         /// <summary>Позначити сповіщення як прочитане</summary>

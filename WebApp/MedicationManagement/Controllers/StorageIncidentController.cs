@@ -4,6 +4,7 @@ using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MedicationManagement.Models.DTOs;
 
 namespace MedicationManagement.Controllers
 {
@@ -28,7 +29,7 @@ namespace MedicationManagement.Controllers
         public async Task<IActionResult> GetAll()
         {
             var incidents = await _incidentService.GetAll();
-            return Ok(incidents);
+            return Ok(incidents.Select(i => i.ToDto()));
         }
 
         /// <summary>Отримати лише активні інциденти</summary>
@@ -36,7 +37,7 @@ namespace MedicationManagement.Controllers
         public async Task<IActionResult> GetActive()
         {
             var incidents = await _incidentService.GetActive();
-            return Ok(incidents);
+            return Ok(incidents.Select(i => i.ToDto()));
         }
 
         /// <summary>Отримати інцидент за ID</summary>
@@ -45,7 +46,7 @@ namespace MedicationManagement.Controllers
         {
             var incident = await _incidentService.GetById(id);
             if (incident is null) return NotFound();
-            return Ok(incident);
+            return Ok(incident.ToDto());
         }
 
         /// <summary>Створити новий інцидент (зазвичай викликається фоновим сервісом)</summary>
@@ -62,7 +63,7 @@ namespace MedicationManagement.Controllers
                 false, entityType: "StorageIncident", entityId: created.IncidentId,
                 severity: AuditSeverity.Warning);
 
-            return CreatedAtAction(nameof(GetById), new { id = created.IncidentId }, created);
+            return CreatedAtAction(nameof(GetById), new { id = created.IncidentId }, created.ToDto());
         }
 
         /// <summary>Позначити інцидент як вирішений</summary>
@@ -78,7 +79,7 @@ namespace MedicationManagement.Controllers
                 $"Incident {id} resolved.", false,
                 entityType: "StorageIncident", entityId: id);
 
-            return Ok(resolved);
+            return Ok(resolved.ToDto());
         }
     }
 }

@@ -3,6 +3,7 @@ using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MedicationManagement.Models.DTOs;
 
 namespace MedicationManagement.Controllers
 {
@@ -28,7 +29,7 @@ namespace MedicationManagement.Controllers
         public async Task<IActionResult> GetAll()
         {
             var events = await _lifecycleService.GetAll();
-            return Ok(events);
+            return Ok(events.Select(e => e.ToDto()));
         }
 
         /// <summary>Отримати всі події для конкретного препарату</summary>
@@ -36,7 +37,7 @@ namespace MedicationManagement.Controllers
         public async Task<IActionResult> GetByMedicineId(int medicineId)
         {
             var events = await _lifecycleService.GetByMedicineId(medicineId);
-            return Ok(events);
+            return Ok(events.Select(e => e.ToDto()));
         }
 
         /// <summary>Отримати подію за ID</summary>
@@ -45,7 +46,7 @@ namespace MedicationManagement.Controllers
         {
             var evt = await _lifecycleService.GetById(id);
             if (evt is null) return NotFound();
-            return Ok(evt);
+            return Ok(evt.ToDto());
         }
 
         /// <summary>Додати нову подію lifecycle для препарату</summary>
@@ -62,7 +63,7 @@ namespace MedicationManagement.Controllers
                 $"Lifecycle event '{lifecycleEvent.EventType}' added for Medicine ID: {lifecycleEvent.MedicineId}",
                 false, entityType: "Medicine", entityId: lifecycleEvent.MedicineId);
 
-            return CreatedAtAction(nameof(GetById), new { id = created.EventId }, created);
+            return CreatedAtAction(nameof(GetById), new { id = created.EventId }, created.ToDto());
         }
     }
 }

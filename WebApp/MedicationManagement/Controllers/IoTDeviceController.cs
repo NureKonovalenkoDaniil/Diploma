@@ -1,9 +1,10 @@
-﻿using MedicationManagement.Models;
+using MedicationManagement.Models;
 using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using MedicationManagement.Models.DTOs;
 
 namespace MedicationManagement.Controllers
 {
@@ -50,7 +51,7 @@ namespace MedicationManagement.Controllers
             try
             {
                 var conditions = await _iotDeviceService.GetConditionsByDeviceId(deviceId);
-                return Ok(conditions);
+                return Ok(conditions.Select(c => c.ToDto()));
             }
             catch (Exception ex)
             {
@@ -72,7 +73,7 @@ namespace MedicationManagement.Controllers
                 if (result != null)
                 {
                     await _auditLogService.LogAction("Create Sensor", User.Identity?.Name ?? "Unknown", $"Created sensor: {result.DeviceID}.", false);
-                    return Ok(result);
+                    return Ok(result.ToDto());
                 }
                 return BadRequest("Could not create IoT device");
             }
@@ -89,7 +90,7 @@ namespace MedicationManagement.Controllers
             try
             {
                 var result = await _iotDeviceService.Read();
-                return Ok(result);
+                return Ok(result.Select(d => d.ToDto()));
             }
             catch (Exception ex)
             {
@@ -106,7 +107,7 @@ namespace MedicationManagement.Controllers
                 var result = await _iotDeviceService.ReadById(id);
                 if (result != null)
                 {
-                    return Ok(result);
+                    return Ok(result.ToDto());
                 }
                 return NotFound($"IoT Device with id: {id} not found");
             }
@@ -129,7 +130,7 @@ namespace MedicationManagement.Controllers
                 var result = await _iotDeviceService.Update(id, patchDoc);
                 if (result != null)
                 {
-                    return Ok(result);
+                    return Ok(result.ToDto());
                 }
                 return NotFound($"Device with id: {id} not found");
             }

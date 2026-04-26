@@ -3,6 +3,7 @@ using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MedicationManagement.Models.DTOs;
 
 namespace MedicationManagement.Controllers
 {
@@ -27,7 +28,7 @@ namespace MedicationManagement.Controllers
         public async Task<IActionResult> GetAll()
         {
             var locations = await _locationService.GetAll();
-            return Ok(locations);
+            return Ok(locations.Select(l => l.ToDto()));
         }
 
         /// <summary>Отримати локацію за ID</summary>
@@ -36,7 +37,7 @@ namespace MedicationManagement.Controllers
         {
             var location = await _locationService.GetById(id);
             if (location is null) return NotFound();
-            return Ok(location);
+            return Ok(location.ToDto());
         }
 
         /// <summary>Створити нову локацію зберігання</summary>
@@ -52,7 +53,7 @@ namespace MedicationManagement.Controllers
                 $"Created storage location: {created.Name}", false,
                 entityType: "StorageLocation", entityId: created.LocationId);
 
-            return CreatedAtAction(nameof(GetById), new { id = created.LocationId }, created);
+            return CreatedAtAction(nameof(GetById), new { id = created.LocationId }, created.ToDto());
         }
 
         /// <summary>Оновити локацію зберігання</summary>
@@ -70,7 +71,7 @@ namespace MedicationManagement.Controllers
                 $"Updated storage location: {updated.Name}", false,
                 entityType: "StorageLocation", entityId: id);
 
-            return Ok(updated);
+            return Ok(updated.ToDto());
         }
 
         /// <summary>Видалити локацію зберігання</summary>

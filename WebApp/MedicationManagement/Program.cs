@@ -71,7 +71,23 @@ namespace MedicationManagement
             .AddEntityFrameworkStores<UserContext>()
             .AddDefaultTokenProviders();
 
-            builder.Services.AddControllers().AddNewtonsoftJson();
+            // Add CORS for SPA Frontend (Фаза 4)
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("FrontendPolicy", policy =>
+                {
+                    policy.WithOrigins("http://localhost:5173", "http://localhost:3000") // Vite & CRA defaults
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials();
+                });
+            });
+
+            // TD-04: Ignore cyclic references to prevent 500 errors when serializing entity graphs (until full DTO mapping is introduced)
+            builder.Services.AddControllers().AddNewtonsoftJson(options =>
+            {
+                options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            });
             builder.Services.AddEndpointsApiExplorer();
         }
 
@@ -167,6 +183,10 @@ namespace MedicationManagement
             });
 
             app.UseRouting();
+
+            // Застосування CORS політики
+            app.UseCors("FrontendPolicy");
+
             app.UseAuthentication();
             app.UseAuthorization();
 

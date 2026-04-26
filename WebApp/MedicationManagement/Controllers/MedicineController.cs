@@ -1,10 +1,11 @@
-﻿using MedicationManagement.Models;
+using MedicationManagement.Models;
 using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using MedicationManagement.Models.DTOs;
 
 namespace MedicationManagement.Controllers
 {
@@ -33,7 +34,7 @@ namespace MedicationManagement.Controllers
             try
             {
                 var medicines = await _medicineService.GetLowStockMedicines(threshold);
-                return Ok(medicines);
+                return Ok(medicines.Select(m => m.ToDto()));
             }
             catch (Exception ex)
             {
@@ -52,7 +53,7 @@ namespace MedicationManagement.Controllers
             {
                 var targetDate = DateTime.Now.AddDays(daysThreshold);
                 var result = await _medicineService.GetExpiringMedicines(targetDate);
-                return Ok(result);
+                return Ok(result.Select(m => m.ToDto()));
             }
             catch (Exception ex)
             {
@@ -92,7 +93,7 @@ namespace MedicationManagement.Controllers
                 if (result != null)
                 {
                     await _auditLogService.LogAction("Create Medicine", User.Identity?.Name ?? "Unknown", $"Created medicine: {result.Name}.", false);
-                    return Ok(result);
+                    return Ok(result.ToDto());
                 }
                 return StatusCode(500, "Failed to create medicine");
             }
@@ -110,7 +111,7 @@ namespace MedicationManagement.Controllers
             try
             {
                 var result = await _medicineService.Read();
-                return Ok(result);
+                return Ok(result.Select(m => m.ToDto()));
             }
             catch (Exception ex)
             {
@@ -128,7 +129,7 @@ namespace MedicationManagement.Controllers
                 var result = await _medicineService.ReadById(id);
                 if (result != null)
                 {
-                    return Ok(result);
+                    return Ok(result.ToDto());
                 }
                 return NotFound($"Medication with id: {id} not found");
             }
@@ -154,7 +155,7 @@ namespace MedicationManagement.Controllers
                 var result = await _medicineService.Update(id, patchDoc);
                 if (result != null)
                 {
-                    return Ok(result);
+                    return Ok(result.ToDto());
                 }
                 return NotFound($"Medication with id: {id} not found");
             }

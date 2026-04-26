@@ -1,6 +1,7 @@
 using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MedicationManagement.Models.DTOs;
 
 namespace MedicationManagement.Controllers
 {
@@ -32,7 +33,7 @@ namespace MedicationManagement.Controllers
             try
             {
                 var logs = await _auditLogService.GetLogs(from, to, user, action);
-                return Ok(logs);
+                return Ok(logs.Select(l => l.ToDto()));
             }
             catch (Exception ex)
             {

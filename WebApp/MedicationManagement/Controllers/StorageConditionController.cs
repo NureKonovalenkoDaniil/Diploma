@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using MedicationManagement.Models.DTOs;
 
 namespace MedicationManagement.Controllers
 {
@@ -52,7 +53,7 @@ namespace MedicationManagement.Controllers
                     string source = User.Identity?.Name ?? $"Sensor {storageCondition.DeviceID}";
                     bool isSensor = User.Identity == null;
                     await _auditLogService.LogAction("Create Condition", source, $"Created Condition: {result.ConditionID}.", isSensor);
-                    return Ok(result);
+                    return Ok(result.ToDto());
                 }
                 return BadRequest("Could not create condition");
             }
@@ -69,7 +70,7 @@ namespace MedicationManagement.Controllers
             try
             {
                 var result = await _storageConditionService.Read();
-                return Ok(result);
+                return Ok(result.Select(c => c.ToDto()));
             }
             catch (Exception ex)
             {
@@ -86,7 +87,7 @@ namespace MedicationManagement.Controllers
                 var result = await _storageConditionService.ReadById(id);
                 if (result != null)
                 {
-                    return Ok(result);
+                    return Ok(result.ToDto());
                 }
                 return NotFound($"Condition with id: {id} not found");
             }
@@ -108,7 +109,7 @@ namespace MedicationManagement.Controllers
                 var result = await _storageConditionService.Update(id, patchDoc);
                 if (result != null)
                 {
-                    return Ok(result);
+                    return Ok(result.ToDto());
                 }
                 return NotFound($"Condition with id: {id} not found");
             }
