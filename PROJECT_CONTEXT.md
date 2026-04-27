@@ -157,6 +157,13 @@
 - Основні висновки: `StorageConditionMonitoringService` повністю перероблено — інтервал з config, debounce через `StorageIncident.Status`, auto-resolve, `Notification` + `AuditLog`. `ExpiryNotificationService` оновлено — дедуплікація, `Notification` у БД, `ExpiryWarningDays` з config. 0 помилок.
 - Що потрібно робити далі: Фаза 4 — новий SPA Frontend
 
+### Запис 5
+- Дата: 2026-04-27
+- Завдання: Фаза 4 — Розробка сучасного SPA Frontend
+- Переглянуті файли / модулі: Frontend/ (Vite, React, TypeScript, Tailwind, shadcn/ui), Axios client, React Router, AuthContext, ThemeContext.
+- Основні висновки: Реалізовано повноцінний SPA на React. 9 основних сторінок (Dashboard, Medicines, IoT, Incidents, Audit, Notifications і т.д.). Налаштовано темну/світлу тему, polling сповіщень. Виправлено CORS (локальний доступ), проблеми з регістром (PascalCase vs camelCase) у JSON та фільтрацію JSON Patch для DTO-полів.
+- Що потрібно робити далі: Фаза 5 — Мобільний застосунок
+
 ## 10. Журнал змін і рішень
 
 ### Запис шаблону
@@ -252,6 +259,23 @@
 - Результат збірки: `dotnet build` — 0 помилок, **0 попереджень**
 - Наступний крок: Фаза 4 — SPA Frontend (всі виправлено, CORS + DTO — перші дії)
 
+### Запис 6 — Фаза 4: SPA Frontend (виконано 2026-04-27)
+
+- Дата: 2026-04-27
+- Що змінено:
+  - Створено окремий проєкт у `Frontend/` на базі Vite 6 + React 18 + TS.
+  - Реалізовано дизайн-систему на Tailwind CSS + shadcn/ui (Dashboard, DataTable, Dialogs, Cards).
+  - Налаштовано **CORS** у `Program.cs` (дозволено будь-який порт localhost).
+  - Створено `AuthContext` для JWT (login/logout, захист роутів, відображення за роллю).
+  - Реалізовано 9 сторінок: Dashboard (графіки Recharts), Medicines (CRUD + Patch), IoT Devices, Storage Locations, Incidents, Notifications (polling), Audit Log (фільтрація).
+  - Виправлено баг з регістром токена (`Token` vs `token`) в `authApi`.
+  - Виправлено баг JSON Patch: додано фільтрацію read-only DTO полів перед відправкою на бекенд.
+  - Додано сторінку реєстрації (`/register`).
+- Які файли змінено: Frontend/ (весь проєкт), WebApp/MedicationManagement/Program.cs, src/api/index.ts.
+- Причина: Створення сучасного інтерфейсу користувача та відокремлення frontend від backend.
+- Ризики / наслідки: Токен зберігається в localStorage. Потрібна Node.js 22.12+ для Vite (використано Vite 6 для сумісності з 22.11).
+- Наступний крок: Фаза 5 — Мобільний застосунок
+
 ## 11. Поточний план найближчих дій (оновлено 2026-04-21)
 
 **Фази 1-3 виконано. Проміжний аудит створено. Фаза 3.5 (виправлення 13 з 15 техборгів) виконано.** Dotnet build: **0 помилок, 0 попереджень**.
@@ -303,7 +327,15 @@
    - ✅ `StorageConditionMonitoringService`: debounce, `StorageIncident`, auto-resolve, `Notification`, `AuditLog`
    - ✅ `ExpiryNotificationService`: дедуплікація, `Notification` у БД, конфіг з appsettings
 
-4. **[ПОТОЧНА]** ФАЗА 4 — Новий SPA Frontend
+4. **[ВИКОНАНО 2026-04-27]** ФАЗА 4 — Новий SPA Frontend:
+   - ✅ Ініціалізація Vite 6 + React + TS
+   - ✅ Налаштування CORS у Program.cs
+   - ✅ Реалізація Auth (Login/Register/Me)
+   - ✅ 9 основних сторінок та Layout (Sidebar/Topbar)
+   - ✅ Polling для сповіщень та інцидентів
+   - ✅ Фільтрація JSON Patch для DTO
+
+5. **[ПОТОЧНА]** ФАЗА 5 — Мобільний застосунок
 
 ## 12. Підтверджені нові сутності для диплома (реалізовано 2026-04-13)
 

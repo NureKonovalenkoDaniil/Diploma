@@ -1,7 +1,7 @@
 # AUDIT_AND_DIPLOMA_PLAN.md
 > Технічний аудит і план розвитку дипломного проєкту  
 > Дата аудиту: 2026-04-09  
-> Останнє оновлення: 2026-04-18 (Фаза 3 виконана)  
+> Останнє оновлення: 2026-04-27 (Фаза 4 виконана)  
 > Проведено: Antigravity AI  
 
 ---
@@ -105,7 +105,7 @@ Diploma/
 - ~~Зв'язок Medicine із StorageLocation~~ **[ДОДАНО Фаза 2]**
 - Unit / integration тести, docker-compose
 
-Висновок: основний рефакторинг виконано. Залишилось: DTO, тести, docker-compose.
+Висновок: основний рефакторинг виконано. Залишилось: DTO (частково впроваджено для SPA), тести, docker-compose.
 
 ## 3.2 Database / Models / Entities / Migrations
 
@@ -226,7 +226,7 @@ Diploma/
 - Немає графіків (charts)
 - Немає адмін-панелі
 
-Висновок: повністю перенести у окремий SPA.
+Висновок: повністю перенесено у окремий SPA (React + Tailwind). ✅ ВИКОНАНО 2026-04-27.
 
 ## 3.10 Mobile App
 
@@ -466,12 +466,12 @@ AuditLog (ДОПОВНИТИ):
 12. ~~`ExpiryNotificationService`: зберігати `Notification` entity, дедуплікація~~ ✅
 13. ~~`appsettings.json`: секція `Monitoring` (`IntervalSeconds`, `ExpiryWarningDays`)~~ ✅
 
-## Фаза 4 — Новий Frontend SPA (5-7 днів)
-13. Ініціалізувати Vue.js або React проєкт у Frontend/
-14. Перенести існуючі сторінки у компоненти
-15. Нові сторінки: StorageLocation, StorageIncident, MedicineLifecycle, Notification
-16. Графіки Temperature/Humidity (Chart.js)
-17. Адмін-панель для управління користувачами
+## Фаза 4 — ~~Новий Frontend SPA (5-7 днів)~~ ✅ ВИКОНАНО 2026-04-27
+13. ~~Ініціалізувати Vue.js або React проєкт у Frontend/~~ ✅
+14. ~~Перенести існуючі сторінки у компоненти~~ ✅
+15. ~~Нові сторінки: StorageLocation, StorageIncident, MedicineLifecycle, Notification~~ ✅
+16. ~~Графіки Temperature/Humidity (Chart.js)~~ ✅ (Recharts)
+17. ~~Адмін-панель для управління користувачами~~ ✅ (Audit Log + Roles)
 
 ## Фаза 5 — Мобільний застосунок (2-3 дні)
 18. Перевірити якість поточного коду (Retrofit, обробка помилок, URL)
@@ -531,4 +531,5 @@ AuditLog (ДОПОВНИТИ):
 *Оновлено 2026-04-18: Фаза 3 завершена — рефакторинг Background Services (дебаунс, auto-resolve, Notification в БД, дедуплікація, конфіг з appsettings).*  
 *Оновлено 2026-04-20: Проміжний аудит (INTERMEDIATE_AUDIT_PHASE_1_3.md) — 34 ендпоінти, 15 позицій техборгу, вимоги до Фази 4.*  
 *Оновлено 2026-04-21: Фаза 3.5 завершена — виправлено 13 з 15 техборгів (TD-01..TD-15, excl. TD-04/CORS). dotnet build: 0 помилок, 0 попереджень.*  
-*Наступне оновлення — після завершення Фази 4 (SPA Frontend).*
+*Оновлено 2026-04-27: Фаза 4 завершена — розроблено сучасний SPA на React/TS, виправлено CORS, баги з регістром JSON та JSON Patch filtering.*  
+*Наступне оновлення — після завершення Фази 5 (Мобільний застосунок).*
