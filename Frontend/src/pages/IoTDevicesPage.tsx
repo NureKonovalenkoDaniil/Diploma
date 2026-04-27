@@ -1,0 +1,153 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { iotApi } from '@/api'
+import type { IoTDeviceDto } from '@/types/api'
+import { useAuth } from '@/contexts/AuthContext'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Cpu, Activity, ChevronRight, Power } from 'lucide-react'
+import { format } from 'date-fns'
+
+export default function IoTDevicesPage() {
+  const { isAdmin } = useAuth()
+  const navigate = useNavigate()
+  const qc = useQueryClient()
+
+  const { data: devices = [], isLoading } = useQuery({
+    queryKey: ['iot-devices'],
+    queryFn: iotApi.getAll,
+    refetchInterval: 30_000,
+  })
+
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, active }: { id: number; active: boolean }) =>
+      iotApi.setStatus(id, active),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['iot-devices'] }),
+  })
+
+  const [expanded, setExpanded] = useState<number | null>(null)
+
+  const { data: conditions = [], isFetching: condFetching } = useQuery({
+    queryKey: ['conditions', expanded],
+    queryFn: () => iotApi.getConditions(expanded!),
+    enabled: expanded !== null,
+  })
+
+  const activeCount = devices.filter((d) => d.isActive).length
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">IoT Пристрої</h1>
+          <p className="text-muted-foreground">{activeCount} з {devices.length} активних датчиків</p>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card>
+          <CardContent className="flex items-center gap-4 pt-6">
+            <div className="rounded-lg bg-primary/10 p-3"><Cpu className="h-5 w-5 text-primary" /></div>
+            <div><p className="text-2xl font-bold">{devices.length}</p><p className="text-xs text-muted-foreground">Всього пристроїв</p></div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-4 pt-6">
+            <div className="rounded-lg bg-emerald-500/10 p-3"><Activity className="h-5 w-5 text-emerald-500" /></div>
+            <div><p className="text-2xl font-bold">{activeCount}</p><p className="text-xs text-muted-foreground">Онлайн</p></div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-4 pt-6">
+            <div className="rounded-lg bg-destructive/10 p-3"><Power className="h-5 w-5 text-destructive" /></div>
+            <div><p className="text-2xl font-bold">{devices.length - activeCount}</p><p className="text-xs text-muted-foreground">Офлайн</p></div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Список пристроїв</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-4 space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Розташування</TableHead>
+                  <TableHead>Тип</TableHead>
+                  <TableHead>Статус</TableHead>
+                  <TableHead>Діапазон темп.</TableHead>
+                  <TableHead>Діапазон вол.</TableHead>
+                  {isAdmin && <TableHead>Дії</TableHead>}
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {devices.map((d) => (
+                  <>
+                    <TableRow key={d.deviceID} className="cursor-pointer" onClick={() => setExpanded(expanded === d.deviceID ? null : d.deviceID)}>
+                      <TableCell className="font-mono text-xs">#{d.deviceID}</TableCell>
+                      <TableCell className="font-medium">{d.location}</TableCell>
+                      <TableCell><Badge variant="outline">{d.type}</Badge></TableCell>
+                      <TableCell>
+                        <Badge variant={d.isActive ? 'success' : 'secondary'}>
+                          {d.isActive ? 'Активний' : 'Неактивний'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">{d.minTemperature}°C – {d.maxTemperature}°C</TableCell>
+                      <TableCell className="text-sm">{d.minHumidity}% – {d.maxHumidity}%</TableCell>
+                      {isAdmin && (
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant={d.isActive ? 'outline' : 'default'}
+                            size="sm"
+                            onClick={() => toggleMutation.mutate({ id: d.deviceID, active: !d.isActive })}
+                          >
+                            {d.isActive ? 'Вимкнути' : 'Увімкнути'}
+                          </Button>
+                        </TableCell>
+                      )}
+                      <TableCell>
+                        <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${expanded === d.deviceID ? 'rotate-90' : ''}`} />
+                      </TableCell>
+                    </TableRow>
+                    {expanded === d.deviceID && (
+                      <TableRow key={`${d.deviceID}-exp`}>
+                        <TableCell colSpan={isAdmin ? 8 : 7} className="bg-muted/30 p-4">
+                          <p className="mb-2 text-sm font-medium">Останні показники умов зберігання</p>
+                          {condFetching ? (
+                            <Skeleton className="h-20" />
+                          ) : conditions.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">Немає даних</p>
+                          ) : (
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                              {conditions.slice(-4).map((c) => (
+                                <div key={c.conditionID} className="rounded-lg border bg-card p-3">
+                                  <p className="text-xs text-muted-foreground">{format(new Date(c.timestamp), 'dd.MM HH:mm')}</p>
+                                  <p className="text-sm font-semibold">🌡️ {c.temperature.toFixed(1)}°C</p>
+                                  <p className="text-sm font-semibold">💧 {c.humidity.toFixed(1)}%</p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
