@@ -91,14 +91,14 @@
 7. Medicine не має FK до StorageLocation; IoTDevice.Location — рядок, не FK
 8. BackgroundServices тільки пишуть у AuditLog, не створюють структуровані сутності
 9. StorageConditionMonitoringService: інтервал 5 сек = ~17000 записів/добу при порушенні
-10. Frontend вбудований у backend (wwwroot), немає окремого SPA
+10. ~~Frontend вбудований у backend (wwwroot), немає окремого SPA~~ **[ВИКОНАНО 2026-04-27]**
 
 **ЯКІСТЬ КОДУ:**
 11. GenerateJwtToken використовує .Result замість await
 12. Перший зареєстрований користувач автоматично = Administrator (race condition)
 13. Немає DTO-рівня — контролери приймають entity напряму
 14. Немає unit / integration тестів для backend
-15. Відсутній docker-compose, README.md, ER-діаграма, C4-діаграма
+15. Відсутній docker-compose, README.md, ER-діаграма, C4-діаграма (Roadmap створено)
 
 ## 8. Уже погоджені рішення
 
