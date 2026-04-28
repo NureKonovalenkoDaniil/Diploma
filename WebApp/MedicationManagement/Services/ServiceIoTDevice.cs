@@ -8,13 +8,13 @@ namespace MedicationManagement.Services
 {
     public interface IServiceIoTDevice
     {
-        Task<bool> SetSensorStatus(int deviceId, bool isActive);
-        Task<List<StorageCondition>> GetConditionsByDeviceId(int deviceId);
+        Task<bool> SetSensorStatus(string deviceId, bool isActive);
+        Task<List<StorageCondition>> GetConditionsByDeviceId(string deviceId);
         Task<IoTDevice?> Create(IoTDevice IoTDevice);
         Task<IEnumerable<IoTDevice>> Read();
-        Task<IoTDevice?> ReadById(int id);
-        Task<IoTDevice?> Update(int id, JsonPatchDocument<IoTDevice> patchDocument);
-        Task<bool> Delete(int id);
+        Task<IoTDevice?> ReadById(string id);
+        Task<IoTDevice?> Update(string id, JsonPatchDocument<IoTDevice> patchDocument);
+        Task<bool> Delete(string id);
     }
 
     public class ServiceIoTDevice : IServiceIoTDevice
@@ -33,7 +33,7 @@ namespace MedicationManagement.Services
         private string? CurrentOrgId => _httpContextAccessor.HttpContext?.User.GetOrganizationId();
         private bool IsAdmin => _httpContextAccessor.HttpContext?.User.IsInRole("Administrator") ?? true;
 
-        public async Task<bool> SetSensorStatus(int deviceId, bool isActive)
+        public async Task<bool> SetSensorStatus(string deviceId, bool isActive)
         {
             try
             {
@@ -59,7 +59,7 @@ namespace MedicationManagement.Services
             }
         }
 
-        public async Task<List<StorageCondition>> GetConditionsByDeviceId(int deviceId)
+        public async Task<List<StorageCondition>> GetConditionsByDeviceId(string deviceId)
         {
             try
             {
@@ -119,7 +119,7 @@ namespace MedicationManagement.Services
             }
         }
 
-        public async Task<IoTDevice?> ReadById(int id)
+        public async Task<IoTDevice?> ReadById(string id)
         {
             try
             {
@@ -140,7 +140,7 @@ namespace MedicationManagement.Services
             }
         }
 
-        public async Task<IoTDevice?> Update(int id, JsonPatchDocument<IoTDevice> patchDocument)
+        public async Task<IoTDevice?> Update(string id, JsonPatchDocument<IoTDevice> patchDocument)
         {
             if (patchDocument == null)
             {
@@ -171,7 +171,7 @@ namespace MedicationManagement.Services
             }
         }
 
-        public async Task<bool> Delete(int id)
+        public async Task<bool> Delete(string id)
         {
             try
             {

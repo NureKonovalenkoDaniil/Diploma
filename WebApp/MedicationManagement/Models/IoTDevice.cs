@@ -11,8 +11,8 @@ namespace MedicationManagement.Models
     public class IoTDevice
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int DeviceID { get; set; }
+        [MaxLength(100)]
+        public string DeviceID { get; set; } = string.Empty;
 
         [Required]
         [MaxLength(36)]

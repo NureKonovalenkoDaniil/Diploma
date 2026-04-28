@@ -18,7 +18,8 @@ namespace MedicationManagement.Models
         public float Humidity { get; set; }
         public DateTime Timestamp { get; set; }
         [ForeignKey("IoTDevice")]
-        public int DeviceID { get; set; } // DeviceID property
+        [Required]
+        public string DeviceID { get; set; } = string.Empty;
         public IoTDevice? IoTDevice { get; set; } // IoTDevice property
     }
 }

@@ -11,11 +11,24 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton'
 import { Cpu, Activity, ChevronRight, Power } from 'lucide-react'
 import { format } from 'date-fns'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 export default function IoTDevicesPage() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, isManager } = useAuth()
   const navigate = useNavigate()
   const qc = useQueryClient()
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [newDevice, setNewDevice] = useState({ deviceID: '', location: '', type: '', minTemp: 2, maxTemp: 8, minHum: 30, maxHum: 60 })
 
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ['iot-devices'],
@@ -24,12 +37,21 @@ export default function IoTDevicesPage() {
   })
 
   const toggleMutation = useMutation({
-    mutationFn: ({ id, active }: { id: number; active: boolean }) =>
+    mutationFn: ({ id, active }: { id: string; active: boolean }) =>
       iotApi.setStatus(id, active),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['iot-devices'] }),
   })
 
-  const [expanded, setExpanded] = useState<number | null>(null)
+  const registerMutation = useMutation({
+    mutationFn: (device: any) => iotApi.create(device),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['iot-devices'] })
+      setIsDialogOpen(false)
+      setNewDevice({ deviceID: '', location: '', type: '', minTemp: 2, maxTemp: 8, minHum: 30, maxHum: 60 })
+    },
+  })
+
+  const [expanded, setExpanded] = useState<string | null>(null)
 
   const { data: conditions = [], isFetching: condFetching } = useQuery({
     queryKey: ['conditions', expanded],
@@ -46,6 +68,65 @@ export default function IoTDevicesPage() {
           <h1 className="text-2xl font-bold">IoT Пристрої</h1>
           <p className="text-muted-foreground">{activeCount} з {devices.length} активних датчиків</p>
         </div>
+        {(isAdmin || isManager) && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>Зареєструвати пристрій</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Реєстрація нового IoT-пристрою</DialogTitle>
+                <DialogDescription>
+                  Введіть серійний номер датчика (DeviceId) та параметри.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="deviceId" className="text-right">DeviceId</Label>
+                  <Input id="deviceId" value={newDevice.deviceID} onChange={e => setNewDevice({...newDevice, deviceID: e.target.value})} className="col-span-3" placeholder="Наприклад, ESP-8800" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="location" className="text-right">Розташування</Label>
+                  <Input id="location" value={newDevice.location} onChange={e => setNewDevice({...newDevice, location: e.target.value})} className="col-span-3" placeholder="Холодильник 1" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="type" className="text-right">Тип</Label>
+                  <Input id="type" value={newDevice.type} onChange={e => setNewDevice({...newDevice, type: e.target.value})} className="col-span-3" placeholder="DHT22" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">Темп. (°C)</Label>
+                  <div className="col-span-3 flex gap-2">
+                    <Input type="number" value={newDevice.minTemp} onChange={e => setNewDevice({...newDevice, minTemp: Number(e.target.value)})} placeholder="Min" />
+                    <Input type="number" value={newDevice.maxTemp} onChange={e => setNewDevice({...newDevice, maxTemp: Number(e.target.value)})} placeholder="Max" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">Вологість (%)</Label>
+                  <div className="col-span-3 flex gap-2">
+                    <Input type="number" value={newDevice.minHum} onChange={e => setNewDevice({...newDevice, minHum: Number(e.target.value)})} placeholder="Min" />
+                    <Input type="number" value={newDevice.maxHum} onChange={e => setNewDevice({...newDevice, maxHum: Number(e.target.value)})} placeholder="Max" />
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Скасувати</Button>
+                <Button onClick={() => registerMutation.mutate({
+                  deviceID: newDevice.deviceID,
+                  location: newDevice.location,
+                  type: newDevice.type,
+                  minTemperature: newDevice.minTemp,
+                  maxTemperature: newDevice.maxTemp,
+                  minHumidity: newDevice.minHum,
+                  maxHumidity: newDevice.maxHum,
+                  isActive: true,
+                  parameters: "{}"
+                })} disabled={!newDevice.deviceID || registerMutation.isPending}>
+                  Зареєструвати
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -104,7 +185,7 @@ export default function IoTDevicesPage() {
                       </TableCell>
                       <TableCell className="text-sm">{d.minTemperature}°C – {d.maxTemperature}°C</TableCell>
                       <TableCell className="text-sm">{d.minHumidity}% – {d.maxHumidity}%</TableCell>
-                      {isAdmin && (
+                      {(isAdmin || isManager) && (
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant={d.isActive ? 'outline' : 'default'}

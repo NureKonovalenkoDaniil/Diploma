@@ -5,6 +5,6 @@ namespace MedicationManagement.Models.DTOs
     public class DeviceLoginDto
     {
         [Required]
-        public int DeviceId { get; set; }
+        public string DeviceId { get; set; } = string.Empty;
     }
 }

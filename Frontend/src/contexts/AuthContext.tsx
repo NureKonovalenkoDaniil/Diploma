@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import type { UserProfile } from '@/types/api'
 import { authApi } from '@/api'
+import { jwtDecode } from 'jwt-decode'
 
 interface AuthContextType {
   user: UserProfile | null
@@ -9,6 +10,8 @@ interface AuthContextType {
   login: (token: string) => Promise<void>
   logout: () => void
   isAdmin: boolean
+  isManager: boolean
+  role: 'Administrator' | 'Manager' | 'User' | 'Device' | null
   isLoading: boolean
 }
 
@@ -17,11 +20,23 @@ const AuthContext = createContext<AuthContextType | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
+  const [role, setRole] = useState<'Administrator' | 'Manager' | 'User' | 'Device' | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  const parseAndSetRole = (jwtToken: string) => {
+    try {
+      const decoded = jwtDecode<any>(jwtToken)
+      const parsedRole = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || 'User'
+      setRole(parsedRole as 'Administrator' | 'Manager' | 'User' | 'Device')
+    } catch {
+      setRole(null)
+    }
+  }
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token')
     if (storedToken) {
+      parseAndSetRole(storedToken)
       authApi.me()
         .then(setUser)
         .catch(() => {
@@ -37,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (newToken: string) => {
     localStorage.setItem('token', newToken)
     setToken(newToken)
+    parseAndSetRole(newToken)
     const profile = await authApi.me()
     setUser(profile)
   }
@@ -45,12 +61,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('token')
     setToken(null)
     setUser(null)
+    setRole(null)
   }
 
-  const isAdmin = user?.roles?.includes('Administrator') ?? false
+  const isAdmin = role === 'Administrator'
+  const isManager = role === 'Manager'
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAdmin, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isAdmin, isManager, role, isLoading }}>
       {children}
     </AuthContext.Provider>
   )

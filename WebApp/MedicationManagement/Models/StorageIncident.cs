@@ -20,7 +20,7 @@ namespace MedicationManagement.Models
 
         // FK до IoT-пристрою, що зафіксував порушення
         [Required]
-        public int DeviceId { get; set; }
+        public string DeviceId { get; set; } = string.Empty;
 
         [ForeignKey(nameof(DeviceId))]
         public IoTDevice IoTDevice { get; set; } = null!;

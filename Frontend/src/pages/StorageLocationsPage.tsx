@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { locationApi } from '@/api'
-import type { StorageLocationDto } from '@/types/api'
+import { locationApi, iotApi } from '@/api'
+import type { StorageLocationDto, IoTDeviceDto } from '@/types/api'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -27,6 +27,7 @@ function LocationForm({
   onSave: (d: FormData) => void
   onClose: () => void
   isLoading: boolean
+  devices: IoTDeviceDto[]
 }) {
   const [form, setForm] = useState<Partial<FormData>>(initial ?? {})
   const set = (k: keyof FormData, v: string | number | undefined) => setForm((p) => ({ ...p, [k]: v }))
@@ -52,13 +53,19 @@ function LocationForm({
         </select>
       </div>
       <div className="space-y-1.5">
-        <Label>ID IoT-пристрою</Label>
-        <Input
-          type="number"
+        <Label>IoT-пристрій</Label>
+        <select
+          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
           value={form.ioTDeviceId ?? ''}
-          onChange={(e) => set('ioTDeviceId', e.target.value ? Number(e.target.value) : undefined)}
-          placeholder="Необов'язково"
-        />
+          onChange={(e) => set('ioTDeviceId', e.target.value || undefined)}
+        >
+          <option value="">Немає (Без пристрою)</option>
+          {devices.map((d) => (
+            <option key={d.deviceID} value={d.deviceID}>
+              {d.deviceID} ({d.location})
+            </option>
+          ))}
+        </select>
       </div>
       <DialogFooter>
         <Button variant="outline" onClick={onClose}>Скасувати</Button>
@@ -83,6 +90,11 @@ export default function StorageLocationsPage() {
   const { data: locations = [], isLoading } = useQuery({
     queryKey: ['locations'],
     queryFn: locationApi.getAll,
+  })
+
+  const { data: devices = [] } = useQuery({
+    queryKey: ['iot-devices'],
+    queryFn: iotApi.getAll,
   })
 
   const createMutation = useMutation({
@@ -187,6 +199,7 @@ export default function StorageLocationsPage() {
               ioTDeviceId: selected.ioTDeviceId,
             } : {}}
             isLoading={createMutation.isPending || updateMutation.isPending}
+            devices={devices}
             onClose={() => setDialogMode(null)}
             onSave={(data) => {
               if (dialogMode === 'create') createMutation.mutate(data)

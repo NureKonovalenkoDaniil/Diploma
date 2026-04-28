@@ -20,7 +20,7 @@ namespace MedicationManagement.Models.DTOs
     );
 
     public record IoTDeviceDto(
-        int DeviceID,
+        string DeviceID,
         string Location,
         string Type,
         string Parameters,
@@ -36,13 +36,13 @@ namespace MedicationManagement.Models.DTOs
         string Name,
         string? Address,
         string LocationType,
-        int? IoTDeviceId,
+        string? IoTDeviceId,
         string? IoTDeviceLocation
     );
 
     public record StorageIncidentDto(
         int IncidentId,
-        int DeviceId,
+        string DeviceId,
         string DeviceLocation,
         int? LocationId,
         string? LocationName,
@@ -74,7 +74,7 @@ namespace MedicationManagement.Models.DTOs
         float Temperature,
         float Humidity,
         DateTime Timestamp,
-        int DeviceID,
+        string DeviceID,
         string? DeviceLocation
     );
 

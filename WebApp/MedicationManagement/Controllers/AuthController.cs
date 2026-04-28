@@ -286,7 +286,7 @@ namespace MedicationManagement.Controllers
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                    new Claim(ClaimTypes.NameIdentifier, device.DeviceID.ToString()),
+                    new Claim(ClaimTypes.NameIdentifier, device.DeviceID),
                     new Claim(ClaimTypes.Name, $"Device-{device.DeviceID}"),
                     new Claim(ClaimTypes.Role, "Device"),
                     new Claim("OrganizationId", device.OrganizationId ?? string.Empty)

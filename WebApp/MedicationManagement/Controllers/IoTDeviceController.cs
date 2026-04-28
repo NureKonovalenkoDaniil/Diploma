@@ -26,7 +26,7 @@ namespace MedicationManagement.Controllers
 
         [HttpPatch("setstatus/{deviceId}")]
         [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> SetSensorStatus(int deviceId, bool isActive)
+        public async Task<IActionResult> SetSensorStatus(string deviceId, bool isActive)
         {
             try
             {
@@ -46,7 +46,7 @@ namespace MedicationManagement.Controllers
         }
 
         [HttpGet("conditions/{deviceId}")]
-        public async Task<IActionResult> GetConditionsByDeviceId(int deviceId)
+        public async Task<IActionResult> GetConditionsByDeviceId(string deviceId)
         {
             try
             {
@@ -100,7 +100,7 @@ namespace MedicationManagement.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> ReadById(int id)
+        public async Task<IActionResult> ReadById(string id)
         {
             try
             {
@@ -120,7 +120,7 @@ namespace MedicationManagement.Controllers
 
         [HttpPatch("{id}")]
         [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> Update(int id, [FromBody] JsonPatchDocument<IoTDevice> patchDoc)
+        public async Task<IActionResult> Update(string id, [FromBody] JsonPatchDocument<IoTDevice> patchDoc)
         {
             if (patchDoc == null)
                 return BadRequest("Patch document is null");
@@ -143,7 +143,7 @@ namespace MedicationManagement.Controllers
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(string id)
         {
             try
             {

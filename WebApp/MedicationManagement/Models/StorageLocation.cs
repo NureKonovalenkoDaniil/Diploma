@@ -29,7 +29,7 @@ namespace MedicationManagement.Models
         public StorageLocationType LocationType { get; set; }
 
         // Nullable FK до IoTDevice — місце може не мати прив'язаного пристрою
-        public int? IoTDeviceId { get; set; }
+        public string? IoTDeviceId { get; set; }
 
         [ForeignKey(nameof(IoTDeviceId))]
         public IoTDevice? IoTDevice { get; set; }

@@ -17,7 +17,7 @@ export interface MedicineDto {
 }
 
 export interface IoTDeviceDto {
-  deviceID: number
+  deviceID: string
   location: string
   type: string
   parameters: string
@@ -33,13 +33,13 @@ export interface StorageLocationDto {
   name: string
   address?: string
   locationType: string
-  ioTDeviceId?: number
+  ioTDeviceId?: string
   ioTDeviceLocation?: string
 }
 
 export interface StorageIncidentDto {
   incidentId: number
-  deviceId: number
+  deviceId: string
   deviceLocation: string
   locationId?: number
   locationName?: string
@@ -71,7 +71,7 @@ export interface StorageConditionDto {
   temperature: number
   humidity: number
   timestamp: string
-  deviceID: number
+  deviceID: string
   deviceLocation?: string
 }
 
@@ -132,7 +132,7 @@ export interface CreateNotificationDto {
 }
 
 export interface CreateStorageIncidentDto {
-  deviceId: number
+  deviceId: string
   locationId?: number
   incidentType: string
   detectedValue: number

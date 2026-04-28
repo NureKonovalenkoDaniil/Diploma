@@ -57,17 +57,17 @@ export const medicineApi = {
 // ──────────────────────────────────────────
 export const iotApi = {
   getAll: () => api.get<IoTDeviceDto[]>('/api/iotdevice').then((r) => r.data),
-  getById: (id: number) =>
+  getById: (id: string) =>
     api.get<IoTDeviceDto>(`/api/iotdevice/${id}`).then((r) => r.data),
-  getConditions: (deviceId: number) =>
+  getConditions: (deviceId: string) =>
     api.get<StorageConditionDto[]>(`/api/iotdevice/conditions/${deviceId}`).then((r) => r.data),
   create: (data: Omit<IoTDeviceDto, 'deviceID'>) =>
     api.post<IoTDeviceDto>('/api/iotdevice', data).then((r) => r.data),
-  update: (id: number, patch: object[]) =>
+  update: (id: string, patch: object[]) =>
     api.patch<IoTDeviceDto>(`/api/iotdevice/${id}`, patch).then((r) => r.data),
-  setStatus: (deviceId: number, isActive: boolean) =>
+  setStatus: (deviceId: string, isActive: boolean) =>
     api.patch(`/api/iotdevice/setstatus/${deviceId}?isActive=${isActive}`),
-  delete: (id: number) => api.delete(`/api/iotdevice/${id}`),
+  delete: (id: string) => api.delete(`/api/iotdevice/${id}`),
 }
 
 // ──────────────────────────────────────────
