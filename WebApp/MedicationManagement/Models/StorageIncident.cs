@@ -14,6 +14,10 @@ namespace MedicationManagement.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int IncidentId { get; set; }
 
+        [Required]
+        [MaxLength(36)]
+        public string OrganizationId { get; set; } = string.Empty;
+
         // FK до IoT-пристрою, що зафіксував порушення
         [Required]
         public int DeviceId { get; set; }

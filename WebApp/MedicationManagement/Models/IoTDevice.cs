@@ -14,6 +14,10 @@ namespace MedicationManagement.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int DeviceID { get; set; }
 
+        [Required]
+        [MaxLength(36)]
+        public string OrganizationId { get; set; } = string.Empty;
+
         /// <summary>Фізичне розташування пристрою (наприклад, "Warehouse A", "Refrigerator 2")</summary>
         [Required]
         [StringLength(100)]

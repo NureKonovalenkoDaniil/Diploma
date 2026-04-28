@@ -1,5 +1,6 @@
 using MedicationManagement.BackgroundServices;
 using MedicationManagement.DBContext;
+using MedicationManagement.Models;
 using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
@@ -58,7 +59,7 @@ namespace MedicationManagement
             builder.Services.AddDbContext<UserContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
                 options.SignIn.RequireConfirmedEmail = true;
                 options.Password.RequireDigit = false;

@@ -15,6 +15,10 @@ namespace MedicationManagement.Models
         public int LocationId { get; set; }
 
         [Required]
+        [MaxLength(36)]
+        public string OrganizationId { get; set; } = string.Empty;
+
+        [Required]
         [StringLength(100)]
         public string Name { get; set; } = string.Empty;
 

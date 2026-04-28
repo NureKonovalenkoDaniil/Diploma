@@ -17,15 +17,15 @@ namespace MedicationManagement.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthController> _logger;
         private readonly IServiceAuditLog _auditLogService;
 
-        public AuthController(UserManager<IdentityUser> userManager,
-                              SignInManager<IdentityUser> signInManager,
+        public AuthController(UserManager<ApplicationUser> userManager,
+                              SignInManager<ApplicationUser> signInManager,
                               RoleManager<IdentityRole> roleManager,
                               IConfiguration configuration,
                               ILogger<AuthController> logger,
@@ -54,12 +54,13 @@ namespace MedicationManagement.Controllers
                 // Перевіряємо ДО CreateAsync, щоб уникнути race condition
                 var isFirstUser = !await _userManager.Users.AnyAsync();
 
-                var user = new IdentityUser
+                var user = new ApplicationUser
                 {
                     UserName = model.Email,
                     Email = model.Email,
                     EmailConfirmed = true,
-                    SecurityStamp = Guid.NewGuid().ToString()
+                    SecurityStamp = Guid.NewGuid().ToString(),
+                    OrganizationId = Guid.NewGuid().ToString()
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
@@ -184,11 +185,12 @@ namespace MedicationManagement.Controllers
                 user.Id,
                 user.UserName,
                 user.Email,
-                Roles = roles
+                Roles = roles,
+                user.OrganizationId
             });
         }
 
-        private async Task<string> GenerateJwtToken(IdentityUser user)
+        private async Task<string> GenerateJwtToken(ApplicationUser user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? string.Empty);
@@ -202,7 +204,8 @@ namespace MedicationManagement.Controllers
                     new Claim(ClaimTypes.NameIdentifier, user.Id ?? string.Empty),
                     new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
                     new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
-                    new Claim(ClaimTypes.Role, role ?? "User")
+                    new Claim(ClaimTypes.Role, role ?? "User"),
+                    new Claim("OrganizationId", user.OrganizationId ?? string.Empty)
                 }),
                 Expires = DateTime.UtcNow.AddDays(expireDays),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256),

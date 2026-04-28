@@ -15,6 +15,10 @@ namespace MedicationManagement.Models
         public int NotificationId { get; set; }
 
         [Required]
+        [MaxLength(36)]
+        public string OrganizationId { get; set; } = string.Empty;
+
+        [Required]
         public NotificationType Type { get; set; }
 
         [Required]

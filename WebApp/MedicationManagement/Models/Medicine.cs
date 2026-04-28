@@ -12,6 +12,10 @@ namespace MedicationManagement.Models
         public int MedicineID { get; set; }
 
         [Required]
+        [MaxLength(36)]
+        public string OrganizationId { get; set; } = string.Empty;
+
+        [Required]
         [StringLength(50)]
         public string Name { get; set; } = string.Empty;
 

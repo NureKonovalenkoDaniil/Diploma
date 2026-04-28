@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MedicationManagement.Models
@@ -10,6 +10,10 @@ namespace MedicationManagement.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ConditionID { get; set; }
+
+        [Required]
+        [MaxLength(36)]
+        public string OrganizationId { get; set; } = string.Empty;
         public float Temperature { get; set; }
         public float Humidity { get; set; }
         public DateTime Timestamp { get; set; }

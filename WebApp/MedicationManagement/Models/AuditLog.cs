@@ -1,10 +1,15 @@
 using MedicationManagement.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace MedicationManagement.Models
 {
     public class AuditLog
     {
         public int Id { get; set; }
+
+        [Required]
+        [MaxLength(36)]
+        public string OrganizationId { get; set; } = string.Empty;
 
         public string Action { get; set; } = string.Empty;
 

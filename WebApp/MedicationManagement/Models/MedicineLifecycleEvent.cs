@@ -14,6 +14,10 @@ namespace MedicationManagement.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int EventId { get; set; }
 
+        [Required]
+        [MaxLength(36)]
+        public string OrganizationId { get; set; } = string.Empty;
+
         // FK до препарату
         [Required]
         public int MedicineId { get; set; }

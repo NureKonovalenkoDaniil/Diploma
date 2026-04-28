@@ -34,6 +34,12 @@
 - [x] Розробка 9 основних сторінок (Dashboard, CRUDs, Logs, Alerts).
 - [x] Виправлення багів інтеграції (PascalCase/camelCase, JSON Patch).
 
+## 🟢 Фаза 4.5: Архітектура Multi-Tenancy (ВИКОНАНО)
+- [x] Створення `ApplicationUser` з властивістю `OrganizationId` (string/Guid).
+- [x] Додавання `OrganizationId` до всіх доменних моделей бази даних.
+- [x] Автоматична генерація ізольованого `OrganizationId` для нових користувачів.
+- [x] Оновлення Identity та EF Core міграцій.
+
 ## 🟡 Фаза 5: Мобільний застосунок (У ПРОЦЕСІ)
 - [ ] Аудит поточного коду Android (Retrofit, Error handling).
 - [ ] Реалізація нових екранів: Інциденти, Життєвий цикл препарату.
