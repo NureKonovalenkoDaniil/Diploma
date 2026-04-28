@@ -1,6 +1,7 @@
 using MedicationManagement.DBContext;
 using MedicationManagement.Models;
 using Microsoft.EntityFrameworkCore;
+using MedicationManagement.Extensions;
 
 namespace MedicationManagement.Services
 {
@@ -17,21 +18,28 @@ namespace MedicationManagement.Services
     {
         private readonly MedicineStorageContext _context;
         private readonly ILogger<ServiceStorageLocation> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ServiceStorageLocation(MedicineStorageContext context, ILogger<ServiceStorageLocation> logger)
+        public ServiceStorageLocation(MedicineStorageContext context, ILogger<ServiceStorageLocation> logger, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _logger = logger;
+            _httpContextAccessor = httpContextAccessor;
         }
+
+        private string? CurrentOrgId => _httpContextAccessor.HttpContext?.User.GetOrganizationId();
+        private bool IsAdmin => _httpContextAccessor.HttpContext?.User.IsInRole("Administrator") ?? true;
 
         public async Task<IEnumerable<StorageLocation>> GetAll()
         {
             try
             {
-                return await _context.StorageLocations
+                var query = _context.StorageLocations
                     .AsNoTracking()
-                    .Include(l => l.IoTDevice)
-                    .ToListAsync();
+                    .Include(l => l.IoTDevice).AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(l => l.OrganizationId == CurrentOrgId);
+                return await query.ToListAsync();
             }
             catch (Exception ex)
             {
@@ -44,11 +52,13 @@ namespace MedicationManagement.Services
         {
             try
             {
-                return await _context.StorageLocations
+                var query = _context.StorageLocations
                     .AsNoTracking()
                     .Include(l => l.IoTDevice)
-                    .Include(l => l.Medicines)
-                    .FirstOrDefaultAsync(l => l.LocationId == id);
+                    .Include(l => l.Medicines).AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(l => l.OrganizationId == CurrentOrgId);
+                return await query.FirstOrDefaultAsync(l => l.LocationId == id);
             }
             catch (Exception ex)
             {
@@ -61,6 +71,11 @@ namespace MedicationManagement.Services
         {
             try
             {
+                var orgId = CurrentOrgId;
+                if (!string.IsNullOrEmpty(orgId))
+                {
+                    location.OrganizationId = orgId;
+                }
                 _context.StorageLocations.Add(location);
                 await _context.SaveChangesAsync();
                 return location;
@@ -76,7 +91,10 @@ namespace MedicationManagement.Services
         {
             try
             {
-                var existing = await _context.StorageLocations.FindAsync(id);
+                var query = _context.StorageLocations.AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(l => l.OrganizationId == CurrentOrgId);
+                var existing = await query.FirstOrDefaultAsync(l => l.LocationId == id);
                 if (existing is null) return null;
 
                 existing.Name = updated.Name;
@@ -98,7 +116,10 @@ namespace MedicationManagement.Services
         {
             try
             {
-                var location = await _context.StorageLocations.FindAsync(id);
+                var query = _context.StorageLocations.AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(l => l.OrganizationId == CurrentOrgId);
+                var location = await query.FirstOrDefaultAsync(l => l.LocationId == id);
                 if (location is null) return false;
 
                 _context.StorageLocations.Remove(location);

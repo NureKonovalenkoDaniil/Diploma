@@ -2,6 +2,7 @@ using MedicationManagement.DBContext;
 using MedicationManagement.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.EntityFrameworkCore;
+using MedicationManagement.Extensions;
 
 namespace MedicationManagement.Services
 {
@@ -23,24 +24,28 @@ namespace MedicationManagement.Services
         private readonly MedicineStorageContext _context;
         private readonly ILogger<ServiceMedicine> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        // Constructor to inject the database context, logger and configuration
-        public ServiceMedicine(MedicineStorageContext context, ILogger<ServiceMedicine> logger, IConfiguration configuration)
+        public ServiceMedicine(MedicineStorageContext context, ILogger<ServiceMedicine> logger, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _logger = logger;
             _configuration = configuration;
+            _httpContextAccessor = httpContextAccessor;
         }
+
+        private string? CurrentOrgId => _httpContextAccessor.HttpContext?.User.GetOrganizationId();
+        private bool IsAdmin => _httpContextAccessor.HttpContext?.User.IsInRole("Administrator") ?? true;
 
         // Method to get medicines with low stock
         public async Task<List<Medicine>> GetLowStockMedicines(int threshold)
         {
             try
             {
-                return await _context.Medicines
-                    .AsNoTracking()
-                    .Where(m => m.Quantity < threshold)
-                    .ToListAsync();
+                var query = _context.Medicines.AsNoTracking().Where(m => m.Quantity < threshold);
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(m => m.OrganizationId == CurrentOrgId);
+                return await query.ToListAsync();
             }
             catch (Exception ex)
             {
@@ -54,10 +59,10 @@ namespace MedicationManagement.Services
         {
             try
             {
-                return await _context.Medicines
-                    .AsNoTracking()
-                    .Where(m => m.ExpiryDate > DateTime.Now && m.ExpiryDate <= thresholdDate)
-                    .ToListAsync();
+                var query = _context.Medicines.AsNoTracking().Where(m => m.ExpiryDate > DateTime.Now && m.ExpiryDate <= thresholdDate);
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(m => m.OrganizationId == CurrentOrgId);
+                return await query.ToListAsync();
             }
             catch (Exception ex)
             {
@@ -100,6 +105,12 @@ namespace MedicationManagement.Services
 
             try
             {
+                var orgId = CurrentOrgId;
+                if (!string.IsNullOrEmpty(orgId))
+                {
+                    medicine.OrganizationId = orgId;
+                }
+                
                 await _context.Medicines.AddAsync(medicine);
                 await _context.SaveChangesAsync();
                 return medicine;
@@ -116,7 +127,10 @@ namespace MedicationManagement.Services
         {
             try
             {
-                return await _context.Medicines.AsNoTracking().ToListAsync();
+                var query = _context.Medicines.AsNoTracking();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(m => m.OrganizationId == CurrentOrgId);
+                return await query.ToListAsync();
             }
             catch (Exception ex)
             {
@@ -130,8 +144,10 @@ namespace MedicationManagement.Services
         {
             try
             {
-                var medicine = await _context.Medicines.AsNoTracking()
-                    .FirstOrDefaultAsync(m => m.MedicineID == id);
+                var query = _context.Medicines.AsNoTracking().Where(m => m.MedicineID == id);
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(m => m.OrganizationId == CurrentOrgId);
+                var medicine = await query.FirstOrDefaultAsync();
                 if (medicine == null)
                 {
                     _logger.LogWarning($"Medicine with ID {id} not found");
@@ -156,7 +172,11 @@ namespace MedicationManagement.Services
 
             try
             {
-                var medicineToUpdate = await _context.Medicines.FindAsync(id);
+                var query = _context.Medicines.AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(m => m.OrganizationId == CurrentOrgId);
+                    
+                var medicineToUpdate = await query.FirstOrDefaultAsync(m => m.MedicineID == id);
                 if (medicineToUpdate == null)
                 {
                     _logger.LogWarning($"Medicine with ID {id} not found");
@@ -179,7 +199,11 @@ namespace MedicationManagement.Services
         {
             try
             {
-                var medicine = await _context.Medicines.FindAsync(id);
+                var query = _context.Medicines.AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(m => m.OrganizationId == CurrentOrgId);
+                    
+                var medicine = await query.FirstOrDefaultAsync(m => m.MedicineID == id);
                 if (medicine == null)
                 {
                     _logger.LogWarning($"Medicine with ID {id} not found");

@@ -2,6 +2,7 @@ using MedicationManagement.DBContext;
 using MedicationManagement.Enums;
 using MedicationManagement.Models;
 using Microsoft.EntityFrameworkCore;
+using MedicationManagement.Extensions;
 
 namespace MedicationManagement.Services
 {
@@ -20,12 +21,17 @@ namespace MedicationManagement.Services
     {
         private readonly MedicineStorageContext _context;
         private readonly ILogger<ServiceNotification> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ServiceNotification(MedicineStorageContext context, ILogger<ServiceNotification> logger)
+        public ServiceNotification(MedicineStorageContext context, ILogger<ServiceNotification> logger, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _logger = logger;
+            _httpContextAccessor = httpContextAccessor;
         }
+
+        private string? CurrentOrgId => _httpContextAccessor.HttpContext?.User.GetOrganizationId();
+        private bool IsAdmin => _httpContextAccessor.HttpContext?.User.IsInRole("Administrator") ?? true;
 
         public async Task<IEnumerable<Notification>> GetAll(string? targetRole = null)
         {
@@ -35,6 +41,9 @@ namespace MedicationManagement.Services
 
                 if (!string.IsNullOrEmpty(targetRole))
                     query = query.Where(n => n.TargetRole == targetRole || n.TargetRole == "All");
+
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(n => n.OrganizationId == CurrentOrgId);
 
                 return await query.OrderByDescending(n => n.CreatedAt).ToListAsync();
             }
@@ -54,6 +63,9 @@ namespace MedicationManagement.Services
                 if (!string.IsNullOrEmpty(targetRole))
                     query = query.Where(n => n.TargetRole == targetRole || n.TargetRole == "All");
 
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(n => n.OrganizationId == CurrentOrgId);
+
                 return await query.OrderByDescending(n => n.CreatedAt).ToListAsync();
             }
             catch (Exception ex)
@@ -69,6 +81,13 @@ namespace MedicationManagement.Services
             {
                 notification.CreatedAt = DateTime.UtcNow;
                 notification.IsRead = false;
+
+                var orgId = CurrentOrgId;
+                if (!string.IsNullOrEmpty(orgId))
+                {
+                    notification.OrganizationId = orgId;
+                }
+
                 _context.Notifications.Add(notification);
                 await _context.SaveChangesAsync();
                 return notification;
@@ -97,6 +116,12 @@ namespace MedicationManagement.Services
                     CreatedAt = DateTime.UtcNow
                 };
 
+                var orgId = CurrentOrgId;
+                if (!string.IsNullOrEmpty(orgId))
+                {
+                    notification.OrganizationId = orgId;
+                }
+
                 _context.Notifications.Add(notification);
                 await _context.SaveChangesAsync();
                 return notification;
@@ -112,7 +137,11 @@ namespace MedicationManagement.Services
         {
             try
             {
-                var notification = await _context.Notifications.FindAsync(notificationId);
+                var query = _context.Notifications.AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(n => n.OrganizationId == CurrentOrgId);
+
+                var notification = await query.FirstOrDefaultAsync(n => n.NotificationId == notificationId);
                 if (notification is null) return false;
 
                 notification.IsRead = true;
@@ -134,6 +163,9 @@ namespace MedicationManagement.Services
 
                 if (!string.IsNullOrEmpty(targetRole))
                     query = query.Where(n => n.TargetRole == targetRole || n.TargetRole == "All");
+
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(n => n.OrganizationId == CurrentOrgId);
 
                 var notifications = await query.ToListAsync();
                 notifications.ForEach(n => n.IsRead = true);

@@ -2,6 +2,7 @@ using MedicationManagement.DBContext;
 using MedicationManagement.Enums;
 using MedicationManagement.Models;
 using Microsoft.EntityFrameworkCore;
+using MedicationManagement.Extensions;
 
 namespace MedicationManagement.Services
 {
@@ -18,22 +19,31 @@ namespace MedicationManagement.Services
     {
         private readonly MedicineStorageContext _context;
         private readonly ILogger<ServiceStorageIncident> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ServiceStorageIncident(MedicineStorageContext context, ILogger<ServiceStorageIncident> logger)
+        public ServiceStorageIncident(MedicineStorageContext context, ILogger<ServiceStorageIncident> logger, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _logger = logger;
+            _httpContextAccessor = httpContextAccessor;
         }
+
+        private string? CurrentOrgId => _httpContextAccessor.HttpContext?.User.GetOrganizationId();
+        private bool IsAdmin => _httpContextAccessor.HttpContext?.User.IsInRole("Administrator") ?? true;
 
         public async Task<IEnumerable<StorageIncident>> GetAll()
         {
             try
             {
-                return await _context.StorageIncidents
+                var query = _context.StorageIncidents
                     .AsNoTracking()
                     .Include(i => i.IoTDevice)
-                    .Include(i => i.StorageLocation)
-                    .OrderByDescending(i => i.CreatedAt)
+                    .Include(i => i.StorageLocation).AsQueryable();
+
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(i => i.OrganizationId == CurrentOrgId);
+
+                return await query.OrderByDescending(i => i.CreatedAt)
                     .ToListAsync();
             }
             catch (Exception ex)
@@ -47,12 +57,16 @@ namespace MedicationManagement.Services
         {
             try
             {
-                return await _context.StorageIncidents
+                var query = _context.StorageIncidents
                     .AsNoTracking()
                     .Include(i => i.IoTDevice)
                     .Include(i => i.StorageLocation)
-                    .Where(i => i.Status == IncidentStatus.Active)
-                    .OrderByDescending(i => i.StartTime)
+                    .Where(i => i.Status == IncidentStatus.Active).AsQueryable();
+
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(i => i.OrganizationId == CurrentOrgId);
+
+                return await query.OrderByDescending(i => i.StartTime)
                     .ToListAsync();
             }
             catch (Exception ex)
@@ -66,11 +80,15 @@ namespace MedicationManagement.Services
         {
             try
             {
-                return await _context.StorageIncidents
+                var query = _context.StorageIncidents
                     .AsNoTracking()
                     .Include(i => i.IoTDevice)
-                    .Include(i => i.StorageLocation)
-                    .FirstOrDefaultAsync(i => i.IncidentId == id);
+                    .Include(i => i.StorageLocation).AsQueryable();
+
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(i => i.OrganizationId == CurrentOrgId);
+
+                return await query.FirstOrDefaultAsync(i => i.IncidentId == id);
             }
             catch (Exception ex)
             {
@@ -87,6 +105,12 @@ namespace MedicationManagement.Services
                 incident.StartTime = DateTime.UtcNow;
                 incident.Status = IncidentStatus.Active;
 
+                var orgId = CurrentOrgId;
+                if (!string.IsNullOrEmpty(orgId))
+                {
+                    incident.OrganizationId = orgId;
+                }
+
                 _context.StorageIncidents.Add(incident);
                 await _context.SaveChangesAsync();
                 return incident;
@@ -102,7 +126,11 @@ namespace MedicationManagement.Services
         {
             try
             {
-                var incident = await _context.StorageIncidents.FindAsync(id);
+                var query = _context.StorageIncidents.AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(i => i.OrganizationId == CurrentOrgId);
+
+                var incident = await query.FirstOrDefaultAsync(i => i.IncidentId == id);
                 if (incident is null) return null;
 
                 incident.Status = IncidentStatus.Resolved;

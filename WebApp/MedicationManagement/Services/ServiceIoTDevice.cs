@@ -2,6 +2,7 @@ using MedicationManagement.DBContext;
 using MedicationManagement.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.EntityFrameworkCore;
+using MedicationManagement.Extensions;
 
 namespace MedicationManagement.Services
 {
@@ -20,18 +21,26 @@ namespace MedicationManagement.Services
     {
         private readonly MedicineStorageContext _context;
         private readonly ILogger<ServiceIoTDevice> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ServiceIoTDevice(MedicineStorageContext context, ILogger<ServiceIoTDevice> logger)
+        public ServiceIoTDevice(MedicineStorageContext context, ILogger<ServiceIoTDevice> logger, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _logger = logger;
+            _httpContextAccessor = httpContextAccessor;
         }
+
+        private string? CurrentOrgId => _httpContextAccessor.HttpContext?.User.GetOrganizationId();
+        private bool IsAdmin => _httpContextAccessor.HttpContext?.User.IsInRole("Administrator") ?? true;
 
         public async Task<bool> SetSensorStatus(int deviceId, bool isActive)
         {
             try
             {
-                var sensor = await _context.IoTDevices.FindAsync(deviceId);
+                var query = _context.IoTDevices.AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(d => d.OrganizationId == CurrentOrgId);
+                var sensor = await query.FirstOrDefaultAsync(d => d.DeviceID == deviceId);
                 if (sensor == null)
                 {
                     _logger.LogWarning($"Sensor with ID {deviceId} not found");
@@ -54,11 +63,12 @@ namespace MedicationManagement.Services
         {
             try
             {
-                return await _context.StorageConditions
-                    .AsNoTracking()
+                var query = _context.StorageConditions.AsNoTracking()
                     .Where(sc => sc.DeviceID == deviceId)
-                    .Include(sc => sc.IoTDevice)
-                    .ToListAsync();
+                    .Include(sc => sc.IoTDevice).AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(sc => sc.OrganizationId == CurrentOrgId);
+                return await query.ToListAsync();
             }
             catch (Exception ex)
             {
@@ -77,6 +87,11 @@ namespace MedicationManagement.Services
 
             try
             {
+                var orgId = CurrentOrgId;
+                if (!string.IsNullOrEmpty(orgId))
+                {
+                    IoTDevice.OrganizationId = orgId;
+                }
                 await _context.IoTDevices.AddAsync(IoTDevice);
                 await _context.SaveChangesAsync();
                 return IoTDevice;
@@ -92,7 +107,10 @@ namespace MedicationManagement.Services
         {
             try
             {
-                return await _context.IoTDevices.AsNoTracking().ToListAsync();
+                var query = _context.IoTDevices.AsNoTracking();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(d => d.OrganizationId == CurrentOrgId);
+                return await query.ToListAsync();
             }
             catch (Exception ex)
             {
@@ -105,8 +123,10 @@ namespace MedicationManagement.Services
         {
             try
             {
-                var device = await _context.IoTDevices.AsNoTracking()
-                    .FirstOrDefaultAsync(d => d.DeviceID == id);
+                var query = _context.IoTDevices.AsNoTracking().Where(d => d.DeviceID == id);
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(d => d.OrganizationId == CurrentOrgId);
+                var device = await query.FirstOrDefaultAsync();
                 if (device == null)
                 {
                     _logger.LogWarning($"IoTDevice with ID {id} not found");
@@ -130,7 +150,10 @@ namespace MedicationManagement.Services
 
             try
             {
-                var deviceToUpdate = await _context.IoTDevices.FindAsync(id);
+                var query = _context.IoTDevices.AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(d => d.OrganizationId == CurrentOrgId);
+                var deviceToUpdate = await query.FirstOrDefaultAsync(d => d.DeviceID == id);
                 if (deviceToUpdate == null)
                 {
                     _logger.LogWarning($"IoTDevice with ID {id} not found");
@@ -152,7 +175,10 @@ namespace MedicationManagement.Services
         {
             try
             {
-                var device = await _context.IoTDevices.FindAsync(id);
+                var query = _context.IoTDevices.AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(d => d.OrganizationId == CurrentOrgId);
+                var device = await query.FirstOrDefaultAsync(d => d.DeviceID == id);
                 if (device == null)
                 {
                     _logger.LogWarning($"IoTDevice with ID {id} not found");

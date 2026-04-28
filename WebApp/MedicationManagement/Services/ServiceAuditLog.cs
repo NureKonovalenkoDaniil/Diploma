@@ -2,6 +2,7 @@ using MedicationManagement.DBContext;
 using MedicationManagement.Enums;
 using MedicationManagement.Models;
 using Microsoft.EntityFrameworkCore;
+using MedicationManagement.Extensions;
 
 namespace MedicationManagement.Services
 {
@@ -29,11 +30,16 @@ namespace MedicationManagement.Services
     public class ServiceAuditLog : IServiceAuditLog
     {
         private readonly MedicineStorageContext _context;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ServiceAuditLog(MedicineStorageContext context)
+        public ServiceAuditLog(MedicineStorageContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
         }
+
+        private string? CurrentOrgId => _httpContextAccessor.HttpContext?.User.GetOrganizationId();
+        private bool IsAdmin => _httpContextAccessor.HttpContext?.User.IsInRole("Administrator") ?? true;
 
         /// <summary>Записати подію до журналу аудиту.</summary>
         public async Task LogAction(string action, string user, string details, bool isSensor,
@@ -51,6 +57,12 @@ namespace MedicationManagement.Services
                 Severity = severity
             };
 
+            var orgId = CurrentOrgId;
+            if (!string.IsNullOrEmpty(orgId))
+            {
+                auditLog.OrganizationId = orgId;
+            }
+
             _context.AuditLogs.Add(auditLog);
             await _context.SaveChangesAsync();
         }
@@ -66,6 +78,9 @@ namespace MedicationManagement.Services
             string? action = null)
         {
             var query = _context.AuditLogs.AsNoTracking().AsQueryable();
+
+            if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                query = query.Where(log => log.OrganizationId == CurrentOrgId);
 
             if (from.HasValue)
                 query = query.Where(log => log.Timestamp >= from.Value);

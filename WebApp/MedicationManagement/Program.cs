@@ -45,6 +45,8 @@ namespace MedicationManagement
 
         private static void RegisterServices(WebApplicationBuilder builder)
         {
+            builder.Services.AddHttpContextAccessor();
+
             builder.Services.AddScoped<IServiceMedicine, ServiceMedicine>();
             builder.Services.AddScoped<IServiceStorageCondition, ServiceStorageCondition>();
             builder.Services.AddScoped<IServiceIoTDevice, ServiceIoTDevice>();

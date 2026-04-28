@@ -2,6 +2,7 @@ using MedicationManagement.DBContext;
 using MedicationManagement.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.EntityFrameworkCore;
+using MedicationManagement.Extensions;
 
 namespace MedicationManagement.Services
 {
@@ -19,19 +20,27 @@ namespace MedicationManagement.Services
     {
         private readonly MedicineStorageContext _context;
         private readonly ILogger<ServiceStorageCondition> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ServiceStorageCondition(MedicineStorageContext context, ILogger<ServiceStorageCondition> logger)
+        public ServiceStorageCondition(MedicineStorageContext context, ILogger<ServiceStorageCondition> logger, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _logger = logger;
+            _httpContextAccessor = httpContextAccessor;
         }
+
+        private string? CurrentOrgId => _httpContextAccessor.HttpContext?.User.GetOrganizationId();
+        private bool IsAdmin => _httpContextAccessor.HttpContext?.User.IsInRole("Administrator") ?? true;
 
         public async Task<List<string>> CheckStorageConditionsForAllDevices()
         {
             var violations = new List<string>();
             try
             {
-                var devices = await _context.IoTDevices.AsNoTracking().ToListAsync();
+                var query = _context.IoTDevices.AsNoTracking();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(d => d.OrganizationId == CurrentOrgId);
+                var devices = await query.ToListAsync();
 
                 foreach (var device in devices)
                 {
@@ -82,6 +91,11 @@ namespace MedicationManagement.Services
                     return null;
                 }
 
+                var orgId = CurrentOrgId;
+                if (!string.IsNullOrEmpty(orgId))
+                {
+                    storageCondition.OrganizationId = orgId;
+                }
                 storageCondition.Timestamp = DateTime.Now;
                 await _context.StorageConditions.AddAsync(storageCondition);
                 await _context.SaveChangesAsync();
@@ -98,7 +112,10 @@ namespace MedicationManagement.Services
         {
             try
             {
-                return await _context.StorageConditions.AsNoTracking().Include(sc => sc.IoTDevice).ToListAsync();
+                var query = _context.StorageConditions.AsNoTracking().Include(sc => sc.IoTDevice).AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(sc => sc.OrganizationId == CurrentOrgId);
+                return await query.ToListAsync();
             }
             catch (Exception ex)
             {
@@ -111,7 +128,10 @@ namespace MedicationManagement.Services
         {
             try
             {
-                var condition = await _context.StorageConditions.AsNoTracking().Include(sc => sc.IoTDevice).FirstOrDefaultAsync(sc => sc.ConditionID == id);
+                var query = _context.StorageConditions.AsNoTracking().Include(sc => sc.IoTDevice).AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(sc => sc.OrganizationId == CurrentOrgId);
+                var condition = await query.FirstOrDefaultAsync(sc => sc.ConditionID == id);
                 if (condition == null)
                 {
                     _logger.LogWarning($"StorageCondition with ID {id} not found");
@@ -135,7 +155,10 @@ namespace MedicationManagement.Services
 
             try
             {
-                var conditionToUpdate = await _context.StorageConditions.FindAsync(id);
+                var query = _context.StorageConditions.AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(sc => sc.OrganizationId == CurrentOrgId);
+                var conditionToUpdate = await query.FirstOrDefaultAsync(sc => sc.ConditionID == id);
                 if (conditionToUpdate == null)
                 {
                     _logger.LogWarning($"StorageCondition with ID {id} not found");
@@ -157,7 +180,10 @@ namespace MedicationManagement.Services
         {
             try
             {
-                var condition = await _context.StorageConditions.FindAsync(id);
+                var query = _context.StorageConditions.AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(sc => sc.OrganizationId == CurrentOrgId);
+                var condition = await query.FirstOrDefaultAsync(sc => sc.ConditionID == id);
                 if (condition == null)
                 {
                     _logger.LogWarning($"StorageCondition with ID {id} not found");
