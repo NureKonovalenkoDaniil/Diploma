@@ -22,6 +22,7 @@ function LocationForm({
   onSave,
   onClose,
   isLoading,
+  devices,
 }: {
   initial?: Partial<FormData>
   onSave: (d: FormData) => void

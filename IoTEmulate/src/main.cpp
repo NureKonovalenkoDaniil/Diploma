@@ -19,7 +19,7 @@ const String dataSendUrl     = String(SERVER_BASE_URL) + "/api/storagecondition"
 const String jwtToken        = JWT_TOKEN;
 
 // Sensor parameters
-int deviceID = DEVICE_ID;
+const String deviceID = DEVICE_ID;
 const int buzzerPin = 12; // GPIO-пін бузера
 
 // Порогові значення — завантажуються з сервера via fetchDeviceConfig()
@@ -85,7 +85,7 @@ void sendDataToServer(float temperature, float humidity) {
     String jsonPayload = "{";
     jsonPayload += "\"Temperature\": " + String(temperature) + ", ";
     jsonPayload += "\"Humidity\": "    + String(humidity)    + ", ";
-    jsonPayload += "\"DeviceID\": "    + String(deviceID);
+    jsonPayload += "\"DeviceID\": \"" + deviceID + "\"";
     jsonPayload += "}";
 
     Serial.println("Sending payload:");

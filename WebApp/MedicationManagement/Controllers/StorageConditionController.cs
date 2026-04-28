@@ -40,19 +40,28 @@ namespace MedicationManagement.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] StorageCondition storageCondition)
+        [Authorize(Roles = "Device,Administrator,Manager")]
+        public async Task<IActionResult> Create([FromBody] CreateStorageConditionDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
+                var storageCondition = new StorageCondition
+                {
+                    Temperature = dto.Temperature,
+                    Humidity    = dto.Humidity,
+                    DeviceID    = dto.DeviceID,
+                    Timestamp   = DateTime.UtcNow,
+                    // OrganizationId підставляється автоматично у сервісі через IHttpContextAccessor
+                };
+
                 var result = await _storageConditionService.Create(storageCondition);
                 if (result != null)
                 {
-                    string source = User.Identity?.Name ?? $"Sensor {storageCondition.DeviceID}";
-                    bool isSensor = User.Identity == null;
-                    await _auditLogService.LogAction("Create Condition", source, $"Created Condition: {result.ConditionID}.", isSensor);
+                    string source = User.Identity?.Name ?? $"Sensor {dto.DeviceID}";
+                    await _auditLogService.LogAction("Create Condition", source, $"Created Condition: {result.ConditionID}.", false);
                     return Ok(result.ToDto());
                 }
                 return BadRequest("Could not create condition");

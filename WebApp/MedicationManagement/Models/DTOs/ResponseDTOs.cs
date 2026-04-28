@@ -100,4 +100,11 @@ namespace MedicationManagement.Models.DTOs
         int? EntityId,
         string Severity
     );
+
+    /// <summary>DTO для прийому даних від IoT-датчика. OrganizationId підставляється з JWT на сервері.</summary>
+    public record CreateStorageConditionDto(
+        float Temperature,
+        float Humidity,
+        string DeviceID
+    );
 }

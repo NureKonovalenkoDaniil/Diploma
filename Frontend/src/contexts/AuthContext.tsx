@@ -26,7 +26,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const parseAndSetRole = (jwtToken: string) => {
     try {
       const decoded = jwtDecode<any>(jwtToken)
-      const parsedRole = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || 'User'
+      const parsedRole = 
+        decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || 
+        decoded['role'] || 
+        'User'
       setRole(parsedRole as 'Administrator' | 'Manager' | 'User' | 'Device')
     } catch {
       setRole(null)

@@ -1,3 +1,4 @@
+using MedicationManagement.Enums;
 using MedicationManagement.Models;
 using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -42,10 +43,19 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Створити нову локацію зберігання</summary>
         [HttpPost]
-        [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> Create([FromBody] StorageLocation location)
+        [Authorize(Roles = "Administrator,Manager")]
+        public async Task<IActionResult> Create([FromBody] StorageLocationDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            var location = new StorageLocation
+            {
+                Name          = dto.Name,
+                Address       = dto.Address,
+                LocationType  = Enum.TryParse<StorageLocationType>(dto.LocationType, out var lt) ? lt : StorageLocationType.Other,
+                IoTDeviceId   = dto.IoTDeviceId,
+                // OrganizationId підставляється автоматично у сервісі
+            };
 
             var created = await _locationService.Create(location);
             var user = User.Identity?.Name ?? "unknown";
@@ -58,10 +68,18 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Оновити локацію зберігання</summary>
         [HttpPut("{id}")]
-        [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> Update(int id, [FromBody] StorageLocation location)
+        [Authorize(Roles = "Administrator,Manager")]
+        public async Task<IActionResult> Update(int id, [FromBody] StorageLocationDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            var location = new StorageLocation
+            {
+                Name         = dto.Name,
+                Address      = dto.Address,
+                LocationType = Enum.TryParse<StorageLocationType>(dto.LocationType, out var lt2) ? lt2 : StorageLocationType.Other,
+                IoTDeviceId  = dto.IoTDeviceId,
+            };
 
             var updated = await _locationService.Update(id, location);
             if (updated is null) return NotFound();

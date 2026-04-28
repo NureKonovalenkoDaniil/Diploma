@@ -38,6 +38,22 @@ namespace MedicationManagement.Models.DTOs
             );
         }
 
+        public static IoTDevice ToEntity(this IoTDeviceDto d)
+        {
+            return new IoTDevice
+            {
+                DeviceID = d.DeviceID,
+                Location = d.Location,
+                Type = d.Type,
+                Parameters = d.Parameters,
+                IsActive = d.IsActive,
+                MinTemperature = d.MinTemperature,
+                MaxTemperature = d.MaxTemperature,
+                MinHumidity = d.MinHumidity,
+                MaxHumidity = d.MaxHumidity
+            };
+        }
+
         public static StorageLocationDto ToDto(this StorageLocation l)
         {
             return new StorageLocationDto(

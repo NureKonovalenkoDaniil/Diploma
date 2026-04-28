@@ -3,3 +3,9 @@ elf = ".pio/build/esp32dev/firmware.elf"
 firmware = ".pio/build/esp32dev/firmware.bin"
 
 diagram = "diagram.json"
+
+[net]
+# Вмикає Wokwi Private Gateway — дозволяє ESP32 емулятору
+# підключатися до вашого локального сервера (localhost).
+# Потребує активного VS Code розширення Wokwi.
+enabled = true

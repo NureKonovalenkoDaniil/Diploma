@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MedicationManagement.Migrations
 {
     [DbContext(typeof(MedicineStorageContext))]
-    [Migration("20260428210349_ChangeDeviceIdToString")]
-    partial class ChangeDeviceIdToString
+    [Migration("20260428220310_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

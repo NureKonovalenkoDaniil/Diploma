@@ -61,14 +61,15 @@ namespace MedicationManagement.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> Create([FromBody] IoTDevice iotDevice)
+        [Authorize(Roles = "Administrator,Manager")]
+        public async Task<IActionResult> Create([FromBody] IoTDeviceDto iotDeviceDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
+                var iotDevice = iotDeviceDto.ToEntity();
                 var result = await _iotDeviceService.Create(iotDevice);
                 if (result != null)
                 {
