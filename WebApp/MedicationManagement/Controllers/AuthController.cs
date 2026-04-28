@@ -23,13 +23,15 @@ namespace MedicationManagement.Controllers
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthController> _logger;
         private readonly IServiceAuditLog _auditLogService;
+        private readonly IServiceIoTDevice _ioTDeviceService;
 
         public AuthController(UserManager<ApplicationUser> userManager,
                               SignInManager<ApplicationUser> signInManager,
                               RoleManager<IdentityRole> roleManager,
                               IConfiguration configuration,
                               ILogger<AuthController> logger,
-                              IServiceAuditLog auditLogService)
+                              IServiceAuditLog auditLogService,
+                              IServiceIoTDevice ioTDeviceService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -37,6 +39,7 @@ namespace MedicationManagement.Controllers
             _configuration = configuration;
             _logger = logger;
             _auditLogService = auditLogService;
+            _ioTDeviceService = ioTDeviceService;
         }
 
         [HttpPost("register")]
@@ -51,9 +54,6 @@ namespace MedicationManagement.Controllers
                 if (userExists != null)
                     return Conflict("User already exists!");
 
-                // Перевіряємо ДО CreateAsync, щоб уникнути race condition
-                var isFirstUser = !await _userManager.Users.AnyAsync();
-
                 var user = new ApplicationUser
                 {
                     UserName = model.Email,
@@ -67,10 +67,9 @@ namespace MedicationManagement.Controllers
                 if (!result.Succeeded)
                     return BadRequest(result.Errors);
 
-                var role = isFirstUser ? "Administrator" : "User";
-                await _userManager.AddToRoleAsync(user, role);
+                await _userManager.AddToRoleAsync(user, "User");
 
-                await _auditLogService.LogAction("Register", model.Email, $"Registered new user with role {role}.", false);
+                await _auditLogService.LogAction("Register", model.Email, "Registered new user with role User.", false);
 
                 return Ok("User registered successfully!");
             }
@@ -102,6 +101,66 @@ namespace MedicationManagement.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during login");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpPost("create-manager")]
+        [Authorize(Roles = "Administrator")]
+        public async Task<IActionResult> CreateManager([FromBody] CreateManagerDto model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var userExists = await _userManager.FindByEmailAsync(model.Email);
+                if (userExists != null)
+                    return Conflict("User already exists!");
+
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    EmailConfirmed = true,
+                    SecurityStamp = Guid.NewGuid().ToString(),
+                    OrganizationId = model.OrganizationId
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+                if (!result.Succeeded)
+                    return BadRequest(result.Errors);
+
+                await _userManager.AddToRoleAsync(user, "Manager");
+
+                await _auditLogService.LogAction("CreateManager", User.Identity?.Name ?? "Unknown", $"Created manager {model.Email} for org {model.OrganizationId}.", false);
+
+                return Ok("Manager created successfully!");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating manager");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpPost("device-login")]
+        public async Task<IActionResult> DeviceLogin([FromBody] DeviceLoginDto model)
+        {
+            try
+            {
+                var device = await _ioTDeviceService.ReadById(model.DeviceId);
+                if (device == null)
+                    return Unauthorized("Invalid device ID");
+
+                await _auditLogService.LogAction("DeviceLogin", $"Device-{model.DeviceId}", "Successful device login.", false);
+
+                var token = GenerateJwtTokenForDevice(device);
+                return Ok(new { Token = token });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during device login");
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -206,6 +265,31 @@ namespace MedicationManagement.Controllers
                     new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
                     new Claim(ClaimTypes.Role, role ?? "User"),
                     new Claim("OrganizationId", user.OrganizationId ?? string.Empty)
+                }),
+                Expires = DateTime.UtcNow.AddDays(expireDays),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256),
+                Issuer = _configuration["Jwt:Issuer"],
+                Audience = _configuration["Jwt:Audience"]
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+        private string GenerateJwtTokenForDevice(IoTDevice device)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? string.Empty);
+            var expireDays = _configuration.GetValue<int>("Jwt:ExpireDays", 30);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, device.DeviceID.ToString()),
+                    new Claim(ClaimTypes.Name, $"Device-{device.DeviceID}"),
+                    new Claim(ClaimTypes.Role, "Device"),
+                    new Claim("OrganizationId", device.OrganizationId ?? string.Empty)
                 }),
                 Expires = DateTime.UtcNow.AddDays(expireDays),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256),

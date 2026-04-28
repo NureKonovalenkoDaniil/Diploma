@@ -36,7 +36,7 @@ namespace MedicationManagement
 
             var app = builder.Build();
 
-            await EnsureRolesCreated(app);
+            await SeedIdentityDataAsync(app);
             ConfigureMiddleware(app);
 
             // TD-15: single app.Run() call
@@ -153,16 +153,41 @@ namespace MedicationManagement
             });
         }
 
-        private static async Task EnsureRolesCreated(WebApplication app)
+        private static async Task SeedIdentityDataAsync(WebApplication app)
         {
             using var scope = app.Services.CreateScope();
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-            string[] roles = { "Administrator", "User", "Sensor" };
+            string[] roles = { "Administrator", "Manager", "User", "Device" };
             foreach (var role in roles)
             {
                 if (!await roleManager.RoleExistsAsync(role))
                     await roleManager.CreateAsync(new IdentityRole(role));
+            }
+
+            var adminEmail = config["AdminSeeding:Email"];
+            var adminPassword = config["AdminSeeding:Password"];
+
+            if (!string.IsNullOrEmpty(adminEmail) && !string.IsNullOrEmpty(adminPassword))
+            {
+                var adminExists = await userManager.FindByEmailAsync(adminEmail);
+                if (adminExists == null)
+                {
+                    var adminUser = new ApplicationUser
+                    {
+                        UserName = adminEmail,
+                        Email = adminEmail,
+                        EmailConfirmed = true,
+                        OrganizationId = Guid.NewGuid().ToString() // Admin technically doesn't need one, but let's give him a unique one.
+                    };
+                    var result = await userManager.CreateAsync(adminUser, adminPassword);
+                    if (result.Succeeded)
+                    {
+                        await userManager.AddToRoleAsync(adminUser, "Administrator");
+                    }
+                }
             }
         }
 
