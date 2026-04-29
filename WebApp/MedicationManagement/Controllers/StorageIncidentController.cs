@@ -51,11 +51,12 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Створити новий інцидент (зазвичай викликається фоновим сервісом)</summary>
         [HttpPost]
-        [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> Create([FromBody] StorageIncident incident)
+        [Authorize(Roles = "Administrator,Manager")]
+        public async Task<IActionResult> Create([FromBody] CreateStorageIncidentDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
+            var incident = dto.ToEntity();
             var created = await _incidentService.Create(incident);
             var user = User.Identity?.Name ?? "system";
             await _auditLogService.LogAction("CreateStorageIncident", user,
@@ -68,7 +69,7 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Позначити інцидент як вирішений</summary>
         [HttpPatch("{id}/resolve")]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Administrator,Manager")]
         public async Task<IActionResult> Resolve(int id)
         {
             var resolved = await _incidentService.Resolve(id);

@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { format, isPast, isWithinInterval, addDays } from 'date-fns'
@@ -37,40 +37,95 @@ function MedicineForm({
   isLoading: boolean
 }) {
   const [form, setForm] = useState<Partial<MedicineDto>>(initial ?? {})
-  const set = (k: keyof MedicineDto, v: string | number | undefined) =>
+  const [touched, setTouched] = useState<Partial<Record<keyof MedicineDto, boolean>>>({})
+  const set = (k: keyof MedicineDto, v: string | number | undefined) => {
     setForm((p) => ({ ...p, [k]: v }))
+    setTouched((p) => ({ ...p, [k]: true }))
+  }
+
+  const errors: Partial<Record<keyof MedicineDto, string>> = {}
+  if (!form.name?.trim())        errors.name       = "Назва є обов'язковою"
+  if (!form.type?.trim())        errors.type       = "Тип є обов'язковим"
+  if (!form.category?.trim())    errors.category   = "Категорія є обов'язковою"
+  if (!form.quantity && form.quantity !== 0) errors.quantity = "Вкажіть кількість"
+  if (!form.expiryDate)          errors.expiryDate = "Вкажіть термін придатності"
+
+  const isValid = Object.keys(errors).length === 0
+
+  const field = (label: string, key: keyof MedicineDto, required = false, children: React.ReactNode) => (
+    <div className="space-y-1.5">
+      <Label className={required ? 'after:content-["*"] after:ml-0.5 after:text-destructive' : ''}>
+        {label}
+      </Label>
+      {children}
+      {touched[key] && errors[key] && (
+        <p className="text-xs text-destructive">{errors[key]}</p>
+      )}
+    </div>
+  )
+
+  const handleSave = () => {
+    // позначити всі обов'язкові поля як торкнуті
+    setTouched({ name: true, type: true, category: true, quantity: true, expiryDate: true })
+    if (isValid) onSave(form)
+  }
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label>Назва *</Label>
-          <Input value={form.name ?? ''} onChange={(e) => set('name', e.target.value)} placeholder="Amoxicillin" />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Тип *</Label>
-          <Input value={form.type ?? ''} onChange={(e) => set('type', e.target.value)} placeholder="Antibiotic" />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Категорія</Label>
-          <Input value={form.category ?? ''} onChange={(e) => set('category', e.target.value)} placeholder="Prescription" />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Кількість</Label>
-          <Input type="number" value={form.quantity ?? ''} onChange={(e) => set('quantity', Number(e.target.value))} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Термін придатності</Label>
-          <Input type="date" value={form.expiryDate ? form.expiryDate.slice(0, 10) : ''} onChange={(e) => set('expiryDate', e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Виробник</Label>
-          <Input value={form.manufacturer ?? ''} onChange={(e) => set('manufacturer', e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Номер партії</Label>
-          <Input value={form.batchNumber ?? ''} onChange={(e) => set('batchNumber', e.target.value)} />
-        </div>
+        {field('Назва', 'name', true,
+          <Input
+            value={form.name ?? ''}
+            onChange={(e) => set('name', e.target.value)}
+            placeholder="Amoxicillin"
+            className={touched.name && errors.name ? 'border-destructive' : ''}
+          />
+        )}
+        {field('Тип', 'type', true,
+          <Input
+            value={form.type ?? ''}
+            onChange={(e) => set('type', e.target.value)}
+            placeholder="Antibiotic"
+            className={touched.type && errors.type ? 'border-destructive' : ''}
+          />
+        )}
+        {field('Категорія', 'category', true,
+          <Input
+            value={form.category ?? ''}
+            onChange={(e) => set('category', e.target.value)}
+            placeholder="Prescription"
+            className={touched.category && errors.category ? 'border-destructive' : ''}
+          />
+        )}
+        {field('Кількість', 'quantity', true,
+          <Input
+            type="number"
+            min={0}
+            value={form.quantity ?? ''}
+            onChange={(e) => set('quantity', Number(e.target.value))}
+            className={touched.quantity && errors.quantity ? 'border-destructive' : ''}
+          />
+        )}
+        {field('Термін придатності', 'expiryDate', true,
+          <Input
+            type="date"
+            value={form.expiryDate ? form.expiryDate.slice(0, 10) : ''}
+            onChange={(e) => set('expiryDate', e.target.value)}
+            className={touched.expiryDate && errors.expiryDate ? 'border-destructive' : ''}
+          />
+        )}
+        {field('Виробник', 'manufacturer', false,
+          <Input
+            value={form.manufacturer ?? ''}
+            onChange={(e) => set('manufacturer', e.target.value)}
+          />
+        )}
+        {field('Номер партії', 'batchNumber', false,
+          <Input
+            value={form.batchNumber ?? ''}
+            onChange={(e) => set('batchNumber', e.target.value)}
+          />
+        )}
         <div className="space-y-1.5">
           <Label>Локація</Label>
           <select
@@ -91,7 +146,7 @@ function MedicineForm({
       </div>
       <DialogFooter>
         <Button variant="outline" onClick={onClose}>Скасувати</Button>
-        <Button onClick={() => onSave(form)} disabled={isLoading}>
+        <Button onClick={handleSave} disabled={isLoading}>
           {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
           Зберегти
         </Button>
@@ -101,12 +156,14 @@ function MedicineForm({
 }
 
 export default function MedicinesPage() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, isManager } = useAuth()
+  const canManage = isAdmin || isManager
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [search, setSearch] = useState('')
   const [dialogMode, setDialogMode] = useState<'create' | 'edit' | null>(null)
   const [selected, setSelected] = useState<MedicineDto | null>(null)
+  const [serverError, setServerError] = useState<string | null>(null)
 
   const { data: medicines = [], isLoading } = useQuery({
     queryKey: ['medicines'],
@@ -124,6 +181,11 @@ export default function MedicinesPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['medicines'] })
       setDialogMode(null)
+      setServerError(null)
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.title || err?.response?.data || 'Помилка сервера. Спробуйте ще раз.'
+      setServerError(typeof msg === 'string' ? msg : JSON.stringify(msg))
     },
   })
 
@@ -160,7 +222,7 @@ export default function MedicinesPage() {
           <h1 className="text-2xl font-bold">Препарати</h1>
           <p className="text-muted-foreground">Управління медичними препаратами</p>
         </div>
-        {isAdmin && (
+        {canManage && (
           <Button onClick={() => { setSelected(null); setDialogMode('create') }}>
             <Plus className="h-4 w-4" /> Додати
           </Button>
@@ -197,7 +259,7 @@ export default function MedicinesPage() {
                   <TableHead>Термін</TableHead>
                   <TableHead>Статус</TableHead>
                   <TableHead>Локація</TableHead>
-                  {isAdmin && <TableHead className="text-right">Дії</TableHead>}
+                  {canManage && <TableHead className="text-right">Дії</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -224,7 +286,7 @@ export default function MedicinesPage() {
                           <Badge variant={status.variant}>{status.label}</Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground">{m.storageLocationName ?? '—'}</TableCell>
-                        {isAdmin && (
+                        {canManage && (
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                               <Button
@@ -259,17 +321,26 @@ export default function MedicinesPage() {
       </Card>
 
       {/* Create/Edit Dialog */}
-      <Dialog open={dialogMode !== null} onOpenChange={(o) => !o && setDialogMode(null)}>
+      <Dialog open={dialogMode !== null} onOpenChange={(o) => { if (!o) { setDialogMode(null); setServerError(null) } }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{dialogMode === 'create' ? 'Додати препарат' : 'Редагувати препарат'}</DialogTitle>
+            <DialogDescription className="sr-only">
+              Форма для {dialogMode === 'create' ? 'створення нового' : 'редагування існуючого'} медичного препарату
+            </DialogDescription>
           </DialogHeader>
+          {serverError && (
+            <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-2 text-sm text-destructive">
+              {serverError}
+            </div>
+          )}
           <MedicineForm
             initial={selected ?? {}}
             locations={locations}
             isLoading={createMutation.isPending || updateMutation.isPending}
-            onClose={() => setDialogMode(null)}
+            onClose={() => { setDialogMode(null); setServerError(null) }}
             onSave={(data) => {
+              setServerError(null)
               if (dialogMode === 'create') {
                 createMutation.mutate(data)
               } else if (selected) {

@@ -226,6 +226,71 @@ namespace MedicationManagement.Controllers
             }
         }
 
+        /// <summary>Отримати список усіх користувачів (тільки Administrator)</summary>
+        [HttpGet("users")]
+        [Authorize(Roles = "Administrator", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> GetUsers()
+        {
+            try
+            {
+                var adminOrgId = User.FindFirst("OrganizationId")?.Value;
+                var users = await _userManager.Users
+                    .Where(u => u.OrganizationId == adminOrgId)
+                    .ToListAsync();
+
+                var result = new List<object>();
+                foreach (var u in users)
+                {
+                    var roles = await _userManager.GetRolesAsync(u);
+                    result.Add(new
+                    {
+                        u.Id,
+                        u.Email,
+                        u.UserName,
+                        Roles = roles,
+                        u.OrganizationId
+                    });
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting users");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>Видалити користувача (тільки Administrator)</summary>
+        [HttpDelete("users/{id}")]
+        [Authorize(Roles = "Administrator", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            try
+            {
+                var adminOrgId = User.FindFirst("OrganizationId")?.Value;
+                var user = await _userManager.FindByIdAsync(id);
+                if (user == null) return NotFound();
+                if (user.OrganizationId != adminOrgId) return Forbid();
+
+                var roles = await _userManager.GetRolesAsync(user);
+                if (roles.Contains("Administrator")) return BadRequest("Неможливо видалити адміністратора.");
+
+                var result = await _userManager.DeleteAsync(user);
+                if (!result.Succeeded) return BadRequest(result.Errors);
+
+                await _auditLogService.LogAction("DeleteUser", User.Identity?.Name ?? "Unknown",
+                    $"Deleted user {user.Email}.", false);
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting user");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
         /// <summary>Отримати дані поточного авторизованого користувача</summary>
         [HttpGet("me")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]

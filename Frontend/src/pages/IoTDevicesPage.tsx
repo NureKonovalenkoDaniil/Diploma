@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { iotApi } from '@/api'
 import type { IoTDeviceDto } from '@/types/api'
@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Cpu, Activity, ChevronRight, Power } from 'lucide-react'
+import { Cpu, Activity, ChevronRight, Power, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import {
   Dialog,
@@ -20,6 +20,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
@@ -49,6 +60,11 @@ export default function IoTDevicesPage() {
       setIsDialogOpen(false)
       setNewDevice({ deviceID: '', location: '', type: '', minTemp: 2, maxTemp: 8, minHum: 30, maxHum: 60 })
     },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => iotApi.delete(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['iot-devices'] }),
   })
 
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -167,14 +183,14 @@ export default function IoTDevicesPage() {
                   <TableHead>Статус</TableHead>
                   <TableHead>Діапазон темп.</TableHead>
                   <TableHead>Діапазон вол.</TableHead>
-                  {isAdmin && <TableHead>Дії</TableHead>}
+                  {(isAdmin || isManager) && <TableHead>Дії</TableHead>}
                   <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {devices.map((d) => (
-                  <>
-                    <TableRow key={d.deviceID} className="cursor-pointer" onClick={() => setExpanded(expanded === d.deviceID ? null : d.deviceID)}>
+                  <Fragment key={d.deviceID}>
+                    <TableRow className="cursor-pointer" onClick={() => setExpanded(expanded === d.deviceID ? null : d.deviceID)}>
                       <TableCell className="font-mono text-xs">#{d.deviceID}</TableCell>
                       <TableCell className="font-medium">{d.location}</TableCell>
                       <TableCell><Badge variant="outline">{d.type}</Badge></TableCell>
@@ -186,7 +202,7 @@ export default function IoTDevicesPage() {
                       <TableCell className="text-sm">{d.minTemperature}°C – {d.maxTemperature}°C</TableCell>
                       <TableCell className="text-sm">{d.minHumidity}% – {d.maxHumidity}%</TableCell>
                       {(isAdmin || isManager) && (
-                        <TableCell onClick={(e) => e.stopPropagation()}>
+                        <TableCell onClick={(e) => e.stopPropagation()} className="flex items-center gap-1">
                           <Button
                             variant={d.isActive ? 'outline' : 'default'}
                             size="sm"
@@ -194,6 +210,30 @@ export default function IoTDevicesPage() {
                           >
                             {d.isActive ? 'Вимкнути' : 'Увімкнути'}
                           </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Видалити пристрій?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Пристрій <strong>{d.deviceID}</strong> ({d.location}) буде назавжди видалено з системи. Цю дію неможливо скасувати.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Скасувати</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  onClick={() => deleteMutation.mutate(d.deviceID)}
+                                >
+                                  Видалити
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </TableCell>
                       )}
                       <TableCell>
@@ -202,7 +242,7 @@ export default function IoTDevicesPage() {
                     </TableRow>
                     {expanded === d.deviceID && (
                       <TableRow key={`${d.deviceID}-exp`}>
-                        <TableCell colSpan={isAdmin ? 8 : 7} className="bg-muted/30 p-4">
+                        <TableCell colSpan={(isAdmin || isManager) ? 8 : 7} className="bg-muted/30 p-4">
                           <p className="mb-2 text-sm font-medium">Останні показники умов зберігання</p>
                           {condFetching ? (
                             <Skeleton className="h-20" />
@@ -222,7 +262,7 @@ export default function IoTDevicesPage() {
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </Fragment>
                 ))}
               </TableBody>
             </Table>

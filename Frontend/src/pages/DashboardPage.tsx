@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Pill, Cpu, AlertTriangle, Bell, TrendingDown, Package } from 'lucide-react'
 import { medicineApi, iotApi, incidentApi, notificationApi } from '@/api'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import {
   AreaChart,
@@ -53,8 +55,106 @@ function StatCard({
   )
 }
 
+// ─── Storage Conditions Chart with device switcher ────────────────────────────
+function StorageChart({ devices }: { devices: { deviceID: string; location: string; isActive: boolean }[] }) {
+  const activeDevices = devices.filter(d => d.isActive)
+  const [selectedId, setSelectedId] = useState<string | null>(activeDevices[0]?.deviceID ?? null)
+
+  const { data: conditionsData = [], isLoading } = useQuery({
+    queryKey: ['conditions-chart', selectedId],
+    queryFn: async () => {
+      if (!selectedId) return []
+      const conds = await iotApi.getConditions(selectedId)
+      return conds
+        .slice(-24)
+        .map((c) => ({
+          time: format(new Date(c.timestamp), 'HH:mm'),
+          Температура: c.temperature,
+          Вологість: c.humidity,
+        }))
+    },
+    enabled: !!selectedId,
+    refetchInterval: 60_000,
+  })
+
+  const selectedDevice = activeDevices.find(d => d.deviceID === selectedId)
+
+  return (
+    <Card className="lg:col-span-2">
+      <CardHeader>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <CardTitle className="text-base">Умови зберігання</CardTitle>
+            <CardDescription>
+              {selectedDevice ? `📍 ${selectedDevice.location} (${selectedDevice.deviceID})` : 'Оберіть пристрій'}
+            </CardDescription>
+          </div>
+          {activeDevices.length > 1 && (
+            <div className="flex flex-wrap gap-1">
+              {activeDevices.map(d => (
+                <Button
+                  key={d.deviceID}
+                  variant={selectedId === d.deviceID ? 'default' : 'outline'}
+                  size="sm"
+                  className="text-xs h-7"
+                  onClick={() => setSelectedId(d.deviceID)}
+                >
+                  {d.location}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        {activeDevices.length === 0 ? (
+          <div className="flex h-48 items-center justify-center text-muted-foreground text-sm">
+            Немає активних IoT-пристроїв
+          </div>
+        ) : isLoading ? (
+          <Skeleton className="h-[220px] w-full" />
+        ) : conditionsData.length === 0 ? (
+          <div className="flex h-48 items-center justify-center text-muted-foreground text-sm">
+            Немає даних для відображення
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={conditionsData}>
+              <defs>
+                <linearGradient id="temp" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(221.2 83.2% 53.3%)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(221.2 83.2% 53.3%)" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="hum" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(160 60% 45%)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(160 60% 45%)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+              <XAxis dataKey="time" tick={{ fontSize: 11 }} className="text-muted-foreground" />
+              <YAxis tick={{ fontSize: 11 }} className="text-muted-foreground" />
+              <Tooltip
+                contentStyle={{
+                  background: 'hsl(var(--popover))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                }}
+              />
+              <Legend wrapperStyle={{ fontSize: '12px' }} />
+              <Area type="monotone" dataKey="Температура" stroke="hsl(221.2 83.2% 53.3%)" fill="url(#temp)" strokeWidth={2} />
+              <Area type="monotone" dataKey="Вологість" stroke="hsl(160 60% 45%)" fill="url(#hum)" strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 export default function DashboardPage() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, isManager } = useAuth()
+  const canManage = isAdmin || isManager
 
   const { data: medicines = [], isLoading: mLoading } = useQuery({
     queryKey: ['medicines'],
@@ -81,25 +181,7 @@ export default function DashboardPage() {
   const { data: lowStock = [] } = useQuery({
     queryKey: ['medicines', 'low-stock'],
     queryFn: () => medicineApi.getLowStock(),
-    enabled: isAdmin,
-  })
-
-  // Build chart data from last conditions of active devices
-  const { data: conditionsData = [] } = useQuery({
-    queryKey: ['conditions-chart'],
-    queryFn: async () => {
-      if (devices.length === 0) return []
-      const firstDevice = devices[0]
-      const conds = await iotApi.getConditions(firstDevice.deviceID)
-      return conds
-        .slice(-24)
-        .map((c) => ({
-          time: format(new Date(c.timestamp), 'HH:mm'),
-          Температура: c.temperature,
-          Вологість: c.humidity,
-        }))
-    },
-    enabled: devices.length > 0,
+    enabled: canManage,
   })
 
   const isLoading = mLoading || dLoading || iLoading
@@ -144,63 +226,8 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Chart */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">Умови зберігання</CardTitle>
-            <CardDescription>
-              {devices[0] ? `Пристрій: ${devices[0].location}` : 'Температура та вологість'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {conditionsData.length === 0 ? (
-              <div className="flex h-48 items-center justify-center text-muted-foreground text-sm">
-                Немає даних для відображення
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={220}>
-                <AreaChart data={conditionsData}>
-                  <defs>
-                    <linearGradient id="temp" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(221.2 83.2% 53.3%)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(221.2 83.2% 53.3%)" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="hum" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(160 60% 45%)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(160 60% 45%)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="time" tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                  <YAxis tick={{ fontSize: 11 }} className="text-muted-foreground" />
-                  <Tooltip
-                    contentStyle={{
-                      background: 'hsl(var(--popover))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '12px' }} />
-                  <Area
-                    type="monotone"
-                    dataKey="Температура"
-                    stroke="hsl(221.2 83.2% 53.3%)"
-                    fill="url(#temp)"
-                    strokeWidth={2}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="Вологість"
-                    stroke="hsl(160 60% 45%)"
-                    fill="url(#hum)"
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
+        {/* Chart — з перемикачем пристроїв */}
+        <StorageChart devices={devices} />
 
         {/* Active Incidents */}
         <Card>
@@ -236,7 +263,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Low Stock */}
-      {isAdmin && lowStock.length > 0 && (
+      {canManage && lowStock.length > 0 && (
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -275,7 +302,7 @@ export default function DashboardPage() {
       )}
 
       {/* Low Stock empty state */}
-      {isAdmin && lowStock.length === 0 && !isLoading && (
+      {canManage && lowStock.length === 0 && !isLoading && (
         <Card>
           <CardContent className="flex items-center gap-3 py-4">
             <TrendingDown className="h-5 w-5 text-emerald-500" />

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import type { UserProfile } from '@/types/api'
 import { authApi } from '@/api'
 import { jwtDecode } from 'jwt-decode'
+import type { QueryClient } from '@tanstack/react-query'
 
 interface AuthContextType {
   user: UserProfile | null
@@ -17,7 +18,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+interface AuthProviderProps {
+  children: ReactNode
+  queryClient: QueryClient
+}
+
+export function AuthProvider({ children, queryClient }: AuthProviderProps) {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
   const [role, setRole] = useState<'Administrator' | 'Manager' | 'User' | 'Device' | null>(null)
@@ -26,9 +32,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const parseAndSetRole = (jwtToken: string) => {
     try {
       const decoded = jwtDecode<any>(jwtToken)
-      const parsedRole = 
-        decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || 
-        decoded['role'] || 
+      const parsedRole =
+        decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
+        decoded['role'] ||
         'User'
       setRole(parsedRole as 'Administrator' | 'Manager' | 'User' | 'Device')
     } catch {
@@ -53,6 +59,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (newToken: string) => {
+    // Очищаємо кеш попереднього аккаунту перед входом нового
+    queryClient.clear()
     localStorage.setItem('token', newToken)
     setToken(newToken)
     parseAndSetRole(newToken)
@@ -61,6 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => {
+    // Очищаємо весь React Query кеш при виході
+    queryClient.clear()
     localStorage.removeItem('token')
     setToken(null)
     setUser(null)

@@ -12,7 +12,8 @@ namespace MedicationManagement.Services
         Task<IEnumerable<Notification>> GetUnread(string? targetRole = null);
         Task<Notification> Create(Notification notification);
         Task<Notification> Create(NotificationType type, string title, string message,
-            string targetRole = "All", string? relatedEntityType = null, int? relatedEntityId = null);
+            string targetRole = "All", string? relatedEntityType = null, int? relatedEntityId = null,
+            string? organizationId = null);
         Task<bool> MarkAsRead(int notificationId);
         Task<int> MarkAllAsRead(string? targetRole = null);
     }
@@ -43,7 +44,8 @@ namespace MedicationManagement.Services
                     query = query.Where(n => n.TargetRole == targetRole || n.TargetRole == "All");
 
                 if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
-                    query = query.Where(n => n.OrganizationId == CurrentOrgId);
+                    query = query.Where(n => n.OrganizationId == CurrentOrgId
+                                         || string.IsNullOrEmpty(n.OrganizationId));
 
                 return await query.OrderByDescending(n => n.CreatedAt).ToListAsync();
             }
@@ -64,7 +66,8 @@ namespace MedicationManagement.Services
                     query = query.Where(n => n.TargetRole == targetRole || n.TargetRole == "All");
 
                 if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
-                    query = query.Where(n => n.OrganizationId == CurrentOrgId);
+                    query = query.Where(n => n.OrganizationId == CurrentOrgId
+                                         || string.IsNullOrEmpty(n.OrganizationId));
 
                 return await query.OrderByDescending(n => n.CreatedAt).ToListAsync();
             }
@@ -100,7 +103,8 @@ namespace MedicationManagement.Services
         }
 
         public async Task<Notification> Create(NotificationType type, string title, string message,
-            string targetRole = "All", string? relatedEntityType = null, int? relatedEntityId = null)
+            string targetRole = "All", string? relatedEntityType = null, int? relatedEntityId = null,
+            string? organizationId = null)
         {
             try
             {
@@ -116,7 +120,8 @@ namespace MedicationManagement.Services
                     CreatedAt = DateTime.UtcNow
                 };
 
-                var orgId = CurrentOrgId;
+                // organizationId з параметра (фоновий сервіс) або з HTTP-контексту (API)
+                var orgId = organizationId ?? CurrentOrgId;
                 if (!string.IsNullOrEmpty(orgId))
                 {
                     notification.OrganizationId = orgId;
@@ -139,7 +144,8 @@ namespace MedicationManagement.Services
             {
                 var query = _context.Notifications.AsQueryable();
                 if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
-                    query = query.Where(n => n.OrganizationId == CurrentOrgId);
+                    query = query.Where(n => n.OrganizationId == CurrentOrgId
+                                         || string.IsNullOrEmpty(n.OrganizationId));
 
                 var notification = await query.FirstOrDefaultAsync(n => n.NotificationId == notificationId);
                 if (notification is null) return false;
@@ -165,7 +171,8 @@ namespace MedicationManagement.Services
                     query = query.Where(n => n.TargetRole == targetRole || n.TargetRole == "All");
 
                 if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
-                    query = query.Where(n => n.OrganizationId == CurrentOrgId);
+                    query = query.Where(n => n.OrganizationId == CurrentOrgId
+                                         || string.IsNullOrEmpty(n.OrganizationId));
 
                 var notifications = await query.ToListAsync();
                 notifications.ForEach(n => n.IsRead = true);

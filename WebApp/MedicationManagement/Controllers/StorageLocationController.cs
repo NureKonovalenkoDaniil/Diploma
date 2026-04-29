@@ -94,7 +94,7 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Видалити локацію зберігання</summary>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Administrator,Manager")]
         public async Task<IActionResult> Delete(int id)
         {
             var success = await _locationService.Delete(id);

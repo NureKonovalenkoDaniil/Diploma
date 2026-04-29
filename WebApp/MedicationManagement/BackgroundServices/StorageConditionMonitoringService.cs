@@ -51,15 +51,6 @@ namespace MedicationManagement.BackgroundServices
         {
             // TD-07 NOTE: Debounce реалізований на рівні SQL-запиту:
             // новий інцидент створюється лише якщо немає активного для device+incidentType.
-            // ОБМЕЖЕННЯ: Оскільки перевірка і вставка не є атомарними, теоретично
-            // за умов двох паралельних тіків можливе подвійне створення інциденту.
-            // Для продакшн-середовища рекомендується додати унікальний частковий індекс:
-            //   CREATE UNIQUE INDEX IX_StorageIncidents_Active
-            //       ON StorageIncidents (DeviceId, IncidentType)
-            //       WHERE Status = 'Active'
-            // Для дипломної роботи це прийнятно — BackgroundService є singleton,
-            // тіки виконуються послідовно і паралельних запусків не відбувається.
-
             using var scope = _serviceProvider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<MedicineStorageContext>();
             var auditService = scope.ServiceProvider.GetRequiredService<IServiceAuditLog>();
@@ -101,17 +92,18 @@ namespace MedicationManagement.BackgroundServices
 
             if (isViolation && activeIncident is null)
             {
-                // Нове порушення — debounce пройдено (немає активного інциденту)
+                // Нове порушення. OrganizationId береться з device (FIX multi-tenancy)
                 var incident = new StorageIncident
                 {
-                    DeviceId = device.DeviceID,
-                    IncidentType = IncidentType.TemperatureViolation,
-                    DetectedValue = condition.Temperature,
-                    ExpectedMin = device.MinTemperature,
-                    ExpectedMax = device.MaxTemperature,
-                    Status = IncidentStatus.Active,
-                    StartTime = DateTime.UtcNow,
-                    CreatedAt = DateTime.UtcNow
+                    DeviceId        = device.DeviceID,
+                    OrganizationId  = device.OrganizationId,
+                    IncidentType    = IncidentType.TemperatureViolation,
+                    DetectedValue   = condition.Temperature,
+                    ExpectedMin     = device.MinTemperature,
+                    ExpectedMax     = device.MaxTemperature,
+                    Status          = IncidentStatus.Active,
+                    StartTime       = DateTime.UtcNow,
+                    CreatedAt       = DateTime.UtcNow
                 };
                 db.StorageIncidents.Add(incident);
                 await db.SaveChangesAsync();
@@ -119,13 +111,15 @@ namespace MedicationManagement.BackgroundServices
                 var msg = $"Температурне порушення на пристрої {device.DeviceID}: {condition.Temperature}°C " +
                           $"(норма: {device.MinTemperature}–{device.MaxTemperature}°C)";
 
+                // targetRole = "All" → бачать і адміни, і менеджери тієї самої організації
                 await notificationService.Create(
                     NotificationType.StorageViolation,
                     "⚠️ Порушення температури",
                     msg,
-                    targetRole: "Administrator",
+                    targetRole: "All",
                     relatedEntityType: "StorageIncident",
-                    relatedEntityId: incident.IncidentId);
+                    relatedEntityId: incident.IncidentId,
+                    organizationId: device.OrganizationId);
 
                 await auditService.LogAction(
                     "StorageIncident_Created", "System", msg, isSensor: true,
@@ -136,8 +130,7 @@ namespace MedicationManagement.BackgroundServices
             }
             else if (!isViolation && activeIncident is not null)
             {
-                // Норма відновлена — auto-resolve
-                activeIncident.Status = IncidentStatus.Resolved;
+                activeIncident.Status  = IncidentStatus.Resolved;
                 activeIncident.EndTime = DateTime.UtcNow;
                 await db.SaveChangesAsync();
 
@@ -148,9 +141,10 @@ namespace MedicationManagement.BackgroundServices
                     NotificationType.StorageViolation,
                     "✅ Температура нормалізована",
                     msg,
-                    targetRole: "Administrator",
+                    targetRole: "All",
                     relatedEntityType: "StorageIncident",
-                    relatedEntityId: activeIncident.IncidentId);
+                    relatedEntityId: activeIncident.IncidentId,
+                    organizationId: device.OrganizationId);
 
                 await auditService.LogAction(
                     "StorageIncident_Resolved", "System", msg, isSensor: true,
@@ -181,14 +175,15 @@ namespace MedicationManagement.BackgroundServices
             {
                 var incident = new StorageIncident
                 {
-                    DeviceId = device.DeviceID,
-                    IncidentType = IncidentType.HumidityViolation,
-                    DetectedValue = condition.Humidity,
-                    ExpectedMin = device.MinHumidity,
-                    ExpectedMax = device.MaxHumidity,
-                    Status = IncidentStatus.Active,
-                    StartTime = DateTime.UtcNow,
-                    CreatedAt = DateTime.UtcNow
+                    DeviceId        = device.DeviceID,
+                    OrganizationId  = device.OrganizationId,
+                    IncidentType    = IncidentType.HumidityViolation,
+                    DetectedValue   = condition.Humidity,
+                    ExpectedMin     = device.MinHumidity,
+                    ExpectedMax     = device.MaxHumidity,
+                    Status          = IncidentStatus.Active,
+                    StartTime       = DateTime.UtcNow,
+                    CreatedAt       = DateTime.UtcNow
                 };
                 db.StorageIncidents.Add(incident);
                 await db.SaveChangesAsync();
@@ -200,9 +195,10 @@ namespace MedicationManagement.BackgroundServices
                     NotificationType.StorageViolation,
                     "⚠️ Порушення вологості",
                     msg,
-                    targetRole: "Administrator",
+                    targetRole: "All",
                     relatedEntityType: "StorageIncident",
-                    relatedEntityId: incident.IncidentId);
+                    relatedEntityId: incident.IncidentId,
+                    organizationId: device.OrganizationId);
 
                 await auditService.LogAction(
                     "StorageIncident_Created", "System", msg, isSensor: true,
@@ -213,7 +209,7 @@ namespace MedicationManagement.BackgroundServices
             }
             else if (!isViolation && activeIncident is not null)
             {
-                activeIncident.Status = IncidentStatus.Resolved;
+                activeIncident.Status  = IncidentStatus.Resolved;
                 activeIncident.EndTime = DateTime.UtcNow;
                 await db.SaveChangesAsync();
 
@@ -224,9 +220,10 @@ namespace MedicationManagement.BackgroundServices
                     NotificationType.StorageViolation,
                     "✅ Вологість нормалізована",
                     msg,
-                    targetRole: "Administrator",
+                    targetRole: "All",
                     relatedEntityType: "StorageIncident",
-                    relatedEntityId: activeIncident.IncidentId);
+                    relatedEntityId: activeIncident.IncidentId,
+                    organizationId: device.OrganizationId);
 
                 await auditService.LogAction(
                     "StorageIncident_Resolved", "System", msg, isSensor: true,

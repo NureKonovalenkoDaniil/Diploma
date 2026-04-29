@@ -119,6 +119,7 @@ export interface UserProfile {
   userName: string
   email: string
   roles: string[]
+  organizationId?: string
 }
 
 // Request DTOs

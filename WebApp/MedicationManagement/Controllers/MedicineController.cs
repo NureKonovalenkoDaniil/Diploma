@@ -28,7 +28,7 @@ namespace MedicationManagement.Controllers
 
         // Endpoint to get medicines with low stock
         [HttpGet("low-stock")]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Administrator,Manager")]
         public async Task<IActionResult> GetLowStockMedicines([FromQuery] int threshold = 10)
         {
             try
@@ -46,7 +46,7 @@ namespace MedicationManagement.Controllers
 
         // Endpoint to get medicines that are expiring before a certain date
         [HttpGet("expiring")]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Administrator,Manager")]
         public async Task<IActionResult> GetExpiringMedicines([FromQuery] int daysThreshold = 7)
         {
             try
@@ -64,7 +64,7 @@ namespace MedicationManagement.Controllers
 
         // Endpoint to get replenishment recommendations for low stock medicines
         [HttpGet("replenishment-recommendations")]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Administrator,Manager")]
         public async Task<IActionResult> GetReplenishmentRecommendations()
         {
             try
@@ -81,14 +81,15 @@ namespace MedicationManagement.Controllers
 
         // Endpoint to create a new medicine
         [HttpPost]
-        [Authorize(Roles = "Administrator")]
-        public async Task<IActionResult> Create([FromBody] Medicine medicine)
+        [Authorize(Roles = "Administrator,Manager")]
+        public async Task<IActionResult> Create([FromBody] CreateMedicineDto medicineDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
+                var medicine = medicineDto.ToEntity();
                 var result = await _medicineService.Create(medicine);
                 if (result != null)
                 {
@@ -142,7 +143,7 @@ namespace MedicationManagement.Controllers
 
         // Endpoint to update an existing medicine
         [HttpPatch("{id}")]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Administrator,Manager")]
         public async Task<IActionResult> Update(int id, [FromBody] JsonPatchDocument<Medicine> patchDoc)
         {
             if (patchDoc == null)
@@ -169,7 +170,7 @@ namespace MedicationManagement.Controllers
 
         // Endpoint to delete a medicine by ID
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Administrator,Manager")]
         public async Task<IActionResult> Delete(int id)
         {
             try

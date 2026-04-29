@@ -13,8 +13,10 @@ import StorageLocationsPage from '@/pages/StorageLocationsPage'
 import IncidentsPage from '@/pages/IncidentsPage'
 import NotificationsPage from '@/pages/NotificationsPage'
 import AuditLogPage from '@/pages/AuditLogPage'
+import UsersPage from '@/pages/UsersPage'
 
-const queryClient = new QueryClient({
+// queryClient як singleton — очищення кешу при login/logout в AuthContext
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 30_000,
@@ -27,7 +29,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
+        <AuthProvider queryClient={queryClient}>
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
@@ -41,6 +43,7 @@ export default function App() {
                 <Route path="/incidents" element={<IncidentsPage />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/audit-log" element={<AuditLogPage />} />
+                <Route path="/users" element={<UsersPage />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
               </Route>
               <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -13,7 +13,8 @@ import { format } from 'date-fns'
 type TabType = 'active' | 'all'
 
 export default function IncidentsPage() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, isManager } = useAuth()
+  const canManage = isAdmin || isManager
   const qc = useQueryClient()
   const [tab, setTab] = useState<TabType>('active')
 
@@ -113,13 +114,13 @@ export default function IncidentsPage() {
                   <TableHead>Статус</TableHead>
                   <TableHead>Початок</TableHead>
                   <TableHead>Кінець</TableHead>
-                  {isAdmin && <TableHead>Дії</TableHead>}
+                  {canManage && <TableHead>Дії</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {incidents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isAdmin ? 8 : 7} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={canManage ? 8 : 7} className="py-10 text-center text-muted-foreground">
                       {tab === 'active' ? '✅ Жодних активних порушень' : 'Інцидентів немає'}
                     </TableCell>
                   </TableRow>
@@ -149,7 +150,7 @@ export default function IncidentsPage() {
                     <TableCell className="text-sm text-muted-foreground">
                       {inc.endTime ? format(new Date(inc.endTime), 'dd.MM HH:mm') : '—'}
                     </TableCell>
-                    {isAdmin && (
+                    {canManage && (
                       <TableCell>
                         {inc.status === 'Active' && (
                           <Button

@@ -8,6 +8,7 @@ import {
   Bell,
   ClipboardList,
   FlaskConical,
+  Users,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
@@ -25,6 +26,7 @@ const managerItems = [
 ]
 
 const adminItems = [
+  { to: '/users',     icon: Users,         label: 'Користувачі'   },
   { to: '/audit-log', icon: ClipboardList, label: 'Журнал аудиту' },
 ]
 

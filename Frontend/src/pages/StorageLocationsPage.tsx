@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -83,7 +83,8 @@ function LocationForm({
 }
 
 export default function StorageLocationsPage() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, isManager } = useAuth()
+  const canManage = isAdmin || isManager
   const qc = useQueryClient()
   const [dialogMode, setDialogMode] = useState<'create' | 'edit' | null>(null)
   const [selected, setSelected] = useState<StorageLocationDto | null>(null)
@@ -128,7 +129,7 @@ export default function StorageLocationsPage() {
           <h1 className="text-2xl font-bold">Локації зберігання</h1>
           <p className="text-muted-foreground">Управління місцями зберігання препаратів</p>
         </div>
-        {isAdmin && (
+        {canManage && (
           <Button onClick={() => { setSelected(null); setDialogMode('create') }}>
             <Plus className="h-4 w-4" /> Додати
           </Button>
@@ -155,7 +156,7 @@ export default function StorageLocationsPage() {
               <CardContent className="space-y-1 text-sm text-muted-foreground">
                 {l.address && <p>📍 {l.address}</p>}
                 {l.ioTDeviceLocation && <p>🔌 IoT: {l.ioTDeviceLocation}</p>}
-                {isAdmin && (
+                {canManage && (
                   <div className="flex gap-2 pt-2">
                     <Button
                       variant="outline"
@@ -181,7 +182,7 @@ export default function StorageLocationsPage() {
         {!isLoading && locations.length === 0 && (
           <Card className="col-span-3">
             <CardContent className="py-10 text-center text-muted-foreground">
-              Локацій ще немає. {isAdmin && 'Додайте першу.'}
+              Локацій ще немає. {canManage && 'Додайте першу.'}
             </CardContent>
           </Card>
         )}
@@ -191,6 +192,9 @@ export default function StorageLocationsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{dialogMode === 'create' ? 'Нова локація' : 'Редагувати локацію'}</DialogTitle>
+            <DialogDescription className="sr-only">
+              Форма для {dialogMode === 'create' ? 'створення нової' : 'редагування існуючої'} локації зберігання
+            </DialogDescription>
           </DialogHeader>
           <LocationForm
             initial={selected ? {

@@ -24,11 +24,12 @@ export const authApi = {
       token: r.data.token || r.data.Token || '',
     })),
   me: () =>
-    api.get<{ Id?: string; id?: string; UserName?: string; userName?: string; Email?: string; email?: string; Roles?: string[]; roles?: string[] }>('/api/auth/me').then((r) => ({
+    api.get<{ Id?: string; id?: string; UserName?: string; userName?: string; Email?: string; email?: string; Roles?: string[]; roles?: string[]; OrganizationId?: string; organizationId?: string }>('/api/auth/me').then((r) => ({
       id: r.data.id || r.data.Id || '',
       userName: r.data.userName || r.data.UserName || '',
       email: r.data.email || r.data.Email || '',
       roles: r.data.roles || r.data.Roles || [],
+      organizationId: r.data.organizationId || r.data.OrganizationId || '',
     })),
 }
 

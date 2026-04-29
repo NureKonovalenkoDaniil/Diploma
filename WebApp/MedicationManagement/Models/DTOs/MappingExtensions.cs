@@ -1,4 +1,5 @@
 using MedicationManagement.Models;
+using MedicationManagement.Enums;
 
 namespace MedicationManagement.Models.DTOs
 {
@@ -21,6 +22,24 @@ namespace MedicationManagement.Models.DTOs
                 m.StorageLocationId,
                 m.StorageLocation?.Name
             );
+        }
+
+        public static Medicine ToEntity(this CreateMedicineDto dto)
+        {
+            return new Medicine
+            {
+                Name = dto.Name,
+                Type = dto.Type,
+                ExpiryDate = dto.ExpiryDate,
+                Quantity = dto.Quantity,
+                Category = dto.Category,
+                Manufacturer = dto.Manufacturer,
+                BatchNumber = dto.BatchNumber,
+                Description = dto.Description,
+                MinStorageTemp = dto.MinStorageTemp,
+                MaxStorageTemp = dto.MaxStorageTemp,
+                StorageLocationId = dto.StorageLocationId
+            };
         }
 
         public static IoTDeviceDto ToDto(this IoTDevice d)
@@ -140,6 +159,35 @@ namespace MedicationManagement.Models.DTOs
                 a.EntityId,
                 a.Severity.ToString()
             );
+        }
+
+        public static StorageIncident ToEntity(this CreateStorageIncidentDto dto)
+        {
+            return new StorageIncident
+            {
+                DeviceId = dto.DeviceId,
+                LocationId = dto.LocationId,
+                IncidentType = Enum.TryParse<IncidentType>(dto.IncidentType, out var it) ? it : IncidentType.TemperatureViolation,
+                DetectedValue = dto.DetectedValue,
+                ExpectedMin = dto.ExpectedMin,
+                ExpectedMax = dto.ExpectedMax,
+                StartTime = dto.StartTime,
+                EndTime = dto.EndTime,
+                Status = Enum.TryParse<IncidentStatus>(dto.Status, out var status) ? status : IncidentStatus.Active
+            };
+        }
+
+        public static MedicineLifecycleEvent ToEntity(this CreateMedicineLifecycleEventDto dto)
+        {
+            return new MedicineLifecycleEvent
+            {
+                MedicineId = dto.MedicineId,
+                EventType = Enum.TryParse<LifecycleEventType>(dto.EventType, out var et) ? et : LifecycleEventType.Received,
+                Description = dto.Description,
+                Quantity = dto.Quantity,
+                RelatedLocationId = dto.RelatedLocationId,
+                PerformedAt = DateTime.UtcNow
+            };
         }
     }
 }

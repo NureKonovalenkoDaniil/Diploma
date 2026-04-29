@@ -41,7 +41,8 @@ namespace MedicationManagement.Services
                     .Include(i => i.StorageLocation).AsQueryable();
 
                 if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
-                    query = query.Where(i => i.OrganizationId == CurrentOrgId);
+                    query = query.Where(i => i.OrganizationId == CurrentOrgId
+                                         || string.IsNullOrEmpty(i.OrganizationId));
 
                 return await query.OrderByDescending(i => i.CreatedAt)
                     .ToListAsync();
@@ -64,7 +65,8 @@ namespace MedicationManagement.Services
                     .Where(i => i.Status == IncidentStatus.Active).AsQueryable();
 
                 if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
-                    query = query.Where(i => i.OrganizationId == CurrentOrgId);
+                    query = query.Where(i => i.OrganizationId == CurrentOrgId
+                                         || string.IsNullOrEmpty(i.OrganizationId));
 
                 return await query.OrderByDescending(i => i.StartTime)
                     .ToListAsync();
@@ -86,7 +88,8 @@ namespace MedicationManagement.Services
                     .Include(i => i.StorageLocation).AsQueryable();
 
                 if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
-                    query = query.Where(i => i.OrganizationId == CurrentOrgId);
+                    query = query.Where(i => i.OrganizationId == CurrentOrgId
+                                         || string.IsNullOrEmpty(i.OrganizationId));
 
                 return await query.FirstOrDefaultAsync(i => i.IncidentId == id);
             }
@@ -128,7 +131,8 @@ namespace MedicationManagement.Services
             {
                 var query = _context.StorageIncidents.AsQueryable();
                 if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
-                    query = query.Where(i => i.OrganizationId == CurrentOrgId);
+                    query = query.Where(i => i.OrganizationId == CurrentOrgId
+                                         || string.IsNullOrEmpty(i.OrganizationId));
 
                 var incident = await query.FirstOrDefaultAsync(i => i.IncidentId == id);
                 if (incident is null) return null;

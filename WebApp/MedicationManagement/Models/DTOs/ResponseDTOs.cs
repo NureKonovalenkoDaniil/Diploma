@@ -107,4 +107,39 @@ namespace MedicationManagement.Models.DTOs
         float Humidity,
         string DeviceID
     );
+
+    /// <summary>DTO для створення/оновлення препарату. OrganizationId підставляється з JWT на сервері.</summary>
+    public record CreateMedicineDto(
+        string Name,
+        string Type,
+        DateTime ExpiryDate,
+        int Quantity,
+        string Category,
+        string? Manufacturer,
+        string? BatchNumber,
+        string? Description,
+        float? MinStorageTemp,
+        float? MaxStorageTemp,
+        int? StorageLocationId
+    );
+
+    public record CreateStorageIncidentDto(
+        string DeviceId,
+        int? LocationId,
+        string IncidentType,
+        float DetectedValue,
+        float ExpectedMin,
+        float ExpectedMax,
+        DateTime StartTime,
+        DateTime? EndTime,
+        string Status
+    );
+
+    public record CreateMedicineLifecycleEventDto(
+        int MedicineId,
+        string EventType,
+        string? Description,
+        int Quantity,
+        int? RelatedLocationId
+    );
 }
