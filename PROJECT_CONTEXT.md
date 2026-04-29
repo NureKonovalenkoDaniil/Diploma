@@ -164,6 +164,20 @@
 - Основні висновки: Реалізовано повноцінний SPA на React. 9 основних сторінок (Dashboard, Medicines, IoT, Incidents, Audit, Notifications і т.д.). Налаштовано темну/світлу тему, polling сповіщень. Виправлено CORS (локальний доступ), проблеми з регістром (PascalCase vs camelCase) у JSON та фільтрацію JSON Patch для DTO-полів.
 - Що потрібно робити далі: Фаза 5 — Мобільний застосунок
 
+### Запис 6 — Сесія 2026-04-29 (Multi-Tenant Bug-Fix + UX)
+- Дата: 2026-04-29
+- Завдання: Повний аудит та виправлення проблем рольової моделі, multi-tenancy, UX
+- Переглянуті файли / модулі:
+  - Backend: `IoTDeviceController.cs`, `StorageIncidentController.cs`, `ServiceStorageIncident.cs`, `ServiceNotification.cs`, `StorageConditionMonitoringService.cs`
+  - Frontend: `IoTDevicesPage.tsx`, `StorageLocationsPage.tsx`, `MedicinesPage.tsx`, `IncidentsPage.tsx`, `DashboardPage.tsx`, `AuthContext.tsx`, `App.tsx`
+- Основні висновки:
+  1. **Критичний баг multi-tenancy (сповіщення/інциденти)**: фоновий сервіс писав `OrganizationId = null` у всі інциденти/сповіщення, бо `CurrentOrgId` порожній у BackgroundService-контексті. Менеджер отримував порожні списки після перезавантаження.
+  2. **Системний баг у всіх `Where`-фільтрах**: операції читання (`GetAll`, `GetActive`, `GetById`) та запису (`Resolve`, `MarkAsRead`, `MarkAllAsRead`) фільтрували лише по `OrganizationId == currentOrgId`, відкидаючи legacy-записи з `null`.
+  3. **Баг кешу React Query**: при переключенні між акаунтами кеш від адміна зберігався — менеджер бачив чужі дані до першого перезавантаження.
+  4. **Доступ менеджера**: кнопки "Додати/Редагувати/Видалити" на сторінках Medicines, StorageLocations, IncidentsPage були доступні лише `isAdmin`, а не `isAdmin || isManager`.
+  5. **403 Forbidden для менеджера**: `setstatus`, `UPDATE`, `DELETE` у `IoTDeviceController` мали тільки `Administrator` у `[Authorize(Roles)]`.
+- Що потрібно робити далі: Фаза 5 — Мобільний застосунок або Фаза 6 — Тести
+
 ## 10. Журнал змін і рішень
 
 ### Запис шаблону
@@ -259,22 +273,62 @@
 - Результат збірки: `dotnet build` — 0 помилок, **0 попереджень**
 - Наступний крок: Фаза 4 — SPA Frontend (всі виправлено, CORS + DTO — перші дії)
 
-### Запис 6 — Фаза 4: SPA Frontend (виконано 2026-04-27)
+### Запис 6 — Фаза 4.9 (виконано 2026-04-28)
 
-- Дата: 2026-04-27
+- Дата: 2026-04-28
 - Що змінено:
-  - Створено окремий проєкт у `Frontend/` на базі Vite 6 + React 18 + TS.
-  - Реалізовано дизайн-систему на Tailwind CSS + shadcn/ui (Dashboard, DataTable, Dialogs, Cards).
-  - Налаштовано **CORS** у `Program.cs` (дозволено будь-який порт localhost).
-  - Створено `AuthContext` для JWT (login/logout, захист роутів, відображення за роллю).
-  - Реалізовано 9 сторінок: Dashboard (графіки Recharts), Medicines (CRUD + Patch), IoT Devices, Storage Locations, Incidents, Notifications (polling), Audit Log (фільтрація).
-  - Виправлено баг з регістром токена (`Token` vs `token`) в `authApi`.
-  - Виправлено баг JSON Patch: додано фільтрацію read-only DTO полів перед відправкою на бекенд.
-  - Додано сторінку реєстрації (`/register`).
-- Які файли змінено: Frontend/ (весь проєкт), WebApp/MedicationManagement/Program.cs, src/api/index.ts.
-- Причина: Створення сучасного інтерфейсу користувача та відокремлення frontend від backend.
-- Ризики / наслідки: Токен зберігається в localStorage. Потрібна Node.js 22.12+ для Vite (використано Vite 6 для сумісності з 22.11).
-- Наступний крок: Фаза 5 — Мобільний застосунок
+  - Встановлено `jwt-decode`, оновлено `AuthContext` для зберігання ролі та `isManager`
+  - Оновлено `Sidebar`: "Журнал аудиту" та "IoT-пристрої" доступні лише Admin/Manager
+  - Реалізовано `IoTDevicesPage.tsx` з таблицею та модальним вікном реєстрації
+  - Прив'язка IoT-пристрою при редагуванні локацій (`StorageLocationsPage`)
+- Які файли змінено: Frontend/src/contexts/AuthContext.tsx, Frontend/src/components/layout/Sidebar.tsx, Frontend/src/pages/IoTDevicesPage.tsx, Frontend/src/pages/StorageLocationsPage.tsx
+- Причина: Рольовий доступ у фронтенді після впровадження multi-tenancy
+- Ризики / наслідки: Доступ лише за JWT-роллю (без перевірки на сервері при рендері)
+- Наступний крок: Виявлено і виправлено критичні баги рольової моделі та multi-tenancy
+
+### Запис 7 — Фаза 4.10: Bug-Fix Session (виконано 2026-04-29)
+
+- Дата: 2026-04-29
+- Що змінено:
+
+  **Бекенд — Рольова модель (403 → 200):**
+  - `IoTDeviceController`: додано `Manager` до `[Authorize(Roles)]` для `SetSensorStatus`, `Update`, `Delete`
+
+  **Бекенд — Multi-Tenancy (критичний fix):**
+  - `StorageConditionMonitoringService`: встановлено `incident.OrganizationId = device.OrganizationId` та `notification.OrganizationId = device.OrganizationId` — фоновий сервіс більше не пише записи з `null`
+  - `IServiceNotification.Create(overload)`: додано параметр `organizationId?` — дозволяє явно передавати org при виклику поза HTTP-контекстом
+  - `StorageConditionMonitoringService`: `targetRole: "Administrator"` → `targetRole: "All"` — менеджери отримують сповіщення
+  - Всі `Where`-фільтри у `ServiceStorageIncident` та `ServiceNotification` (6 методів): додано умову `|| string.IsNullOrEmpty(i.OrganizationId)` для backward compatibility з legacy-записами
+
+  **Бекенд — StorageIncident.Resolve (404 → 200):**
+  - `ServiceStorageIncident.Resolve()`: той самий фільтр з backward compatibility
+  - `ServiceStorageIncident.GetById()`: аналогічно
+  - `ServiceNotification.MarkAsRead()` та `MarkAllAsRead()`: аналогічно
+
+  **Фронтенд — Рольова модель (Manager бачить і може керувати):**
+  - `MedicinesPage.tsx`: `isAdmin` → `canManage = isAdmin || isManager` у 4 місцях
+  - `StorageLocationsPage.tsx`: аналогічно, + додано `DialogDescription` (усунено aria-warning)
+  - `IncidentsPage.tsx`: `isAdmin` → `canManage` у 4 місцях (заголовок, colSpan, кнопка "Закрити")
+  - `IoTDevicesPage.tsx`: `isAdmin` → `canManage`, key prop `<>` → `<Fragment key={...}>`, кнопка видалення з `AlertDialog`-підтвердженням
+
+  **Фронтенд — Кеш React Query:**
+  - `AuthContext.tsx`: `queryClient.clear()` викликається при `login()` та `logout()` — усунено витік даних між акаунтами
+  - `App.tsx`: `queryClient` переданий як пропс у `AuthProvider`
+
+  **Фронтенд — Dashboard:**
+  - `DashboardPage.tsx`: новий компонент `StorageChart` з перемикачем між активними пристроями (кнопки по локаціях)
+  - `lowStock` тепер доступний і менеджерам (`enabled: canManage`)
+
+  **Фронтенд — AlertDialog компонент:**
+  - Встановлено пакет `@radix-ui/react-alert-dialog`
+  - Створено `src/components/ui/alert-dialog.tsx` (стандартний shadcn/radix компонент)
+
+- Які файли змінено:
+  - Backend: `IoTDeviceController.cs`, `StorageConditionMonitoringService.cs`, `ServiceNotification.cs`, `ServiceStorageIncident.cs`
+  - Frontend: `MedicinesPage.tsx`, `StorageLocationsPage.tsx`, `IncidentsPage.tsx`, `IoTDevicesPage.tsx`, `DashboardPage.tsx`, `AuthContext.tsx`, `App.tsx`, `alert-dialog.tsx` (новий)
+- Причина: Усунення системних помилок multi-tenancy та рольової моделі, виявлених під час тестування
+- Ризики / наслідки: Backward compatibility фільтр (`|| string.IsNullOrEmpty(OrganizationId)`) технічно дозволяє менеджерам бачити записи без orgs. Це прийнятно для однієї організації, але потребує SQL-міграції для backfill у production.
+- Наступний крок: Фаза 5 — Мобільний застосунок або Фаза 6 — Тести
 
 ## 11. Поточний план найближчих дій (оновлено 2026-04-21)
 
@@ -368,6 +422,18 @@
    - ✅ Оновлено `Sidebar`: "Журнал аудиту" та "Інвентар пристроїв" доступні лише для Admin/Manager
    - ✅ Створено сторінку `IoTDevicesPage.tsx` з таблицею та модальним вікном реєстрації
    - ✅ Впроваджено `<select>` для прив'язки IoT-пристроїв при створенні/редагуванні локацій (`StorageLocationsPage`)
+
+4.10. **[ВИКОНАНО 2026-04-29]** ФАЗА 4.10 — Bug-Fix: Multi-Tenancy та Рольова Модель:
+   - ✅ `StorageConditionMonitoringService`: встановлено `OrganizationId = device.OrganizationId`, `targetRole = "All"`
+   - ✅ `IServiceNotification.Create`: доданий параметр `organizationId?` для позаhttp-контексту
+   - ✅ Всі `Where`-фільтри в `ServiceStorageIncident` та `ServiceNotification` (8 методів): backward compatibility для legacy-записів
+   - ✅ `IoTDeviceController`: доданий `Manager` до `[Authorize(Roles)]` для SetStatus/Update/Delete
+   - ✅ `MedicinesPage`, `StorageLocationsPage`, `IncidentsPage`, `IoTDevicesPage`: `isAdmin` → `canManage`
+   - ✅ `AuthContext`: `queryClient.clear()` при login/logout
+   - ✅ `DashboardPage`: перемикач між пристроями у графіку умов зберігання
+   - ✅ `IoTDevicesPage`: кнопка видалення пристрою з `AlertDialog`-підтвердженням
+   - ✅ `IoTDevicesPage`: виправлено React warning (key prop: `<>` → `<Fragment key={...}>`)
+   - ✅ `StorageLocationsPage`: додано `DialogDescription` (усунено aria-warning)
 
 5. **[ПОТОЧНА]** ФАЗА 5 — Мобільний застосунок
 

@@ -1,7 +1,7 @@
 # AUDIT_AND_DIPLOMA_PLAN.md
 > Технічний аудит і план розвитку дипломного проєкту  
 > Дата аудиту: 2026-04-09  
-> Останнє оновлення: 2026-04-27 (Фаза 4 виконана)  
+> Останнє оновлення: 2026-04-29 (Фаза 4.10 виконана — Multi-Tenancy Bug-Fix)  
 > Проведено: Antigravity AI  
 
 ---
@@ -490,11 +490,26 @@ AuditLog (ДОПОВНИТИ):
 17.10. ~~Фільтрація GET запитів за OrganizationId у сервісах~~ ✅
 17.11. ~~Автоматичне додавання OrganizationId при CreateAsync~~ ✅
 
-## Фаза 5 — Мобільний застосунок (2-3 дні)
+## Фаза 4.9 — ~~Адаптація Frontend SPA (Roles & IoT Devices)~~ ✅ ВИКОНАНО 2026-04-28
+17.12. ~~Встановлено `jwt-decode`, оновлено `AuthContext` для ролі/isManager~~ ✅
+17.13. ~~Оновлено `Sidebar` (Admin/Manager доступ)~~ ✅
+17.14. ~~Реалізовано `IoTDevicesPage.tsx`~~ ✅
+17.15. ~~Прив'язка IoT-пристрою при редагуванні локацій~~ ✅
+
+## Фаза 4.10 — ~~Multi-Tenancy Bug-Fix (1 день)~~ ✅ ВИКОНАНО 2026-04-29
+17.16. ~~`StorageConditionMonitoringService`: `OrganizationId = device.OrganizationId`, `targetRole = "All"`~~ ✅
+17.17. ~~`IServiceNotification.Create`: параметр `organizationId?` для BackgroundService~~ ✅
+17.18. ~~Всі `Where`-фільтри (8 методів у 2 сервісах): backward compatibility `|| IsNullOrEmpty`~~ ✅
+17.19. ~~`IoTDeviceController`: `Manager` у `[Authorize(Roles)]` для SetStatus/Update/Delete~~ ✅
+17.20. ~~`MedicinesPage`, `StorageLocationsPage`, `IncidentsPage`, `IoTDevicesPage`: `isAdmin` → `canManage`~~ ✅
+17.21. ~~`AuthContext.queryClient.clear()` при login/logout~~ ✅
+17.22. ~~`DashboardPage`: `StorageChart` з перемикачем між пристроями~~ ✅
+17.23. ~~`IoTDevicesPage`: `AlertDialog` перед видаленням + `Fragment key`~~ ✅
+17.24. ~~`StorageLocationsPage`: `DialogDescription` (aria-warning)~~ ✅
 18. Перевірити якість поточного коду (Retrofit, обробка помилок, URL)
 19. Нові екрани: StorageIncidents, MedicineLifecycle
 
-## Фаза 6 — Тести (2-3 дні)
+## Фаза 5 — Мобільний застосунок (2-3 дні)
 20. Проєкт Tests/MedicationManagement.Tests/ (xUnit)
 21. Unit-тести: ServiceMedicine, ServiceStorageCondition, ServiceStorageIncident
 22. Integration-тести через WebApplicationFactory
@@ -552,4 +567,6 @@ AuditLog (ДОПОВНИТИ):
 *Оновлено 2026-04-28: Фаза 4.5 завершена — впроваджено базову архітектуру Multi-Tenancy (додано OrganizationId до всіх моделей та ApplicationUser, оновлено AuthController).*  
 *Оновлено 2026-04-28: Фаза 4.6 завершена — проведено рефакторинг ролей, додано CreateManager, DeviceLogin та Data Seeding.*  
 *Оновлено 2026-04-28: Фаза 4.7 завершена — впроваджено ізоляцію даних на рівні сервісів (Data Filtering).*  
-*Наступне оновлення — після завершення Фази 5 (Мобільний застосунок).*
+*Оновлено 2026-04-28: Фаза 4.9 завершена — Frontend: ролі/isManager, IoTDevicesPage, прив'язка пристроїв.*  
+*Оновлено 2026-04-29: Фаза 4.10 завершена — Bug-Fix: критичні проблеми multi-tenancy (OrganizationId=null у BackgroundService, backward compatibility фільтри, кеш React Query), рольова модель Manager, Dashboard з перемикачем пристроїв, AlertDialog для видалення. Backend: 0 помилок. Frontend: tsc 0 помилок, build успішний.*  
+*Наступне оновлення — після завершення Фази 5 (Мобільний застосунок) або Фази 6 (Тести).*
