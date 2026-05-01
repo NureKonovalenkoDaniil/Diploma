@@ -1,7 +1,7 @@
 # AUDIT_AND_DIPLOMA_PLAN.md
 > Технічний аудит і план розвитку дипломного проєкту  
 > Дата аудиту: 2026-04-09  
-> Останнє оновлення: 2026-04-29 (Фаза 4.10 виконана — Multi-Tenancy Bug-Fix)  
+> Останнє оновлення: 2026-05-01 (додано атомарні операції з препаратом, `MedicineStatus`, авто lifecycle-події)  
 > Проведено: Antigravity AI  
 
 ---
@@ -12,15 +12,16 @@
 
 Це курсова робота, яка реалізує базову інформаційну систему управління медичними препаратами на стеку **ASP.NET Core 8 / SQL Server / EF Core / JWT + Identity**. До складу входять:
 
-- backend API (5 контролерів, 4 сервіси, 2 фонові служби);
-- web frontend у `wwwroot` (10 HTML-файлів + 11 JS-файлів, Bootstrap 5);
+- backend API (розширено: доменні сутності, multi-tenancy, окремі контролери/сервіси, 2 фонові служби);
+- legacy web frontend у `wwwroot` (Bootstrap 5 + Vanilla JS);
+- окремий SPA frontend у `Frontend/` (React/TS);
 - мобільний застосунок на Kotlin/Android Compose;
 - IoT-емуляція на ESP32 + DHT22 у середовищі Wokwi (PlatformIO / C++);
 - навантажувальні тести на NBomber (GET і POST).
 
 ## Наскільки проєкт придатний як основа диплома
 
-**Придатний з суттєвими доповненнями.** Технічний каркас правильний і реалізований на сучасному стеку. Але предметна модель занадто проста для дипломного рівня: відсутні ключові для теми сутності (StorageLocation, StorageIncident, MedicineLifecycleEvent, Notification), немає нормального зв'язку між Medicine і StorageCondition, жорстко зашиті токени і URL, відсутні unit / integration-тести, frontend морально застарів і вбудований у backend.
+**Придатний.** Технічний каркас правильний і реалізований на сучасному стеку. Після робіт 2026-04-28/29 предметну модель розширено до дипломного рівня (StorageLocation, StorageIncident, MedicineLifecycleEvent, Notification), додано multi-tenancy та сучасний SPA frontend. Ключові прогалини для дипломного “фінішу” зараз: тестування (unit/integration), відтворюваний запуск (docker-compose), узгоджена демонстраційна історія (life cycle + storage safety + incidents + audit), синхронізація Mobile/LoadTests з актуальним API.
 
 ## Головні сильні сторони
 
@@ -35,16 +36,45 @@
 
 ## Головні слабкі сторони
 
-1. Предметна модель неповна: Medicine не пов'язана з StorageCondition, IoTDevice не прив'язаний до місця зберігання, відсутні StorageLocation і StorageIncident.
+1. Предметна модель суттєво розширена (StorageLocation/StorageIncident/MedicineLifecycleEvent/Notification, multi-tenancy), але зв'язок “препарат → фактичні умови зберігання” залишається непрямим: Medicine → StorageLocation → IoTDevice → StorageCondition (може бути достатньо для диплома, але UI/звіти потребуватимуть явних сценаріїв).
 2. ~~Жорстко зашиті секрети: JWT-ключ і JWT-токени прямо в коді (appsettings.json, main.cpp, тести).~~ **[ВИПРАВЛЕНО 2026-04-13]** JWT-ключ перенесено у User Secrets, appsettings.json очищено. *Залишок: IoT-токен у main.cpp та токени у LoadTests — буде вирішено у Фазі 4-5.*
 3. Токен зберігається в localStorage — XSS-вразливість.
-4. Frontend вбудований у backend (wwwroot): немає окремого SPA-проєкту.
+4. Frontend як SPA вже існує (`Frontend/`), але у репозиторії досі присутній legacy `wwwroot`, а backend робить редірект `/` → `/login.html` (ризик плутанини під час демонстрації диплома).
 5. Ніяких тестів (unit / integration).
 6. ~~StorageConditionController — не захищений JWT! [Authorize] відсутній на рівні класу.~~ **[ВИПРАВЛЕНО 2026-04-13]** Додано `[Authorize(JwtBearerDefaults.AuthenticationScheme)]`.
 7. Перший зареєстрований користувач = Administrator — небезпечна логіка.
 8. ~~Термін JWT = 1 рік (рядок 179 AuthController): DateTime.UtcNow.AddYears(1) — критично.~~ **[ВИПРАВЛЕНО 2026-04-13]** Термін читається з `Jwt:ExpireDays` (default 30 днів). Також виправлено `.Result` → `await` і `ASCII` → `UTF8`.
 9. ~~IoT-код: температура і вологість захардкоджені (float temperature = 3; float humidity = 30;) — датчик DHT22 не читається реально.~~ **[ВИПРАВЛЕНО 2026-04-13]** Замінено на `dht.readTemperature()` / `dht.readHumidity()`, додано `dht.begin()` у `setup()`.
 10. Відсутній docker-compose.
+
+---
+
+# 1.1 Оновлення після 2026-04-29 (коміти 2026-05-01)
+
+## Що додано / змінено
+
+1. `MedicineController`: додані атомарні команди, які одночасно змінюють стан і пишуть `MedicineLifecycleEvent`:
+   - `POST /api/medicine/{id}/move`
+   - `POST /api/medicine/{id}/receive`
+   - `POST /api/medicine/{id}/issue`
+   - `POST /api/medicine/{id}/dispose`
+2. Додано `Medicine.Status` (`MedicineStatus`: `Active`, `Expired`, `Disposed`, `Recalled`) з EF міграцією `AddMedicineStatus`.
+3. Автоматизації lifecycle:
+   - при `POST /api/medicine` створюється `MedicineLifecycleEvent(Received)` (авто-надходження);
+   - у `ExpiryNotificationService` додано авто-фіксацію `MedicineLifecycleEvent(Expired)` (dedupe) + зміна `Medicine.Status` на `Expired`.
+4. `StorageConditionMonitoringService`: покращено обробку вологості/температури та інцидентів; додано поля вологості в `Medicine` (міграція `AddMedicineHumidity`).
+5. Frontend (SPA): додані кнопки/діалоги для переміщення та операцій із запасом прямо на `MedicineDetailPage`; оновлено типи `MedicineDto` (додано `status`).
+
+## Чого не вистачає / ризики (актуально на 2026-05-01)
+
+1. Потрібні unit / integration тести для нових командних endpoint-ів (особливо: валідація залишку, multi-tenancy фільтри, транзакційність).
+2. `LoadTest.GET`/`LoadTest.POST` все ще мають hardcoded URL і JWT-токен — ризик витоку і неактуальність після змін (`DeviceID` string, multi-tenancy, статуси).
+3. Mobile застосунок відстає від backend:
+   - login очікує `token`, а API повертає `Token`;
+   - `IoTDevice.DeviceID` у backend string, а в mobile місцями парситься як int;
+   - URL бекенду захардкожений `http://10.0.2.2:5000`.
+4. Відсутній `docker-compose.yml` і документований “single command run” для демонстрації диплому (backend + db + frontend).
+5. Відсутні ER/C4 діаграми та узгоджений “happy path” сценарій демонстрації (life cycle + storage safety + incidents + audit).
 
 ---
 

@@ -8,20 +8,21 @@
 
 «Розподілена інформаційна система управління життєвим циклом та безпекою зберігання медичних препаратів»
 
-## 2. Поточна підтверджена архітектура (після аудиту 2026-04-09)
+## 2. Поточна підтверджена архітектура (актуалізовано після комітів 2026-04-28/29 та 2026-05-01)
 
-**Backend:** ASP.NET Core 8 / .NET 8  
+**Backend:** ASP.NET Core 8 / .NET 8 (`WebApp/MedicationManagement`)  
 **Database:** SQL Server  
-**ORM:** Entity Framework Core 8.0.11  
-**Authentication:** JWT Bearer + ASP.NET Identity (2 DbContext: MedicineStorageContext + UserContext)  
-**API:** REST API (5 контролерів: AuthController, MedicineController, StorageConditionController, IoTDeviceController, AuditLogController)  
-**Services:** 4 сервіси з інтерфейсами: IServiceMedicine, IServiceStorageCondition, IServiceIoTDevice, IServiceAuditLog  
-**Background Services:** ExpiryNotificationService (1 день), StorageConditionMonitoringService (5 сек)  
-**Web frontend:** wwwroot: 10 HTML + 11 JS (Bootstrap 5.3.6 CDN, Vanilla JS) — вбудований у backend  
-**Mobile:** Android Kotlin + Jetpack Compose, 26 Kotlin-файлів (9 Activity, 5 Fragment, 4 Adapter, 4 Model, 3 Theme)  
-**IoT:** ESP32 DevKit C v4 + DHT22 + buzzer у Wokwi (PlatformIO / C++), 181 рядок main.cpp  
-**Load Tests:** NBomber (GET 50 копій 15 сек, POST 10 копій 20 сек)  
-**Swagger:** Swashbuckle.AspNetCore 7.1.0 (Development only)
+**ORM:** Entity Framework Core 8.0.11 (2 DbContext: `MedicineStorageContext` + `UserContext`)  
+**Authentication:** JWT Bearer + ASP.NET Identity, ролі: `Administrator`, `Manager`, `User`, `Device`  
+**API:** REST API (9 контролерів): `AuthController`, `MedicineController`, `StorageConditionController`, `IoTDeviceController`, `AuditLogController`, `StorageLocationController`, `StorageIncidentController`, `MedicineLifecycleController`, `NotificationController`  
+**Services:** 8 сервісів з інтерфейсами: `IServiceMedicine`, `IServiceStorageCondition`, `IServiceIoTDevice`, `IServiceAuditLog`, `IServiceStorageLocation`, `IServiceStorageIncident`, `IServiceMedicineLifecycle`, `IServiceNotification`  
+**Background Services:** `ExpiryNotificationService` (1 день), `StorageConditionMonitoringService` (інтервал з `Monitoring:IntervalSeconds`, default 60 сек)  
+**Web frontend (legacy):** `wwwroot` (Bootstrap + Vanilla JS) — досі присутній у backend  
+**Web frontend (SPA):** окремий проєкт `Frontend/` (Vite + React + TypeScript + Tailwind + shadcn/ui)  
+**Mobile:** Android Kotlin (Activities/Fragments + частково Compose) у `Mobile/MedicationManagement`  
+**IoT:** ESP32 DevKit C v4 + DHT22 + buzzer у Wokwi (PlatformIO / C++), конфіг винесено у `IoTEmulate/src/config.h` (файл ігнорується Git)  
+**Load Tests:** NBomber (`WebApp/LoadTest.GET`, `WebApp/LoadTest.POST`)  
+**Swagger:** Swashbuckle.AspNetCore 7.1.0 (вмикання через `Swagger:Enabled` у `appsettings.json`)
 
 ## 2.1. Останні зміни (після 2026-04-29)
 
