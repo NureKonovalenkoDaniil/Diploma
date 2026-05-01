@@ -1,5 +1,6 @@
 using MedicationManagement.Models;
 using Microsoft.EntityFrameworkCore;
+using MedicationManagement.Enums;
 
 namespace MedicationManagement.DBContext
 {
@@ -45,6 +46,10 @@ namespace MedicationManagement.DBContext
             // --- Medicine (оновлений) ---
             modelBuilder.Entity<Medicine>(entity =>
             {
+                entity.Property(e => e.Status)
+                      .HasConversion<string>()
+                      .HasMaxLength(20);
+
                 // Зв'язок Medicine → StorageLocation (nullable N:1)
                 entity.HasOne(e => e.StorageLocation)
                       .WithMany(l => l.Medicines)

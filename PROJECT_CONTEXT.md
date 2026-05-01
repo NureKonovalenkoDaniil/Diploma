@@ -44,6 +44,18 @@
 
 Frontend: у `MedicineDetailPage` додані кнопки **"Надходження" / "Видача" / "Утилізація"** з діалогом введення кількості і коментаря.
 
+### [ВИКОНАНО 2026-05-01] Автоматичні lifecycle-події та статус препарату
+
+Щоб зменшити ручні дії та уникнути ситуацій, коли факт у системі не відображений у журналі:
+- Додано `Medicine.Status` (enum як string у БД): `Active`, `Expired`, `Disposed`, `Recalled`.
+  - Міграція: `AddMedicineStatus` (для `MedicineStorageContext`).
+- При створенні препарату через `POST /api/medicine` автоматично створюється lifecycle-подія `Received` (опис: авто-надходження при створенні).
+- `ExpiryNotificationService` доповнено: якщо `Medicine.ExpiryDate <= now` і ще немає lifecycle-події `Expired`, сервіс:
+  - створює `MedicineLifecycleEvent(EventType=Expired)` (dedupe);
+  - переводить `Medicine.Status` у `Expired` (якщо був `Active`).
+
+Важливо: ручне додавання подій через `POST /api/medicinelifecycle` залишено (як “аудит/коментар”), але ключові стани фіксуються автоматично/атомарно.
+
 ## 3. Підтверджені поточні модулі
 
 На даний момент підтверджено наявність або часткову наявність таких модулів:

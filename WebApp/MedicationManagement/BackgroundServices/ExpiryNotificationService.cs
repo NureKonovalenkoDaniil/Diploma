@@ -2,6 +2,7 @@ using MedicationManagement.DBContext;
 using MedicationManagement.Enums;
 using MedicationManagement.Services;
 using Microsoft.EntityFrameworkCore;
+using MedicationManagement.Models;
 
 namespace MedicationManagement.BackgroundServices
 {
@@ -52,6 +53,9 @@ namespace MedicationManagement.BackgroundServices
             var auditService = scope.ServiceProvider.GetRequiredService<IServiceAuditLog>();
             var notificationService = scope.ServiceProvider.GetRequiredService<IServiceNotification>();
 
+            // 1) Expired (факт) — разово фіксуємо lifecycle-подію + (за потреби) статус
+            await CheckExpiredMedicinesAsync(db, auditService);
+
             var threshold = DateTime.UtcNow.AddDays(_expiryWarningDays);
             var expiringMedicines = await medicineService.GetExpiringMedicines(threshold);
 
@@ -90,6 +94,59 @@ namespace MedicationManagement.BackgroundServices
                     severity: AuditSeverity.Warning);
 
                 _logger.LogWarning("Expiry notification sent for Medicine {Id} ({Name})", medicine.MedicineID, medicine.Name);
+            }
+        }
+
+        private static async Task CheckExpiredMedicinesAsync(
+            MedicineStorageContext db,
+            IServiceAuditLog auditService)
+        {
+            var nowUtc = DateTime.UtcNow;
+
+            // Беремо лише ті, що вже прострочені, але ще не мають події Expired
+            var expired = await db.Medicines
+                .AsQueryable()
+                .Where(m => m.ExpiryDate <= nowUtc)
+                .ToListAsync();
+
+            foreach (var medicine in expired)
+            {
+                var alreadyHasExpiredEvent = await db.MedicineLifecycleEvents.AnyAsync(e =>
+                    e.MedicineId == medicine.MedicineID &&
+                    e.EventType == LifecycleEventType.Expired);
+
+                if (alreadyHasExpiredEvent) continue;
+
+                // Оновлюємо статус, якщо він ще Active.
+                if (medicine.Status == MedicineStatus.Active)
+                {
+                    medicine.Status = MedicineStatus.Expired;
+                    await db.SaveChangesAsync();
+                }
+
+                var evt = new MedicineLifecycleEvent
+                {
+                    MedicineId = medicine.MedicineID,
+                    OrganizationId = medicine.OrganizationId,
+                    EventType = LifecycleEventType.Expired,
+                    Quantity = null,
+                    PerformedBy = "System",
+                    PerformedAt = DateTime.UtcNow,
+                    RelatedLocationId = medicine.StorageLocationId,
+                    Description = $"Авто-прострочення: термін придатності минув {medicine.ExpiryDate:yyyy-MM-dd}"
+                };
+
+                db.MedicineLifecycleEvents.Add(evt);
+                await db.SaveChangesAsync();
+
+                await auditService.LogAction(
+                    "Medicine_AutoExpired",
+                    "System",
+                    $"Medicine ID {medicine.MedicineID} auto-marked as Expired.",
+                    isSensor: false,
+                    entityType: "Medicine",
+                    entityId: medicine.MedicineID,
+                    severity: AuditSeverity.Warning);
             }
         }
     }

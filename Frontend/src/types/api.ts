@@ -7,6 +7,7 @@ export interface MedicineDto {
   expiryDate: string;
   quantity: number;
   category: string;
+  status: string;
   manufacturer?: string;
   batchNumber?: string;
   description?: string;
@@ -16,6 +17,23 @@ export interface MedicineDto {
   maxStorageHumidity?: number;
   storageLocationId?: number;
   storageLocationName?: string;
+}
+
+export interface CreateMedicineRequest {
+  name: string;
+  type: string;
+  expiryDate: string;
+  quantity: number;
+  category: string;
+  status?: string;
+  manufacturer?: string;
+  batchNumber?: string;
+  description?: string;
+  minStorageTemp?: number;
+  maxStorageTemp?: number;
+  minStorageHumidity?: number;
+  maxStorageHumidity?: number;
+  storageLocationId?: number;
 }
 
 export interface IoTDeviceDto {

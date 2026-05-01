@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MedicationManagement.Enums;
 
 namespace MedicationManagement.Models
 {
@@ -28,6 +29,9 @@ namespace MedicationManagement.Models
         public int Quantity { get; set; }
 
         public string Category { get; set; } = string.Empty;
+
+        [Required]
+        public MedicineStatus Status { get; set; } = MedicineStatus.Active;
 
         // --- Нові поля для дипломного рівня ---
 

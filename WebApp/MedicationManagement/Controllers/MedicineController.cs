@@ -90,10 +90,12 @@ namespace MedicationManagement.Controllers
             try
             {
                 var medicine = medicineDto.ToEntity();
-                var result = await _medicineService.Create(medicine);
+                var user = User.Identity?.Name ?? "Unknown";
+                var result = await _medicineService.Create(medicine, performedBy: user, autoReceivedEvent: true);
                 if (result != null)
                 {
-                    await _auditLogService.LogAction("Create Medicine", User.Identity?.Name ?? "Unknown", $"Created medicine: {result.Name}.", false);
+                    await _auditLogService.LogAction("Create Medicine", user, $"Created medicine: {result.Name}.", false,
+                        entityType: "Medicine", entityId: result.MedicineID);
                     return Ok(result.ToDto());
                 }
                 return StatusCode(500, "Failed to create medicine");

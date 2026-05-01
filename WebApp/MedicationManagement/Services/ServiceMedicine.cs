@@ -13,7 +13,7 @@ namespace MedicationManagement.Services
         Task<List<ReplenishmentRecommendation>> GetReplenishmentRecommendations();
         Task<IEnumerable<Medicine>> GetExpiringMedicines(DateTime thresholdDate);
         Task<List<Medicine>> GetLowStockMedicines(int threshold);
-        Task<Medicine?> Create(Medicine medicine);
+        Task<Medicine?> Create(Medicine medicine, string performedBy, bool autoReceivedEvent = true);
         Task<IEnumerable<Medicine>> Read();
         Task<Medicine?> ReadById(int id);
         Task<Medicine?> Update(int id, JsonPatchDocument<Medicine> patchDocument);
@@ -100,7 +100,7 @@ namespace MedicationManagement.Services
         }
 
         // Method to create a new medicine
-        public async Task<Medicine?> Create(Medicine medicine)
+        public async Task<Medicine?> Create(Medicine medicine, string performedBy, bool autoReceivedEvent = true)
         {
             if (medicine == null)
             {
@@ -115,9 +115,31 @@ namespace MedicationManagement.Services
                 {
                     medicine.OrganizationId = orgId;
                 }
-                
+
+                await using var tx = await _context.Database.BeginTransactionAsync();
+
                 await _context.Medicines.AddAsync(medicine);
                 await _context.SaveChangesAsync();
+
+                if (autoReceivedEvent)
+                {
+                    var evt = new MedicineLifecycleEvent
+                    {
+                        MedicineId = medicine.MedicineID,
+                        OrganizationId = medicine.OrganizationId,
+                        EventType = LifecycleEventType.Received,
+                        Quantity = medicine.Quantity,
+                        PerformedBy = performedBy,
+                        PerformedAt = DateTime.UtcNow,
+                        RelatedLocationId = medicine.StorageLocationId,
+                        Description = $"Авто-надходження при створенні: +{medicine.Quantity}"
+                    };
+
+                    _context.MedicineLifecycleEvents.Add(evt);
+                    await _context.SaveChangesAsync();
+                }
+
+                await tx.CommitAsync();
                 return medicine;
             }
             catch (Exception ex)
@@ -411,6 +433,10 @@ namespace MedicationManagement.Services
                 await using var tx = await _context.Database.BeginTransactionAsync();
 
                 medicine.Quantity -= toDispose;
+                if (medicine.Quantity == 0)
+                {
+                    medicine.Status = MedicineStatus.Disposed;
+                }
                 await _context.SaveChangesAsync();
 
                 var orgId = CurrentOrgId;

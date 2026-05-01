@@ -13,6 +13,7 @@ import type {
   UserProfile,
   ReplenishmentRecommendation,
   CreateNotificationDto,
+  CreateMedicineRequest,
 } from '@/types/api'
 
 // ──────────────────────────────────────────
@@ -46,7 +47,7 @@ export const medicineApi = {
     api.get<MedicineDto[]>(`/api/medicine/expiring?daysThreshold=${days}`).then((r) => r.data),
   getReplenishment: () =>
     api.get<ReplenishmentRecommendation[]>('/api/medicine/replenishment-recommendations').then((r) => r.data),
-  create: (data: Omit<MedicineDto, 'medicineID' | 'storageLocationName'>) =>
+  create: (data: CreateMedicineRequest) =>
     api.post<MedicineDto>('/api/medicine', data).then((r) => r.data),
   move: (id: number, data: { storageLocationId: number; description?: string; quantity?: number }) =>
     api.post<MedicineDto>(`/api/medicine/${id}/move`, data).then((r) => r.data),

@@ -33,6 +33,10 @@ function getMedicineStatus(m: MedicineDto): {
   label: string;
   variant: 'destructive' | 'warning' | 'success' | 'secondary';
 } {
+  if (m.status === 'Recalled') return { label: 'Відкликано', variant: 'destructive' };
+  if (m.status === 'Disposed') return { label: 'Утилізовано', variant: 'secondary' };
+  if (m.status === 'Expired') return { label: 'Прострочено', variant: 'destructive' };
+
   const expiry = new Date(m.expiryDate);
   if (isPast(expiry)) return { label: 'Прострочено', variant: 'destructive' };
   if (isWithinInterval(expiry, { start: new Date(), end: addDays(new Date(), 7) }))
@@ -280,7 +284,21 @@ export default function MedicinesPage() {
 
   const createMutation = useMutation({
     mutationFn: (data: Partial<MedicineDto>) =>
-      medicineApi.create(data as Omit<MedicineDto, 'medicineID' | 'storageLocationName'>),
+      medicineApi.create({
+        name: data.name ?? '',
+        type: data.type ?? '',
+        expiryDate: data.expiryDate ?? new Date().toISOString(),
+        quantity: data.quantity ?? 0,
+        category: data.category ?? '',
+        manufacturer: data.manufacturer,
+        batchNumber: data.batchNumber,
+        description: data.description,
+        minStorageTemp: data.minStorageTemp,
+        maxStorageTemp: data.maxStorageTemp,
+        minStorageHumidity: data.minStorageHumidity,
+        maxStorageHumidity: data.maxStorageHumidity,
+        storageLocationId: data.storageLocationId,
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['medicines'] });
       setDialogMode(null);
