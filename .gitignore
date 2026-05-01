@@ -1,15 +1,50 @@
-.vscode
-.vs
-bin
-obj
-WebApp\MedicationManagement\bin
-WebApp\MedicationManagement\obj
+.vscode/
+.vs/
 
-# Secrets and sensitive config
+# .NET
+**/bin/
+**/obj/
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates
+
+# ASP.NET Core config (keep examples only)
+**/appsettings*.json
+!**/appsettings.Development.json
+!**/appsettings.example.json
+
+# User secrets
+**/secrets.json
+
+# Environment files
 .env
 .env.*
-secrets.json
-appsettings.Production.json
-appsettings.*.json
-!appsettings.json
-!appsettings.Development.json
+!.env.example
+
+# Node/Vite
+**/node_modules/
+**/dist/
+**/.vite/
+**/.cache/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+
+# Android/Gradle
+**/.gradle/
+**/local.properties
+**/build/
+**/*.iml
+**/.idea/
+**/*.keystore
+**/*.jks
+
+# IoT/PlatformIO
+**/.pio/
+**/config.h
+**/config.hpp
+
+# Logs
+**/*.log

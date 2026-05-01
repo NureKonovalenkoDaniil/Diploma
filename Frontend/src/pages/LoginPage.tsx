@@ -1,45 +1,72 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { FlaskConical, Eye, EyeOff, Loader2 } from 'lucide-react'
-import { authApi } from '@/api'
-import { useAuth } from '@/contexts/AuthContext'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { FlaskConical, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { authApi } from '@/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const schema = z.object({
   email: z.string().email('Введіть коректний email'),
   password: z.string().min(1, 'Введіть пароль'),
-})
+});
 
-type FormData = z.infer<typeof schema>
+type FormData = z.infer<typeof schema>;
 
 export default function LoginPage() {
-  const navigate = useNavigate()
-  const { login } = useAuth()
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<'unconfirmed' | 'invalid' | null>(null);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({ resolver: zodResolver(schema) })
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (data: FormData) => {
-    setError(null)
+    setError(null);
+    setErrorType(null);
+    setResendStatus(null);
     try {
-      const res = await authApi.login(data)
-      await login(res.token)
-      navigate('/dashboard')
-    } catch {
-      setError('Невірний email або пароль')
+      const res = await authApi.login(data);
+      await login(res.token);
+      navigate('/dashboard');
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 403) {
+        setError('Потрібно підтвердити пошту перед входом');
+        setErrorType('unconfirmed');
+        return;
+      }
+      setError('Невірний email або пароль');
+      setErrorType('invalid');
     }
-  }
+  };
+
+  const resendConfirmation = async () => {
+    setResendStatus(null);
+    const email = getValues('email');
+    if (!email) {
+      setResendStatus('Вкажіть email у полі вище');
+      return;
+    }
+    try {
+      await authApi.resendConfirmation(email);
+      setResendStatus('Лист підтвердження надіслано');
+    } catch {
+      setResendStatus('Не вдалося надіслати лист. Спробуйте пізніше.');
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted/40 p-4">
@@ -51,7 +78,9 @@ export default function LoginPage() {
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold">MedStorage</h1>
-            <p className="text-sm text-muted-foreground">Система управління медичними препаратами</p>
+            <p className="text-sm text-muted-foreground">
+              Система управління медичними препаратами
+            </p>
           </div>
         </div>
 
@@ -72,9 +101,7 @@ export default function LoginPage() {
                   autoComplete="email"
                   {...register('email')}
                 />
-                {errors.email && (
-                  <p className="text-xs text-destructive">{errors.email.message}</p>
-                )}
+                {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
               </div>
 
               <div className="space-y-2">
@@ -90,8 +117,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((p) => !p)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
@@ -103,6 +129,15 @@ export default function LoginPage() {
               {error && (
                 <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
                   {error}
+                </div>
+              )}
+
+              {errorType === 'unconfirmed' && (
+                <div className="space-y-2">
+                  <Button type="button" variant="outline" onClick={resendConfirmation}>
+                    Надіслати лист підтвердження ще раз
+                  </Button>
+                  {resendStatus && <p className="text-xs text-muted-foreground">{resendStatus}</p>}
                 </div>
               )}
 
@@ -122,5 +157,5 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
-  )
+  );
 }

@@ -47,6 +47,9 @@ namespace MedicationManagement
         {
             builder.Services.AddHttpContextAccessor();
 
+            builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
+            builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
+
             builder.Services.AddScoped<IServiceMedicine, ServiceMedicine>();
             builder.Services.AddScoped<IServiceStorageCondition, ServiceStorageCondition>();
             builder.Services.AddScoped<IServiceIoTDevice, ServiceIoTDevice>();

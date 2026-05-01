@@ -1,14 +1,15 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { FlaskConical, Eye, EyeOff, Loader2 } from 'lucide-react'
-import { api } from '@/api/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { FlaskConical, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { api } from '@/api/client';
+import { authApi } from '@/api';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const schema = z
   .object({
@@ -19,40 +20,42 @@ const schema = z
   .refine((d) => d.password === d.confirmPassword, {
     message: 'Паролі не збігаються',
     path: ['confirmPassword'],
-  })
+  });
 
-type FormData = z.infer<typeof schema>
+type FormData = z.infer<typeof schema>;
 
 export default function RegisterPage() {
-  const navigate = useNavigate()
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [successEmail, setSuccessEmail] = useState<string | null>(null);
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({ resolver: zodResolver(schema) })
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (data: FormData) => {
-    setError(null)
+    setError(null);
     try {
       await api.post('/api/auth/register', {
         email: data.email,
         password: data.password,
-      })
-      setSuccess(true)
-      setTimeout(() => navigate('/login'), 2000)
+      });
+      setSuccess(true);
+      setSuccessEmail(data.email);
     } catch (err: unknown) {
-      const e = err as { response?: { data?: string | object; status?: number } }
+      const e = err as { response?: { data?: string | object; status?: number } };
       if (e.response?.status === 409) {
-        setError('Користувач з таким email вже існує')
+        setError('Користувач з таким email вже існує');
       } else {
-        setError('Помилка реєстрації. Спробуйте ще раз.')
+        setError('Помилка реєстрації. Спробуйте ще раз.');
       }
     }
-  }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted/40 p-4">
@@ -64,7 +67,9 @@ export default function RegisterPage() {
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold">MedStorage</h1>
-            <p className="text-sm text-muted-foreground">Система управління медичними препаратами</p>
+            <p className="text-sm text-muted-foreground">
+              Система управління медичними препаратами
+            </p>
           </div>
         </div>
 
@@ -82,7 +87,27 @@ export default function RegisterPage() {
               <div className="flex flex-col items-center gap-3 py-4 text-center">
                 <div className="text-4xl">✅</div>
                 <p className="font-semibold">Реєстрація успішна!</p>
-                <p className="text-sm text-muted-foreground">Перенаправлення на сторінку входу...</p>
+                <p className="text-sm text-muted-foreground">
+                  Перевірте пошту та підтвердіть email перед входом.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    if (!successEmail) return;
+                    setResendStatus(null);
+                    try {
+                      await authApi.resendConfirmation(successEmail);
+                      setResendStatus('Лист підтвердження надіслано');
+                    } catch {
+                      setResendStatus('Не вдалося надіслати лист. Спробуйте пізніше.');
+                    }
+                  }}>
+                  Надіслати лист ще раз
+                </Button>
+                {resendStatus && <p className="text-xs text-muted-foreground">{resendStatus}</p>}
+                <Button variant="outline" onClick={() => navigate('/login')}>
+                  Перейти до входу
+                </Button>
               </div>
             ) : (
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -113,8 +138,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword((p) => !p)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
@@ -160,5 +184,5 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
-  )
+  );
 }

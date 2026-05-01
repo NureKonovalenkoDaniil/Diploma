@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -24,6 +25,7 @@ namespace MedicationManagement.Controllers
         private readonly ILogger<AuthController> _logger;
         private readonly IServiceAuditLog _auditLogService;
         private readonly IServiceIoTDevice _ioTDeviceService;
+        private readonly IEmailSender _emailSender;
 
         public AuthController(UserManager<ApplicationUser> userManager,
                               SignInManager<ApplicationUser> signInManager,
@@ -31,7 +33,8 @@ namespace MedicationManagement.Controllers
                               IConfiguration configuration,
                               ILogger<AuthController> logger,
                               IServiceAuditLog auditLogService,
-                              IServiceIoTDevice ioTDeviceService)
+                              IServiceIoTDevice ioTDeviceService,
+                              IEmailSender emailSender)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -40,6 +43,7 @@ namespace MedicationManagement.Controllers
             _logger = logger;
             _auditLogService = auditLogService;
             _ioTDeviceService = ioTDeviceService;
+            _emailSender = emailSender;
         }
 
         [HttpPost("register")]
@@ -58,7 +62,7 @@ namespace MedicationManagement.Controllers
                 {
                     UserName = model.Email,
                     Email = model.Email,
-                    EmailConfirmed = true,
+                    EmailConfirmed = false,
                     SecurityStamp = Guid.NewGuid().ToString(),
                     OrganizationId = Guid.NewGuid().ToString()
                 };
@@ -68,6 +72,7 @@ namespace MedicationManagement.Controllers
                     return BadRequest(result.Errors);
 
                 await _userManager.AddToRoleAsync(user, "User");
+                await SendEmailConfirmationAsync(user);
 
                 await _auditLogService.LogAction("Register", model.Email, "Registered new user with role User.", false);
 
@@ -92,6 +97,9 @@ namespace MedicationManagement.Controllers
                 var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
                 if (!result.Succeeded)
                     return Unauthorized("Invalid login attempt");
+
+                if (!user.EmailConfirmed)
+                    return StatusCode(403, "Email is not confirmed");
 
                 await _auditLogService.LogAction("Login", model.Email, "Successful login.", false);
 
@@ -122,7 +130,7 @@ namespace MedicationManagement.Controllers
                 {
                     UserName = model.Email,
                     Email = model.Email,
-                    EmailConfirmed = true,
+                    EmailConfirmed = false,
                     SecurityStamp = Guid.NewGuid().ToString(),
                     OrganizationId = model.OrganizationId
                 };
@@ -132,6 +140,7 @@ namespace MedicationManagement.Controllers
                     return BadRequest(result.Errors);
 
                 await _userManager.AddToRoleAsync(user, "Manager");
+                await SendEmailConfirmationAsync(user);
 
                 await _auditLogService.LogAction("CreateManager", User.Identity?.Name ?? "Unknown", $"Created manager {model.Email} for org {model.OrganizationId}.", false);
 
@@ -142,6 +151,41 @@ namespace MedicationManagement.Controllers
                 _logger.LogError(ex, "Error creating manager");
                 return StatusCode(500, "Internal server error");
             }
+        }
+
+        [HttpGet("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
+        {
+            if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(token))
+                return BadRequest("Invalid confirmation data");
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user is null) return BadRequest("Invalid user");
+
+            var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+            var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
+            if (!result.Succeeded)
+                return BadRequest("Email confirmation failed");
+
+            await _auditLogService.LogAction("ConfirmEmail", user.Email ?? "Unknown", "Email confirmed.", false);
+            return Ok("Email confirmed successfully");
+        }
+
+        [HttpPost("resend-confirmation")]
+        public async Task<IActionResult> ResendConfirmation([FromBody] ResendConfirmationDto model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user is null)
+                return Ok("If the account exists, a confirmation email was sent.");
+
+            if (user.EmailConfirmed)
+                return Ok("Email is already confirmed.");
+
+            await SendEmailConfirmationAsync(user);
+            return Ok("Confirmation email sent.");
         }
 
         [HttpPost("device-login")]
@@ -364,6 +408,20 @@ namespace MedicationManagement.Controllers
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        private async Task SendEmailConfirmationAsync(ApplicationUser user)
+        {
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+            var baseUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:5173";
+            var link = $"{baseUrl.TrimEnd('/')}/confirm-email?userId={Uri.EscapeDataString(user.Id)}&token={Uri.EscapeDataString(encodedToken)}";
+
+            var subject = "Підтвердження email";
+            var body = $"<p>Підтвердіть вашу адресу електронної пошти, натиснувши на посилання:</p><p><a href=\"{link}\">Підтвердити email</a></p>";
+
+            await _emailSender.SendAsync(user.Email ?? string.Empty, subject, body);
         }
     }
 }

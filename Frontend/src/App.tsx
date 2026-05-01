@@ -1,19 +1,20 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { AuthProvider } from '@/contexts/AuthContext'
-import { ThemeProvider } from '@/contexts/ThemeContext'
-import { AppLayout } from '@/components/layout/AppLayout'
-import LoginPage from '@/pages/LoginPage'
-import RegisterPage from '@/pages/RegisterPage'
-import DashboardPage from '@/pages/DashboardPage'
-import MedicinesPage from '@/pages/MedicinesPage'
-import MedicineDetailPage from '@/pages/MedicineDetailPage'
-import IoTDevicesPage from '@/pages/IoTDevicesPage'
-import StorageLocationsPage from '@/pages/StorageLocationsPage'
-import IncidentsPage from '@/pages/IncidentsPage'
-import NotificationsPage from '@/pages/NotificationsPage'
-import AuditLogPage from '@/pages/AuditLogPage'
-import UsersPage from '@/pages/UsersPage'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import { AppLayout } from '@/components/layout/AppLayout';
+import LoginPage from '@/pages/LoginPage';
+import RegisterPage from '@/pages/RegisterPage';
+import ConfirmEmailPage from '@/pages/ConfirmEmailPage';
+import DashboardPage from '@/pages/DashboardPage';
+import MedicinesPage from '@/pages/MedicinesPage';
+import MedicineDetailPage from '@/pages/MedicineDetailPage';
+import IoTDevicesPage from '@/pages/IoTDevicesPage';
+import StorageLocationsPage from '@/pages/StorageLocationsPage';
+import IncidentsPage from '@/pages/IncidentsPage';
+import NotificationsPage from '@/pages/NotificationsPage';
+import AuditLogPage from '@/pages/AuditLogPage';
+import UsersPage from '@/pages/UsersPage';
 
 // queryClient як singleton — очищення кешу при login/logout в AuthContext
 export const queryClient = new QueryClient({
@@ -23,7 +24,7 @@ export const queryClient = new QueryClient({
       retry: 1,
     },
   },
-})
+});
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/confirm-email" element={<ConfirmEmailPage />} />
               <Route element={<AppLayout />}>
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/medicines" element={<MedicinesPage />} />
@@ -52,5 +54,5 @@ export default function App() {
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
-  )
+  );
 }
