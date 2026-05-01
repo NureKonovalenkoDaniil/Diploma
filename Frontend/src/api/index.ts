@@ -24,6 +24,9 @@ export const authApi = {
     api.post<{ Token?: string; token?: string }>('/api/auth/login', data).then((r) => ({
       token: r.data.token || r.data.Token || '',
     })),
+  forgotPassword: (email: string) => api.post('/api/auth/forgot-password', { email }),
+  resetPassword: (data: { email: string; token: string; newPassword: string }) =>
+    api.post('/api/auth/reset-password', data),
   confirmEmail: (userId: string, token: string) =>
     api.get('/api/auth/confirm-email', { params: { userId, token } }),
   resendConfirmation: (email: string) => api.post('/api/auth/resend-confirmation', { email }),

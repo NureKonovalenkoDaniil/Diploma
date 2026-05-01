@@ -188,6 +188,39 @@ namespace MedicationManagement.Controllers
             return Ok("Confirmation email sent.");
         }
 
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null || !user.EmailConfirmed)
+                return Ok("If the account exists, a reset email was sent.");
+
+            await SendPasswordResetAsync(user);
+            return Ok("Reset email sent.");
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+                return BadRequest("Invalid reset request");
+
+            var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Token));
+            var result = await _userManager.ResetPasswordAsync(user, decodedToken, model.NewPassword);
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            await _auditLogService.LogAction("ResetPassword", user.Email ?? "Unknown", "Password reset completed.", false);
+            return Ok("Password reset successful");
+        }
+
         [HttpPost("device-login")]
         public async Task<IActionResult> DeviceLogin([FromBody] DeviceLoginDto model)
         {
@@ -420,6 +453,20 @@ namespace MedicationManagement.Controllers
 
             var subject = "Підтвердження email";
             var body = $"<p>Підтвердіть вашу адресу електронної пошти, натиснувши на посилання:</p><p><a href=\"{link}\">Підтвердити email</a></p>";
+
+            await _emailSender.SendAsync(user.Email ?? string.Empty, subject, body);
+        }
+
+        private async Task SendPasswordResetAsync(ApplicationUser user)
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+            var baseUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:5173";
+            var link = $"{baseUrl.TrimEnd('/')}/reset-password?email={Uri.EscapeDataString(user.Email ?? string.Empty)}&token={Uri.EscapeDataString(encodedToken)}";
+
+            var subject = "Відновлення пароля";
+            var body = $"<p>Для відновлення пароля перейдіть за посиланням:</p><p><a href=\"{link}\">Скинути пароль</a></p>";
 
             await _emailSender.SendAsync(user.Email ?? string.Empty, subject, body);
         }

@@ -155,6 +155,12 @@ export default function LoginPage() {
             Зареєструватися
           </Link>
         </p>
+        <p className="text-center text-sm text-muted-foreground">
+          Забули пароль?{' '}
+          <Link to="/forgot-password" className="text-primary hover:underline font-medium">
+            Відновити
+          </Link>
+        </p>
       </div>
     </div>
   );
