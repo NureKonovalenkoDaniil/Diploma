@@ -83,10 +83,17 @@ namespace MedicationManagement.Services
                 query = query.Where(log => log.OrganizationId == CurrentOrgId);
 
             if (from.HasValue)
-                query = query.Where(log => log.Timestamp >= from.Value);
+            {
+                // Конвертуємо локальний час запиту в UTC для порівняння з базою
+                var fromUtc = from.Value.ToUniversalTime();
+                query = query.Where(log => log.Timestamp >= fromUtc);
+            }
 
             if (to.HasValue)
-                query = query.Where(log => log.Timestamp <= to.Value);
+            {
+                var toUtc = to.Value.ToUniversalTime();
+                query = query.Where(log => log.Timestamp <= toUtc);
+            }
 
             if (!string.IsNullOrWhiteSpace(user))
                 query = query.Where(log => log.User.Contains(user));

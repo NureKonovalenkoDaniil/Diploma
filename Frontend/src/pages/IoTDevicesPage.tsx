@@ -1,16 +1,23 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState, Fragment } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { iotApi } from '@/api'
-import type { IoTDeviceDto } from '@/types/api'
-import { useAuth } from '@/contexts/AuthContext'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Cpu, Activity, ChevronRight, Power, Trash2 } from 'lucide-react'
-import { format } from 'date-fns'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, Fragment } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { iotApi } from '@/api';
+import type { IoTDeviceDto } from '@/types/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Cpu, Activity, ChevronRight, Power, Trash2, Pencil } from 'lucide-react';
+import { format } from 'date-fns';
 import {
   Dialog,
   DialogContent,
@@ -19,7 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,59 +37,92 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+} from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function IoTDevicesPage() {
-  const { isAdmin, isManager } = useAuth()
-  const navigate = useNavigate()
-  const qc = useQueryClient()
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [newDevice, setNewDevice] = useState({ deviceID: '', location: '', type: '', minTemp: 2, maxTemp: 8, minHum: 30, maxHum: 60 })
+  const { isAdmin, isManager } = useAuth();
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newDevice, setNewDevice] = useState({
+    deviceID: '',
+    location: '',
+    type: '',
+    minTemp: 2,
+    maxTemp: 8,
+    minHum: 30,
+    maxHum: 60,
+  });
 
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ['iot-devices'],
     queryFn: iotApi.getAll,
     refetchInterval: 30_000,
-  })
+  });
 
   const toggleMutation = useMutation({
-    mutationFn: ({ id, active }: { id: string; active: boolean }) =>
-      iotApi.setStatus(id, active),
+    mutationFn: ({ id, active }: { id: string; active: boolean }) => iotApi.setStatus(id, active),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['iot-devices'] }),
-  })
+  });
 
   const registerMutation = useMutation({
     mutationFn: (device: any) => iotApi.create(device),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['iot-devices'] })
-      setIsDialogOpen(false)
-      setNewDevice({ deviceID: '', location: '', type: '', minTemp: 2, maxTemp: 8, minHum: 30, maxHum: 60 })
+      qc.invalidateQueries({ queryKey: ['iot-devices'] });
+      setIsDialogOpen(false);
+      setNewDevice({
+        deviceID: '',
+        location: '',
+        type: '',
+        minTemp: 2,
+        maxTemp: 8,
+        minHum: 30,
+        maxHum: 60,
+      });
     },
-  })
+  });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => iotApi.delete(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['iot-devices'] }),
-  })
+  });
 
-  const [expanded, setExpanded] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [editingDevice, setEditingDevice] = useState<IoTDeviceDto | null>(null);
 
   const { data: conditions = [], isFetching: condFetching } = useQuery({
     queryKey: ['conditions', expanded],
     queryFn: () => iotApi.getConditions(expanded!),
     enabled: expanded !== null,
-  })
+  });
 
-  const activeCount = devices.filter((d) => d.isActive).length
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<IoTDeviceDto> }) => {
+      const patchData = Object.entries(data).map(([path, value]) => ({
+        op: 'replace',
+        path: `/${path}`,
+        value,
+      }));
+      return iotApi.update(id, patchData);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['iot-devices'] });
+      setEditingDevice(null);
+    },
+  });
+
+  const activeCount = devices.filter((d) => d.isActive).length;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">IoT Пристрої</h1>
-          <p className="text-muted-foreground">{activeCount} з {devices.length} активних датчиків</p>
+          <p className="text-muted-foreground">
+            {activeCount} з {devices.length} активних датчиків
+          </p>
         </div>
         {(isAdmin || isManager) && (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -98,45 +138,103 @@ export default function IoTDevicesPage() {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="deviceId" className="text-right">DeviceId</Label>
-                  <Input id="deviceId" value={newDevice.deviceID} onChange={e => setNewDevice({...newDevice, deviceID: e.target.value})} className="col-span-3" placeholder="Наприклад, ESP-8800" />
+                  <Label htmlFor="deviceId" className="text-right">
+                    DeviceId
+                  </Label>
+                  <Input
+                    id="deviceId"
+                    value={newDevice.deviceID}
+                    onChange={(e) => setNewDevice({ ...newDevice, deviceID: e.target.value })}
+                    className="col-span-3"
+                    placeholder="Наприклад, ESP-8800"
+                  />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="location" className="text-right">Розташування</Label>
-                  <Input id="location" value={newDevice.location} onChange={e => setNewDevice({...newDevice, location: e.target.value})} className="col-span-3" placeholder="Холодильник 1" />
+                  <Label htmlFor="location" className="text-right">
+                    Розташування
+                  </Label>
+                  <Input
+                    id="location"
+                    value={newDevice.location}
+                    onChange={(e) => setNewDevice({ ...newDevice, location: e.target.value })}
+                    className="col-span-3"
+                    placeholder="Холодильник 1"
+                  />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="type" className="text-right">Тип</Label>
-                  <Input id="type" value={newDevice.type} onChange={e => setNewDevice({...newDevice, type: e.target.value})} className="col-span-3" placeholder="DHT22" />
+                  <Label htmlFor="type" className="text-right">
+                    Тип
+                  </Label>
+                  <Input
+                    id="type"
+                    value={newDevice.type}
+                    onChange={(e) => setNewDevice({ ...newDevice, type: e.target.value })}
+                    className="col-span-3"
+                    placeholder="DHT22"
+                  />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label className="text-right">Темп. (°C)</Label>
                   <div className="col-span-3 flex gap-2">
-                    <Input type="number" value={newDevice.minTemp} onChange={e => setNewDevice({...newDevice, minTemp: Number(e.target.value)})} placeholder="Min" />
-                    <Input type="number" value={newDevice.maxTemp} onChange={e => setNewDevice({...newDevice, maxTemp: Number(e.target.value)})} placeholder="Max" />
+                    <Input
+                      type="number"
+                      value={newDevice.minTemp}
+                      onChange={(e) =>
+                        setNewDevice({ ...newDevice, minTemp: Number(e.target.value) })
+                      }
+                      placeholder="Min"
+                    />
+                    <Input
+                      type="number"
+                      value={newDevice.maxTemp}
+                      onChange={(e) =>
+                        setNewDevice({ ...newDevice, maxTemp: Number(e.target.value) })
+                      }
+                      placeholder="Max"
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label className="text-right">Вологість (%)</Label>
                   <div className="col-span-3 flex gap-2">
-                    <Input type="number" value={newDevice.minHum} onChange={e => setNewDevice({...newDevice, minHum: Number(e.target.value)})} placeholder="Min" />
-                    <Input type="number" value={newDevice.maxHum} onChange={e => setNewDevice({...newDevice, maxHum: Number(e.target.value)})} placeholder="Max" />
+                    <Input
+                      type="number"
+                      value={newDevice.minHum}
+                      onChange={(e) =>
+                        setNewDevice({ ...newDevice, minHum: Number(e.target.value) })
+                      }
+                      placeholder="Min"
+                    />
+                    <Input
+                      type="number"
+                      value={newDevice.maxHum}
+                      onChange={(e) =>
+                        setNewDevice({ ...newDevice, maxHum: Number(e.target.value) })
+                      }
+                      placeholder="Max"
+                    />
                   </div>
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Скасувати</Button>
-                <Button onClick={() => registerMutation.mutate({
-                  deviceID: newDevice.deviceID,
-                  location: newDevice.location,
-                  type: newDevice.type,
-                  minTemperature: newDevice.minTemp,
-                  maxTemperature: newDevice.maxTemp,
-                  minHumidity: newDevice.minHum,
-                  maxHumidity: newDevice.maxHum,
-                  isActive: true,
-                  parameters: "{}"
-                })} disabled={!newDevice.deviceID || registerMutation.isPending}>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Скасувати
+                </Button>
+                <Button
+                  onClick={() =>
+                    registerMutation.mutate({
+                      deviceID: newDevice.deviceID,
+                      location: newDevice.location,
+                      type: newDevice.type,
+                      minTemperature: newDevice.minTemp,
+                      maxTemperature: newDevice.maxTemp,
+                      minHumidity: newDevice.minHum,
+                      maxHumidity: newDevice.maxHum,
+                      isActive: true,
+                      parameters: '{}',
+                    })
+                  }
+                  disabled={!newDevice.deviceID || registerMutation.isPending}>
                   Зареєструвати
                 </Button>
               </DialogFooter>
@@ -148,20 +246,35 @@ export default function IoTDevicesPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-4 pt-6">
-            <div className="rounded-lg bg-primary/10 p-3"><Cpu className="h-5 w-5 text-primary" /></div>
-            <div><p className="text-2xl font-bold">{devices.length}</p><p className="text-xs text-muted-foreground">Всього пристроїв</p></div>
+            <div className="rounded-lg bg-primary/10 p-3">
+              <Cpu className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{devices.length}</p>
+              <p className="text-xs text-muted-foreground">Всього пристроїв</p>
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex items-center gap-4 pt-6">
-            <div className="rounded-lg bg-emerald-500/10 p-3"><Activity className="h-5 w-5 text-emerald-500" /></div>
-            <div><p className="text-2xl font-bold">{activeCount}</p><p className="text-xs text-muted-foreground">Онлайн</p></div>
+            <div className="rounded-lg bg-emerald-500/10 p-3">
+              <Activity className="h-5 w-5 text-emerald-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{activeCount}</p>
+              <p className="text-xs text-muted-foreground">Онлайн</p>
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex items-center gap-4 pt-6">
-            <div className="rounded-lg bg-destructive/10 p-3"><Power className="h-5 w-5 text-destructive" /></div>
-            <div><p className="text-2xl font-bold">{devices.length - activeCount}</p><p className="text-xs text-muted-foreground">Офлайн</p></div>
+            <div className="rounded-lg bg-destructive/10 p-3">
+              <Power className="h-5 w-5 text-destructive" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{devices.length - activeCount}</p>
+              <p className="text-xs text-muted-foreground">Офлайн</p>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -172,7 +285,11 @@ export default function IoTDevicesPage() {
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-4 space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
+            <div className="p-4 space-y-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-10" />
+              ))}
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -190,29 +307,46 @@ export default function IoTDevicesPage() {
               <TableBody>
                 {devices.map((d) => (
                   <Fragment key={d.deviceID}>
-                    <TableRow className="cursor-pointer" onClick={() => setExpanded(expanded === d.deviceID ? null : d.deviceID)}>
+                    <TableRow
+                      className="cursor-pointer"
+                      onClick={() => setExpanded(expanded === d.deviceID ? null : d.deviceID)}>
                       <TableCell className="font-mono text-xs">#{d.deviceID}</TableCell>
                       <TableCell className="font-medium">{d.location}</TableCell>
-                      <TableCell><Badge variant="outline">{d.type}</Badge></TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{d.type}</Badge>
+                      </TableCell>
                       <TableCell>
                         <Badge variant={d.isActive ? 'success' : 'secondary'}>
                           {d.isActive ? 'Активний' : 'Неактивний'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm">{d.minTemperature}°C – {d.maxTemperature}°C</TableCell>
-                      <TableCell className="text-sm">{d.minHumidity}% – {d.maxHumidity}%</TableCell>
+                      <TableCell className="text-sm">
+                        {d.minTemperature}°C – {d.maxTemperature}°C
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {d.minHumidity}% – {d.maxHumidity}%
+                      </TableCell>
                       {(isAdmin || isManager) && (
-                        <TableCell onClick={(e) => e.stopPropagation()} className="flex items-center gap-1">
+                        <TableCell
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center gap-1">
                           <Button
                             variant={d.isActive ? 'outline' : 'default'}
                             size="sm"
-                            onClick={() => toggleMutation.mutate({ id: d.deviceID, active: !d.isActive })}
-                          >
+                            onClick={() =>
+                              toggleMutation.mutate({ id: d.deviceID, active: !d.isActive })
+                            }>
                             {d.isActive ? 'Вимкнути' : 'Увімкнути'}
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => setEditingDevice(d)}>
+                            <Pencil className="h-4 w-4" />
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </AlertDialogTrigger>
@@ -220,15 +354,15 @@ export default function IoTDevicesPage() {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Видалити пристрій?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Пристрій <strong>{d.deviceID}</strong> ({d.location}) буде назавжди видалено з системи. Цю дію неможливо скасувати.
+                                  Пристрій <strong>{d.deviceID}</strong> ({d.location}) буде
+                                  назавжди видалено з системи. Цю дію неможливо скасувати.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Скасувати</AlertDialogCancel>
                                 <AlertDialogAction
                                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  onClick={() => deleteMutation.mutate(d.deviceID)}
-                                >
+                                  onClick={() => deleteMutation.mutate(d.deviceID)}>
                                   Видалити
                                 </AlertDialogAction>
                               </AlertDialogFooter>
@@ -237,13 +371,19 @@ export default function IoTDevicesPage() {
                         </TableCell>
                       )}
                       <TableCell>
-                        <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${expanded === d.deviceID ? 'rotate-90' : ''}`} />
+                        <ChevronRight
+                          className={`h-4 w-4 text-muted-foreground transition-transform ${expanded === d.deviceID ? 'rotate-90' : ''}`}
+                        />
                       </TableCell>
                     </TableRow>
                     {expanded === d.deviceID && (
                       <TableRow key={`${d.deviceID}-exp`}>
-                        <TableCell colSpan={(isAdmin || isManager) ? 8 : 7} className="bg-muted/30 p-4">
-                          <p className="mb-2 text-sm font-medium">Останні показники умов зберігання</p>
+                        <TableCell
+                          colSpan={isAdmin || isManager ? 8 : 7}
+                          className="bg-muted/30 p-4">
+                          <p className="mb-2 text-sm font-medium">
+                            Останні показники умов зберігання
+                          </p>
                           {condFetching ? (
                             <Skeleton className="h-20" />
                           ) : conditions.length === 0 ? (
@@ -252,9 +392,15 @@ export default function IoTDevicesPage() {
                             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                               {conditions.slice(-4).map((c) => (
                                 <div key={c.conditionID} className="rounded-lg border bg-card p-3">
-                                  <p className="text-xs text-muted-foreground">{format(new Date(c.timestamp), 'dd.MM HH:mm')}</p>
-                                  <p className="text-sm font-semibold">🌡️ {c.temperature.toFixed(1)}°C</p>
-                                  <p className="text-sm font-semibold">💧 {c.humidity.toFixed(1)}%</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {format(new Date(c.timestamp), 'dd.MM HH:mm')}
+                                  </p>
+                                  <p className="text-sm font-semibold">
+                                    🌡️ {c.temperature.toFixed(1)}°C
+                                  </p>
+                                  <p className="text-sm font-semibold">
+                                    💧 {c.humidity.toFixed(1)}%
+                                  </p>
                                 </div>
                               ))}
                             </div>
@@ -269,6 +415,109 @@ export default function IoTDevicesPage() {
           )}
         </CardContent>
       </Card>
+      {/* Edit Device Dialog */}
+      {(isAdmin || isManager) && editingDevice && (
+        <Dialog open={!!editingDevice} onOpenChange={(open) => !open && setEditingDevice(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Редагування пристрою {editingDevice.deviceID}</DialogTitle>
+              <DialogDescription>Змініть параметри пристрою.</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-location" className="text-right">
+                  Розташування
+                </Label>
+                <Input
+                  id="edit-location"
+                  value={editingDevice.location}
+                  onChange={(e) => setEditingDevice({ ...editingDevice, location: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-type" className="text-right">
+                  Тип
+                </Label>
+                <Input
+                  id="edit-type"
+                  value={editingDevice.type}
+                  onChange={(e) => setEditingDevice({ ...editingDevice, type: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">Темп. (°C)</Label>
+                <div className="col-span-3 flex gap-2">
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={editingDevice.minTemperature}
+                    onChange={(e) =>
+                      setEditingDevice({ ...editingDevice, minTemperature: Number(e.target.value) })
+                    }
+                    placeholder="Min"
+                  />
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={editingDevice.maxTemperature}
+                    onChange={(e) =>
+                      setEditingDevice({ ...editingDevice, maxTemperature: Number(e.target.value) })
+                    }
+                    placeholder="Max"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">Вологість (%)</Label>
+                <div className="col-span-3 flex gap-2">
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={editingDevice.minHumidity}
+                    onChange={(e) =>
+                      setEditingDevice({ ...editingDevice, minHumidity: Number(e.target.value) })
+                    }
+                    placeholder="Min"
+                  />
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={editingDevice.maxHumidity}
+                    onChange={(e) =>
+                      setEditingDevice({ ...editingDevice, maxHumidity: Number(e.target.value) })
+                    }
+                    placeholder="Max"
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingDevice(null)}>
+                Скасувати
+              </Button>
+              <Button
+                onClick={() =>
+                  updateMutation.mutate({
+                    id: editingDevice.deviceID,
+                    data: {
+                      location: editingDevice.location,
+                      type: editingDevice.type,
+                      minTemperature: editingDevice.minTemperature,
+                      maxTemperature: editingDevice.maxTemperature,
+                      minHumidity: editingDevice.minHumidity,
+                      maxHumidity: editingDevice.maxHumidity,
+                    },
+                  })
+                }
+                disabled={updateMutation.isPending}>
+                Зберегти
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
-  )
+  );
 }

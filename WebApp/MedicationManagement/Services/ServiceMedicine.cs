@@ -42,7 +42,7 @@ namespace MedicationManagement.Services
         {
             try
             {
-                var query = _context.Medicines.AsNoTracking().Where(m => m.Quantity < threshold);
+                var query = _context.Medicines.Include(m => m.StorageLocation).AsNoTracking().Where(m => m.Quantity < threshold);
                 if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
                     query = query.Where(m => m.OrganizationId == CurrentOrgId);
                 return await query.ToListAsync();
@@ -59,7 +59,7 @@ namespace MedicationManagement.Services
         {
             try
             {
-                var query = _context.Medicines.AsNoTracking().Where(m => m.ExpiryDate > DateTime.Now && m.ExpiryDate <= thresholdDate);
+                var query = _context.Medicines.Include(m => m.StorageLocation).AsNoTracking().Where(m => m.ExpiryDate > DateTime.UtcNow && m.ExpiryDate <= thresholdDate);
                 if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
                     query = query.Where(m => m.OrganizationId == CurrentOrgId);
                 return await query.ToListAsync();
@@ -127,7 +127,7 @@ namespace MedicationManagement.Services
         {
             try
             {
-                var query = _context.Medicines.AsNoTracking();
+                var query = _context.Medicines.Include(m => m.StorageLocation).AsNoTracking();
                 if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
                     query = query.Where(m => m.OrganizationId == CurrentOrgId);
                 return await query.ToListAsync();
@@ -144,7 +144,7 @@ namespace MedicationManagement.Services
         {
             try
             {
-                var query = _context.Medicines.AsNoTracking().Where(m => m.MedicineID == id);
+                var query = _context.Medicines.Include(m => m.StorageLocation).AsNoTracking().Where(m => m.MedicineID == id);
                 if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
                     query = query.Where(m => m.OrganizationId == CurrentOrgId);
                 var medicine = await query.FirstOrDefaultAsync();

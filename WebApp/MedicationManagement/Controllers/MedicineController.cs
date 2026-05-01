@@ -51,7 +51,7 @@ namespace MedicationManagement.Controllers
         {
             try
             {
-                var targetDate = DateTime.Now.AddDays(daysThreshold);
+                var targetDate = DateTime.UtcNow.AddDays(daysThreshold);
                 var result = await _medicineService.GetExpiringMedicines(targetDate);
                 return Ok(result.Select(m => m.ToDto()));
             }

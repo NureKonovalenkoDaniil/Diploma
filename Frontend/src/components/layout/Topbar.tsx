@@ -25,7 +25,7 @@ export function Topbar() {
   const { data: unread = [] } = useQuery({
     queryKey: ['notifications', 'unread'],
     queryFn: notificationApi.getUnread,
-    refetchInterval: 30_000,
+    refetchInterval: 10000,
   })
 
   const markAllMutation = useMutation({
@@ -110,10 +110,18 @@ export function Topbar() {
                     <div className="flex w-full items-center justify-between">
                       <span className="text-sm font-medium">{n.title}</span>
                       <Badge
-                        variant={n.type === 'StorageViolation' ? 'destructive' : n.type === 'LowStock' ? 'warning' : 'info'}
+                        variant={
+                          n.type === 'StorageViolation' ? 'destructive' : 
+                          n.type === 'StorageRestored' ? 'success' :
+                          (n.type === 'LowStock' || n.type === 'Expiry') ? 'warning' : 
+                          'info'
+                        }
                         className="text-[10px]"
                       >
-                        {n.type}
+                        {n.type === 'StorageViolation' ? 'Порушення' : 
+                         n.type === 'StorageRestored' ? 'Норма' :
+                         n.type === 'LowStock' ? 'Запас' :
+                         n.type === 'Expiry' ? 'Термін' : n.type}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-2">{n.message}</p>

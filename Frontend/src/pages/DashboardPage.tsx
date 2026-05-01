@@ -169,13 +169,13 @@ export default function DashboardPage() {
   const { data: activeIncidents = [], isLoading: iLoading } = useQuery({
     queryKey: ['incidents', 'active'],
     queryFn: incidentApi.getActive,
-    refetchInterval: 60_000,
+    refetchInterval: 10000,
   })
 
   const { data: unread = [] } = useQuery({
     queryKey: ['notifications', 'unread'],
     queryFn: notificationApi.getUnread,
-    refetchInterval: 30_000,
+    refetchInterval: 10000,
   })
 
   const { data: lowStock = [] } = useQuery({

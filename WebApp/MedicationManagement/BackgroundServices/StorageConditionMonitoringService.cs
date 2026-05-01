@@ -130,15 +130,15 @@ namespace MedicationManagement.BackgroundServices
             }
             else if (!isViolation && activeIncident is not null)
             {
-                activeIncident.Status  = IncidentStatus.Resolved;
+                activeIncident.Status  = IncidentStatus.AutoResolved;
                 activeIncident.EndTime = DateTime.UtcNow;
                 await db.SaveChangesAsync();
 
                 var msg = $"Температура нормалізована на пристрої {device.DeviceID}: {condition.Temperature}°C. " +
-                          $"Інцидент #{activeIncident.IncidentId} закрито.";
+                          $"Інцидент #{activeIncident.IncidentId} закрито автоматично.";
 
                 await notificationService.Create(
-                    NotificationType.StorageViolation,
+                    NotificationType.StorageRestored,
                     "✅ Температура нормалізована",
                     msg,
                     targetRole: "All",
@@ -147,11 +147,11 @@ namespace MedicationManagement.BackgroundServices
                     organizationId: device.OrganizationId);
 
                 await auditService.LogAction(
-                    "StorageIncident_Resolved", "System", msg, isSensor: true,
+                    "StorageIncident_AutoResolved", "System", msg, isSensor: true,
                     entityType: "StorageIncident", entityId: activeIncident.IncidentId,
                     severity: AuditSeverity.Info);
 
-                _logger.LogInformation("Temperature incident #{Id} resolved for device {DeviceId}", activeIncident.IncidentId, device.DeviceID);
+                _logger.LogInformation("Temperature incident #{Id} auto-resolved for device {DeviceId}", activeIncident.IncidentId, device.DeviceID);
             }
         }
 
@@ -209,15 +209,15 @@ namespace MedicationManagement.BackgroundServices
             }
             else if (!isViolation && activeIncident is not null)
             {
-                activeIncident.Status  = IncidentStatus.Resolved;
+                activeIncident.Status  = IncidentStatus.AutoResolved;
                 activeIncident.EndTime = DateTime.UtcNow;
                 await db.SaveChangesAsync();
 
                 var msg = $"Вологість нормалізована на пристрої {device.DeviceID}: {condition.Humidity}%. " +
-                          $"Інцидент #{activeIncident.IncidentId} закрито.";
+                          $"Інцидент #{activeIncident.IncidentId} закрито автоматично.";
 
                 await notificationService.Create(
-                    NotificationType.StorageViolation,
+                    NotificationType.StorageRestored,
                     "✅ Вологість нормалізована",
                     msg,
                     targetRole: "All",
@@ -226,11 +226,11 @@ namespace MedicationManagement.BackgroundServices
                     organizationId: device.OrganizationId);
 
                 await auditService.LogAction(
-                    "StorageIncident_Resolved", "System", msg, isSensor: true,
+                    "StorageIncident_AutoResolved", "System", msg, isSensor: true,
                     entityType: "StorageIncident", entityId: activeIncident.IncidentId,
                     severity: AuditSeverity.Info);
 
-                _logger.LogInformation("Humidity incident #{Id} resolved for device {DeviceId}", activeIncident.IncidentId, device.DeviceID);
+                _logger.LogInformation("Humidity incident #{Id} auto-resolved for device {DeviceId}", activeIncident.IncidentId, device.DeviceID);
             }
         }
     }

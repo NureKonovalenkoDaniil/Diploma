@@ -35,6 +35,9 @@ unsigned long lastSendTime  = 0;
 
 const unsigned long checkInterval = 5000;
 const unsigned long sendInterval  = 10000; // 10 секунд
+const unsigned long configInterval = 60000; // 60 секунд
+
+unsigned long lastConfigTime = 0;
 
 // Отримати конфігурацію пристрою: порогові значення з сервера
 void fetchDeviceConfig() {
@@ -137,6 +140,14 @@ void setup() {
 void loop() {
   unsigned long currentTime = millis();
 
+  // 1. Оновлення конфігурації (кожні 60 секунд)
+  if (currentTime - lastConfigTime >= configInterval) {
+    lastConfigTime = currentTime;
+    Serial.println("Syncing config with server...");
+    fetchDeviceConfig();
+  }
+
+  // 2. Перевірка локальних умов (кожні 5 секунд)
   if (currentTime - lastCheckTime >= checkInterval) {
     lastCheckTime = currentTime;
 

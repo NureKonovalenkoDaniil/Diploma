@@ -7,8 +7,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Bell, Check, CheckCheck } from 'lucide-react'
 import { format } from 'date-fns'
 
-const TYPE_CONFIG: Record<string, { label: string; variant: 'destructive' | 'warning' | 'info' | 'secondary' }> = {
+const TYPE_CONFIG: Record<string, { label: string; variant: 'destructive' | 'warning' | 'info' | 'secondary' | 'success' }> = {
   StorageViolation: { label: 'Порушення', variant: 'destructive' },
+  StorageRestored: { label: 'Нормалізовано', variant: 'success' },
   Expiry: { label: 'Термін', variant: 'warning' },
   LowStock: { label: 'Запас', variant: 'warning' },
   System: { label: 'Система', variant: 'info' },

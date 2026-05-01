@@ -96,7 +96,7 @@ namespace MedicationManagement.Services
                 {
                     storageCondition.OrganizationId = orgId;
                 }
-                storageCondition.Timestamp = DateTime.Now;
+                storageCondition.Timestamp = DateTime.UtcNow;
                 await _context.StorageConditions.AddAsync(storageCondition);
                 await _context.SaveChangesAsync();
                 return storageCondition;

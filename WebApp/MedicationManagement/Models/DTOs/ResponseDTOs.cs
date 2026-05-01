@@ -15,6 +15,8 @@ namespace MedicationManagement.Models.DTOs
         string? Description,
         float? MinStorageTemp,
         float? MaxStorageTemp,
+        float? MinStorageHumidity,
+        float? MaxStorageHumidity,
         int? StorageLocationId,
         string? StorageLocationName
     );
@@ -120,6 +122,8 @@ namespace MedicationManagement.Models.DTOs
         string? Description,
         float? MinStorageTemp,
         float? MaxStorageTemp,
+        float? MinStorageHumidity,
+        float? MaxStorageHumidity,
         int? StorageLocationId
     );
 

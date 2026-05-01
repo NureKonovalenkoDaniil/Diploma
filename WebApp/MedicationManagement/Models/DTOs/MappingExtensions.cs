@@ -19,6 +19,8 @@ namespace MedicationManagement.Models.DTOs
                 m.Description,
                 m.MinStorageTemp,
                 m.MaxStorageTemp,
+                m.MinStorageHumidity,
+                m.MaxStorageHumidity,
                 m.StorageLocationId,
                 m.StorageLocation?.Name
             );
@@ -38,6 +40,8 @@ namespace MedicationManagement.Models.DTOs
                 Description = dto.Description,
                 MinStorageTemp = dto.MinStorageTemp,
                 MaxStorageTemp = dto.MaxStorageTemp,
+                MinStorageHumidity = dto.MinStorageHumidity,
+                MaxStorageHumidity = dto.MaxStorageHumidity,
                 StorageLocationId = dto.StorageLocationId
             };
         }
@@ -97,10 +101,10 @@ namespace MedicationManagement.Models.DTOs
                 i.DetectedValue,
                 i.ExpectedMin,
                 i.ExpectedMax,
-                i.StartTime,
-                i.EndTime,
+                DateTime.SpecifyKind(i.StartTime, DateTimeKind.Utc),
+                i.EndTime.HasValue ? DateTime.SpecifyKind(i.EndTime.Value, DateTimeKind.Utc) : null,
                 i.Status.ToString(),
-                i.CreatedAt
+                DateTime.SpecifyKind(i.CreatedAt, DateTimeKind.Utc)
             );
         }
 
@@ -114,7 +118,7 @@ namespace MedicationManagement.Models.DTOs
                 e.Description,
                 e.Quantity,
                 e.PerformedBy,
-                e.PerformedAt,
+                DateTime.SpecifyKind(e.PerformedAt, DateTimeKind.Utc),
                 e.RelatedLocationId,
                 e.RelatedLocation?.Name
             );
@@ -126,7 +130,7 @@ namespace MedicationManagement.Models.DTOs
                 c.ConditionID,
                 c.Temperature,
                 c.Humidity,
-                c.Timestamp,
+                DateTime.SpecifyKind(c.Timestamp, DateTimeKind.Utc),
                 c.DeviceID,
                 c.IoTDevice?.Location
             );
@@ -141,7 +145,7 @@ namespace MedicationManagement.Models.DTOs
                 n.Message,
                 n.TargetRole,
                 n.IsRead,
-                n.CreatedAt,
+                DateTime.SpecifyKind(n.CreatedAt, DateTimeKind.Utc),
                 n.RelatedEntityType,
                 n.RelatedEntityId
             );
@@ -153,7 +157,7 @@ namespace MedicationManagement.Models.DTOs
                 a.Id,
                 a.Action,
                 a.User,
-                a.Timestamp,
+                DateTime.SpecifyKind(a.Timestamp, DateTimeKind.Utc),
                 a.Details,
                 a.EntityType,
                 a.EntityId,

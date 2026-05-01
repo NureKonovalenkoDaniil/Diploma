@@ -1,45 +1,68 @@
-import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
-import { auditApi } from '@/api'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Search, RotateCcw } from 'lucide-react'
-import { format } from 'date-fns'
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { auditApi } from '@/api';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Search, RotateCcw } from 'lucide-react';
+import { format } from 'date-fns';
 
-type Filters = { from: string; to: string; user: string; action: string }
+type Filters = { from: string; to: string; user: string; action: string };
 
 const severityVariant = (s: string): 'destructive' | 'warning' | 'info' => {
-  if (s === 'Error') return 'destructive'
-  if (s === 'Warning') return 'warning'
-  return 'info'
-}
+  if (s === 'Error') return 'destructive';
+  if (s === 'Warning') return 'warning';
+  return 'info';
+};
 
 export default function AuditLogPage() {
-  const [filters, setFilters] = useState<Filters>({ from: '', to: '', user: '', action: '' })
-  const [applied, setApplied] = useState<Partial<Filters>>({})
+  const [filters, setFilters] = useState<Filters>({ from: '', to: '', user: '', action: '' });
+  const [applied, setApplied] = useState<Partial<Filters>>({});
 
-  const { data: logs = [], isLoading, refetch } = useQuery({
+  const {
+    data: logs = [],
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['audit-log', applied],
-    queryFn: () => auditApi.getLogs({
-      from: applied.from || undefined,
-      to: applied.to || undefined,
-      user: applied.user || undefined,
-      action: applied.action || undefined,
-    }),
-  })
+    queryFn: () => {
+      let fromIso, toIso;
+      // We pass the local date as a simple YYYY-MM-DD string,
+      // because we want the backend to do a naive date comparison
+      // ignoring timezone shifts.
+      if (applied.from) {
+        fromIso = applied.from; // '2026-04-29'
+      }
+      if (applied.to) {
+        toIso = applied.to; // '2026-04-29'
+      }
+      return auditApi.getLogs({
+        from: fromIso,
+        to: toIso,
+        user: applied.user || undefined,
+        action: applied.action || undefined,
+      });
+    },
+  });
 
-  const applyFilters = () => setApplied({ ...filters })
+  const applyFilters = () => setApplied({ ...filters });
   const resetFilters = () => {
-    setFilters({ from: '', to: '', user: '', action: '' })
-    setApplied({})
-  }
+    setFilters({ from: '', to: '', user: '', action: '' });
+    setApplied({});
+  };
 
-  const f = (k: keyof Filters, v: string) => setFilters((p) => ({ ...p, [k]: v }))
+  const f = (k: keyof Filters, v: string) => setFilters((p) => ({ ...p, [k]: v }));
 
   return (
     <div className="space-y-6">
@@ -50,24 +73,34 @@ export default function AuditLogPage() {
 
       {/* Filters */}
       <Card>
-        <CardHeader><CardTitle className="text-sm font-medium">Фільтри</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">Фільтри</CardTitle>
+        </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5">
               <Label className="text-xs">З дати</Label>
-              <Input type="datetime-local" value={filters.from} onChange={(e) => f('from', e.target.value)} />
+              <Input type="date" value={filters.from} onChange={(e) => f('from', e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">По дату</Label>
-              <Input type="datetime-local" value={filters.to} onChange={(e) => f('to', e.target.value)} />
+              <Input type="date" value={filters.to} onChange={(e) => f('to', e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Користувач</Label>
-              <Input placeholder="email@example.com" value={filters.user} onChange={(e) => f('user', e.target.value)} />
+              <Input
+                placeholder="email@example.com"
+                value={filters.user}
+                onChange={(e) => f('user', e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Дія</Label>
-              <Input placeholder="Create Medicine" value={filters.action} onChange={(e) => f('action', e.target.value)} />
+              <Input
+                placeholder="Create Medicine"
+                value={filters.action}
+                onChange={(e) => f('action', e.target.value)}
+              />
             </div>
           </div>
           <div className="mt-3 flex gap-2">
@@ -88,7 +121,11 @@ export default function AuditLogPage() {
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-4 space-y-2">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
+            <div className="p-4 space-y-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-10" />
+              ))}
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -108,27 +145,31 @@ export default function AuditLogPage() {
                       Записів не знайдено
                     </TableCell>
                   </TableRow>
-                ) : logs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                      {format(new Date(log.timestamp), 'dd.MM.yyyy HH:mm:ss')}
-                    </TableCell>
-                    <TableCell className="font-medium text-sm">{log.action}</TableCell>
-                    <TableCell className="text-sm">{log.user}</TableCell>
-                    <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{log.details}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {log.entityType ? `${log.entityType} #${log.entityId}` : '—'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={severityVariant(log.severity)}>{log.severity}</Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                ) : (
+                  logs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                        {format(new Date(log.timestamp), 'dd.MM.yyyy HH:mm:ss')}
+                      </TableCell>
+                      <TableCell className="font-medium text-sm">{log.action}</TableCell>
+                      <TableCell className="text-sm">{log.user}</TableCell>
+                      <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
+                        {log.details}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {log.entityType ? `${log.entityType} #${log.entityId}` : '—'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={severityVariant(log.severity)}>{log.severity}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           )}
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

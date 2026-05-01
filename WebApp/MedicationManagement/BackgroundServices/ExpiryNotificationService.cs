@@ -52,7 +52,7 @@ namespace MedicationManagement.BackgroundServices
             var auditService = scope.ServiceProvider.GetRequiredService<IServiceAuditLog>();
             var notificationService = scope.ServiceProvider.GetRequiredService<IServiceNotification>();
 
-            var threshold = DateTime.Now.AddDays(_expiryWarningDays);
+            var threshold = DateTime.UtcNow.AddDays(_expiryWarningDays);
             var expiringMedicines = await medicineService.GetExpiringMedicines(threshold);
 
             var todayUtc = DateTime.UtcNow.Date;
@@ -72,7 +72,7 @@ namespace MedicationManagement.BackgroundServices
                     continue;
                 }
 
-                var daysLeft = (medicine.ExpiryDate - DateTime.Now).Days;
+                var daysLeft = (medicine.ExpiryDate - DateTime.UtcNow).Days;
                 var msg = $"Препарат «{medicine.Name}» (ID: {medicine.MedicineID}) " +
                           $"закінчується {medicine.ExpiryDate:yyyy-MM-dd} (через {daysLeft} д.).";
 

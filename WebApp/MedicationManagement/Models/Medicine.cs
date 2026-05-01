@@ -45,6 +45,12 @@ namespace MedicationManagement.Models
         /// <summary>Максимальна допустима температура зберігання (°C)</summary>
         public float? MaxStorageTemp { get; set; }
 
+        /// <summary>Мінімальна допустима вологість зберігання (%)</summary>
+        public float? MinStorageHumidity { get; set; }
+
+        /// <summary>Максимальна допустима вологість зберігання (%)</summary>
+        public float? MaxStorageHumidity { get; set; }
+
         // Nullable FK до місця зберігання
         public int? StorageLocationId { get; set; }
 
