@@ -167,6 +167,48 @@ namespace MedicationManagement.Controllers
             }
         }
 
+        /// <summary>
+        /// Атомарне переміщення препарату: оновлює StorageLocationId і створює lifecycle-подію Moved.
+        /// </summary>
+        [HttpPost("{id}/move")]
+        [Authorize(Roles = "Administrator,Manager")]
+        public async Task<IActionResult> Move(int id, [FromBody] MoveMedicineDto dto)
+        {
+            if (dto is null) return BadRequest("Request body is required");
+            if (dto.StorageLocationId <= 0) return BadRequest("StorageLocationId must be a positive integer");
+
+            try
+            {
+                var user = User.Identity?.Name ?? "Unknown";
+                var result = await _medicineService.Move(
+                    id,
+                    dto.StorageLocationId,
+                    performedBy: user,
+                    description: dto.Description,
+                    quantity: dto.Quantity);
+
+                if (result is null)
+                {
+                    // Could be: medicine not found, or location not found / not accessible within tenant.
+                    return NotFound("Medicine or target location not found");
+                }
+
+                await _auditLogService.LogAction(
+                    "MoveMedicine",
+                    user,
+                    $"Moved medicine ID {id} to StorageLocationId {dto.StorageLocationId}.",
+                    false,
+                    entityType: "Medicine",
+                    entityId: id);
+
+                return Ok(result.ToDto());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to move medicine with ID {Id}", id);
+                return StatusCode(500, "Internal server error");
+            }
+        }
 
         // Endpoint to delete a medicine by ID
         [HttpDelete("{id}")]

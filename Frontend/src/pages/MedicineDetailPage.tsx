@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Plus, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Truck, Loader2 } from 'lucide-react';
 import { medicineApi, lifecycleApi, locationApi } from '@/api';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const EVENT_TYPES = ['Received', 'Issued', 'Moved', 'Expired', 'Disposed', 'Recalled'];
 
@@ -32,12 +33,19 @@ export default function MedicineDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { isAdmin, isManager } = useAuth();
   const [open, setOpen] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
   const [eventForm, setEventForm] = useState({
     eventType: 'Received',
     description: '',
     quantity: '',
     relatedLocationId: '',
+  });
+  const [moveForm, setMoveForm] = useState({
+    storageLocationId: '',
+    description: '',
+    quantity: '',
   });
 
   const medId = Number(id);
@@ -55,6 +63,24 @@ export default function MedicineDetailPage() {
   const { data: locations = [] } = useQuery({
     queryKey: ['locations'],
     queryFn: locationApi.getAll,
+  });
+
+  const canManage = isAdmin || isManager;
+
+  const moveMutation = useMutation({
+    mutationFn: () =>
+      medicineApi.move(medId, {
+        storageLocationId: Number(moveForm.storageLocationId),
+        description: moveForm.description || undefined,
+        quantity: moveForm.quantity ? Number(moveForm.quantity) : undefined,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['medicines', medId] });
+      qc.invalidateQueries({ queryKey: ['medicines'] });
+      qc.invalidateQueries({ queryKey: ['lifecycle', medId] });
+      setMoveOpen(false);
+      setMoveForm({ storageLocationId: '', description: '', quantity: '' });
+    },
   });
 
   const addEventMutation = useMutation({
@@ -163,9 +189,16 @@ export default function MedicineDetailPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Lifecycle-події</CardTitle>
-          <Button size="sm" onClick={() => setOpen(true)}>
-            <Plus className="h-3.5 w-3.5" /> Додати подію
-          </Button>
+          <div className="flex items-center gap-2">
+            {canManage && (
+              <Button size="sm" variant="outline" onClick={() => setMoveOpen(true)}>
+                <Truck className="h-3.5 w-3.5" /> Перемістити
+              </Button>
+            )}
+            <Button size="sm" onClick={() => setOpen(true)}>
+              <Plus className="h-3.5 w-3.5" /> Додати подію
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {eLoading ? (
@@ -214,6 +247,62 @@ export default function MedicineDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={moveOpen} onOpenChange={setMoveOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Перемістити препарат</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Нова локація</Label>
+              <select
+                title="Нова локація"
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground"
+                value={moveForm.storageLocationId}
+                onChange={(e) => setMoveForm((p) => ({ ...p, storageLocationId: e.target.value }))}>
+                <option value="">Оберіть локацію</option>
+                {locations.map((loc) => (
+                  <option key={loc.locationId} value={loc.locationId}>
+                    {loc.name}
+                  </option>
+                ))}
+              </select>
+              {!moveForm.storageLocationId && (
+                <p className="text-xs text-muted-foreground">Обов&apos;язково для переміщення</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label>Кількість (опціонально)</Label>
+              <Input
+                type="number"
+                min={0}
+                value={moveForm.quantity}
+                onChange={(e) => setMoveForm((p) => ({ ...p, quantity: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Коментар (опціонально)</Label>
+              <Input
+                value={moveForm.description}
+                onChange={(e) => setMoveForm((p) => ({ ...p, description: e.target.value }))}
+                placeholder="Напр. переміщення для інвентаризації"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMoveOpen(false)}>
+              Скасувати
+            </Button>
+            <Button
+              onClick={() => moveMutation.mutate()}
+              disabled={moveMutation.isPending || !moveForm.storageLocationId}>
+              {moveMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Перемістити
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

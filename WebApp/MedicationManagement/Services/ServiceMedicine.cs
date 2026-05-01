@@ -3,6 +3,7 @@ using MedicationManagement.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.EntityFrameworkCore;
 using MedicationManagement.Extensions;
+using MedicationManagement.Enums;
 
 namespace MedicationManagement.Services
 {
@@ -16,6 +17,7 @@ namespace MedicationManagement.Services
         Task<IEnumerable<Medicine>> Read();
         Task<Medicine?> ReadById(int id);
         Task<Medicine?> Update(int id, JsonPatchDocument<Medicine> patchDocument);
+        Task<Medicine?> Move(int id, int storageLocationId, string performedBy, string? description = null, int? quantity = null);
         Task<bool> Delete(int id);
     }
     // Implementation of the medicine service
@@ -190,6 +192,81 @@ namespace MedicationManagement.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error updating medicine with ID {id}");
+                return null;
+            }
+        }
+
+        public async Task<Medicine?> Move(int id, int storageLocationId, string performedBy, string? description = null, int? quantity = null)
+        {
+            try
+            {
+                // Read medicine + current location for a meaningful description.
+                var medQuery = _context.Medicines
+                    .Include(m => m.StorageLocation)
+                    .AsQueryable();
+
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    medQuery = medQuery.Where(m => m.OrganizationId == CurrentOrgId);
+
+                var medicine = await medQuery.FirstOrDefaultAsync(m => m.MedicineID == id);
+                if (medicine is null)
+                {
+                    _logger.LogWarning("Medicine with ID {Id} not found for move", id);
+                    return null;
+                }
+
+                // Validate target location exists and belongs to the same tenant (for non-admin).
+                var locQuery = _context.StorageLocations.AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    locQuery = locQuery.Where(l => l.OrganizationId == CurrentOrgId);
+
+                var targetLocation = await locQuery.FirstOrDefaultAsync(l => l.LocationId == storageLocationId);
+                if (targetLocation is null)
+                {
+                    _logger.LogWarning("Target StorageLocation with ID {Id} not found for move", storageLocationId);
+                    return null;
+                }
+
+                var fromName = medicine.StorageLocation?.Name;
+                var toName = targetLocation.Name;
+
+                // Atomic update + lifecycle event.
+                await using var tx = await _context.Database.BeginTransactionAsync();
+
+                medicine.StorageLocationId = targetLocation.LocationId;
+                await _context.SaveChangesAsync();
+
+                var orgId = CurrentOrgId;
+                if (string.IsNullOrEmpty(orgId))
+                {
+                    // For admin flows, keep the event in the same tenant as the medicine.
+                    orgId = medicine.OrganizationId;
+                }
+
+                var evt = new MedicineLifecycleEvent
+                {
+                    MedicineId = medicine.MedicineID,
+                    OrganizationId = orgId ?? string.Empty,
+                    EventType = LifecycleEventType.Moved,
+                    RelatedLocationId = targetLocation.LocationId,
+                    Quantity = quantity,
+                    PerformedBy = performedBy,
+                    PerformedAt = DateTime.UtcNow,
+                    Description = string.IsNullOrWhiteSpace(description)
+                        ? $"Переміщення: {(string.IsNullOrWhiteSpace(fromName) ? "—" : fromName)} → {toName}"
+                        : description
+                };
+
+                _context.MedicineLifecycleEvents.Add(evt);
+                await _context.SaveChangesAsync();
+
+                await tx.CommitAsync();
+
+                return medicine;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error moving medicine with ID {Id} to location {LocationId}", id, storageLocationId);
                 return null;
             }
         }

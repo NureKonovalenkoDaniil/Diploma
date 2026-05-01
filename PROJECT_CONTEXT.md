@@ -23,6 +23,18 @@
 **Load Tests:** NBomber (GET 50 копій 15 сек, POST 10 копій 20 сек)  
 **Swagger:** Swashbuckle.AspNetCore 7.1.0 (Development only)
 
+## 2.1. Останні зміни (після 2026-04-29)
+
+### [ВИКОНАНО 2026-05-01] Атомарне переміщення препарату між локаціями
+
+Проблема: переміщення препарату вимагало двох дій (змінити `Medicine.StorageLocationId` окремо та вручну створити `MedicineLifecycleEvent`), що призводило до розсинхронізації та зайвих переходів у UI.
+
+Рішення:
+- Додано backend endpoint `POST /api/medicine/{id}/move`, який в одній транзакції:
+  - оновлює `Medicine.StorageLocationId`;
+  - створює `MedicineLifecycleEvent` з `EventType = Moved`.
+- У Frontend (сторінка `MedicineDetailPage`) додано кнопку/діалог **"Перемістити"**, що викликає цей endpoint і після успіху оновлює дані препарату та список lifecycle-подій.
+
 ## 3. Підтверджені поточні модулі
 
 На даний момент підтверджено наявність або часткову наявність таких модулів:

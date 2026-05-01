@@ -146,4 +146,15 @@ namespace MedicationManagement.Models.DTOs
         int Quantity,
         int? RelatedLocationId
     );
+
+    /// <summary>
+    /// DTO для атомарного переміщення препарату між локаціями:
+    /// оновлює Medicine.StorageLocationId та створює MedicineLifecycleEvent(EventType=Moved).
+    /// OrganizationId підставляється з JWT на сервері.
+    /// </summary>
+    public record MoveMedicineDto(
+        int StorageLocationId,
+        string? Description,
+        int? Quantity
+    );
 }
