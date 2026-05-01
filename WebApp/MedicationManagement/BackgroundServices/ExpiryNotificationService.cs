@@ -68,6 +68,7 @@ namespace MedicationManagement.BackgroundServices
                     n.Type == NotificationType.Expiry &&
                     n.RelatedEntityType == "Medicine" &&
                     n.RelatedEntityId == medicine.MedicineID &&
+                    n.OrganizationId == medicine.OrganizationId &&
                     n.CreatedAt.Date == todayUtc);
 
                 if (alreadyNotified)
@@ -86,7 +87,8 @@ namespace MedicationManagement.BackgroundServices
                     msg,
                     targetRole: "All",
                     relatedEntityType: "Medicine",
-                    relatedEntityId: medicine.MedicineID);
+                    relatedEntityId: medicine.MedicineID,
+                    organizationId: medicine.OrganizationId);
 
                 await auditService.LogAction(
                     "ExpiryNotification_Sent", "System", msg, isSensor: false,
