@@ -157,4 +157,15 @@ namespace MedicationManagement.Models.DTOs
         string? Description,
         int? Quantity
     );
+
+    /// <summary>
+    /// DTO для змін залишку препарату через бізнес-операції (Received/Issued/Disposed),
+    /// які одночасно створюють відповідний MedicineLifecycleEvent.
+    /// </summary>
+    public record ChangeMedicineQuantityDto(
+        int Quantity,
+        string? Description,
+        int? RelatedLocationId,
+        int? StorageLocationId
+    );
 }

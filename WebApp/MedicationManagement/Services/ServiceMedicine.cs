@@ -18,6 +18,9 @@ namespace MedicationManagement.Services
         Task<Medicine?> ReadById(int id);
         Task<Medicine?> Update(int id, JsonPatchDocument<Medicine> patchDocument);
         Task<Medicine?> Move(int id, int storageLocationId, string performedBy, string? description = null, int? quantity = null);
+        Task<(Medicine? medicine, string? error)> Receive(int id, int quantity, string performedBy, int? storageLocationId = null, string? description = null, int? relatedLocationId = null);
+        Task<(Medicine? medicine, string? error)> Issue(int id, int quantity, string performedBy, string? description = null, int? relatedLocationId = null);
+        Task<(Medicine? medicine, string? error)> Dispose(int id, int? quantity, string performedBy, string? description = null, int? relatedLocationId = null);
         Task<bool> Delete(int id);
     }
     // Implementation of the medicine service
@@ -268,6 +271,175 @@ namespace MedicationManagement.Services
             {
                 _logger.LogError(ex, "Error moving medicine with ID {Id} to location {LocationId}", id, storageLocationId);
                 return null;
+            }
+        }
+
+        public async Task<(Medicine? medicine, string? error)> Receive(
+            int id, int quantity, string performedBy, int? storageLocationId = null, string? description = null, int? relatedLocationId = null)
+        {
+            if (quantity <= 0) return (null, "Quantity must be a positive integer");
+
+            try
+            {
+                var query = _context.Medicines.Include(m => m.StorageLocation).AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(m => m.OrganizationId == CurrentOrgId);
+
+                var medicine = await query.FirstOrDefaultAsync(m => m.MedicineID == id);
+                if (medicine is null) return (null, "Medicine not found");
+
+                StorageLocation? targetLocation = null;
+                if (storageLocationId.HasValue)
+                {
+                    var locQuery = _context.StorageLocations.AsQueryable();
+                    if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                        locQuery = locQuery.Where(l => l.OrganizationId == CurrentOrgId);
+
+                    targetLocation = await locQuery.FirstOrDefaultAsync(l => l.LocationId == storageLocationId.Value);
+                    if (targetLocation is null) return (null, "Target location not found");
+                }
+
+                await using var tx = await _context.Database.BeginTransactionAsync();
+
+                medicine.Quantity += quantity;
+                if (targetLocation is not null)
+                {
+                    medicine.StorageLocationId = targetLocation.LocationId;
+                }
+
+                await _context.SaveChangesAsync();
+
+                var orgId = CurrentOrgId;
+                if (string.IsNullOrEmpty(orgId)) orgId = medicine.OrganizationId;
+
+                var evt = new MedicineLifecycleEvent
+                {
+                    MedicineId = medicine.MedicineID,
+                    OrganizationId = orgId ?? string.Empty,
+                    EventType = LifecycleEventType.Received,
+                    Quantity = quantity,
+                    PerformedBy = performedBy,
+                    PerformedAt = DateTime.UtcNow,
+                    RelatedLocationId = relatedLocationId ?? targetLocation?.LocationId ?? medicine.StorageLocationId,
+                    Description = string.IsNullOrWhiteSpace(description)
+                        ? $"Надходження: +{quantity}"
+                        : description
+                };
+
+                _context.MedicineLifecycleEvents.Add(evt);
+                await _context.SaveChangesAsync();
+
+                await tx.CommitAsync();
+                return (medicine, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error receiving stock for medicine ID {Id}", id);
+                return (null, "Internal error");
+            }
+        }
+
+        public async Task<(Medicine? medicine, string? error)> Issue(
+            int id, int quantity, string performedBy, string? description = null, int? relatedLocationId = null)
+        {
+            if (quantity <= 0) return (null, "Quantity must be a positive integer");
+
+            try
+            {
+                var query = _context.Medicines.Include(m => m.StorageLocation).AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(m => m.OrganizationId == CurrentOrgId);
+
+                var medicine = await query.FirstOrDefaultAsync(m => m.MedicineID == id);
+                if (medicine is null) return (null, "Medicine not found");
+
+                if (medicine.Quantity < quantity)
+                    return (null, $"Insufficient stock. Available: {medicine.Quantity}");
+
+                await using var tx = await _context.Database.BeginTransactionAsync();
+
+                medicine.Quantity -= quantity;
+                await _context.SaveChangesAsync();
+
+                var orgId = CurrentOrgId;
+                if (string.IsNullOrEmpty(orgId)) orgId = medicine.OrganizationId;
+
+                var evt = new MedicineLifecycleEvent
+                {
+                    MedicineId = medicine.MedicineID,
+                    OrganizationId = orgId ?? string.Empty,
+                    EventType = LifecycleEventType.Issued,
+                    Quantity = quantity,
+                    PerformedBy = performedBy,
+                    PerformedAt = DateTime.UtcNow,
+                    RelatedLocationId = relatedLocationId ?? medicine.StorageLocationId,
+                    Description = string.IsNullOrWhiteSpace(description)
+                        ? $"Видача: -{quantity}"
+                        : description
+                };
+
+                _context.MedicineLifecycleEvents.Add(evt);
+                await _context.SaveChangesAsync();
+
+                await tx.CommitAsync();
+                return (medicine, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error issuing stock for medicine ID {Id}", id);
+                return (null, "Internal error");
+            }
+        }
+
+        public async Task<(Medicine? medicine, string? error)> Dispose(
+            int id, int? quantity, string performedBy, string? description = null, int? relatedLocationId = null)
+        {
+            try
+            {
+                var query = _context.Medicines.Include(m => m.StorageLocation).AsQueryable();
+                if (!IsAdmin && !string.IsNullOrEmpty(CurrentOrgId))
+                    query = query.Where(m => m.OrganizationId == CurrentOrgId);
+
+                var medicine = await query.FirstOrDefaultAsync(m => m.MedicineID == id);
+                if (medicine is null) return (null, "Medicine not found");
+
+                var toDispose = quantity ?? medicine.Quantity;
+                if (toDispose <= 0) return (null, "Quantity must be a positive integer");
+                if (medicine.Quantity < toDispose)
+                    return (null, $"Insufficient stock. Available: {medicine.Quantity}");
+
+                await using var tx = await _context.Database.BeginTransactionAsync();
+
+                medicine.Quantity -= toDispose;
+                await _context.SaveChangesAsync();
+
+                var orgId = CurrentOrgId;
+                if (string.IsNullOrEmpty(orgId)) orgId = medicine.OrganizationId;
+
+                var evt = new MedicineLifecycleEvent
+                {
+                    MedicineId = medicine.MedicineID,
+                    OrganizationId = orgId ?? string.Empty,
+                    EventType = LifecycleEventType.Disposed,
+                    Quantity = toDispose,
+                    PerformedBy = performedBy,
+                    PerformedAt = DateTime.UtcNow,
+                    RelatedLocationId = relatedLocationId ?? medicine.StorageLocationId,
+                    Description = string.IsNullOrWhiteSpace(description)
+                        ? $"Утилізація: -{toDispose}"
+                        : description
+                };
+
+                _context.MedicineLifecycleEvents.Add(evt);
+                await _context.SaveChangesAsync();
+
+                await tx.CommitAsync();
+                return (medicine, null);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error disposing stock for medicine ID {Id}", id);
+                return (null, "Internal error");
             }
         }
 

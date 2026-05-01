@@ -35,6 +35,15 @@
   - створює `MedicineLifecycleEvent` з `EventType = Moved`.
 - У Frontend (сторінка `MedicineDetailPage`) додано кнопку/діалог **"Перемістити"**, що викликає цей endpoint і після успіху оновлює дані препарату та список lifecycle-подій.
 
+### [ВИКОНАНО 2026-05-01] Командні операції для подій, що змінюють стан (Quantity)
+
+Щоб lifecycle-події не розходились із фактичним станом препарату, введено окремі атомарні команди:
+- `POST /api/medicine/{id}/receive` — збільшує `Medicine.Quantity` і створює `MedicineLifecycleEvent(EventType=Received)`
+- `POST /api/medicine/{id}/issue` — зменшує `Medicine.Quantity` і створює `MedicineLifecycleEvent(EventType=Issued)` (з валідацією залишку)
+- `POST /api/medicine/{id}/dispose` — зменшує `Medicine.Quantity` і створює `MedicineLifecycleEvent(EventType=Disposed)` (0 = утилізувати весь залишок у UI)
+
+Frontend: у `MedicineDetailPage` додані кнопки **"Надходження" / "Видача" / "Утилізація"** з діалогом введення кількості і коментаря.
+
 ## 3. Підтверджені поточні модулі
 
 На даний момент підтверджено наявність або часткову наявність таких модулів:

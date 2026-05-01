@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Plus, Truck, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Truck, ArrowDownCircle, ArrowUpCircle, Trash2, Loader2 } from 'lucide-react';
 import { medicineApi, lifecycleApi, locationApi } from '@/api';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +36,7 @@ export default function MedicineDetailPage() {
   const { isAdmin, isManager } = useAuth();
   const [open, setOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
+  const [stockOpen, setStockOpen] = useState<null | 'receive' | 'issue' | 'dispose'>(null);
   const [eventForm, setEventForm] = useState({
     eventType: 'Received',
     description: '',
@@ -46,6 +47,11 @@ export default function MedicineDetailPage() {
     storageLocationId: '',
     description: '',
     quantity: '',
+  });
+  const [stockForm, setStockForm] = useState({
+    quantity: '',
+    description: '',
+    storageLocationId: '',
   });
 
   const medId = Number(id);
@@ -67,6 +73,12 @@ export default function MedicineDetailPage() {
 
   const canManage = isAdmin || isManager;
 
+  const invalidateMedicineViews = () => {
+    qc.invalidateQueries({ queryKey: ['medicines', medId] });
+    qc.invalidateQueries({ queryKey: ['medicines'] });
+    qc.invalidateQueries({ queryKey: ['lifecycle', medId] });
+  };
+
   const moveMutation = useMutation({
     mutationFn: () =>
       medicineApi.move(medId, {
@@ -75,11 +87,41 @@ export default function MedicineDetailPage() {
         quantity: moveForm.quantity ? Number(moveForm.quantity) : undefined,
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['medicines', medId] });
-      qc.invalidateQueries({ queryKey: ['medicines'] });
-      qc.invalidateQueries({ queryKey: ['lifecycle', medId] });
+      invalidateMedicineViews();
       setMoveOpen(false);
       setMoveForm({ storageLocationId: '', description: '', quantity: '' });
+    },
+  });
+
+  const stockMutation = useMutation({
+    mutationFn: async () => {
+      const qty = Number(stockForm.quantity);
+      if (!stockOpen) throw new Error('Invalid operation');
+      if (!Number.isFinite(qty)) throw new Error('Invalid quantity');
+
+      if (stockOpen === 'receive') {
+        return medicineApi.receive(medId, {
+          quantity: qty,
+          description: stockForm.description || undefined,
+          storageLocationId: stockForm.storageLocationId ? Number(stockForm.storageLocationId) : undefined,
+        });
+      }
+      if (stockOpen === 'issue') {
+        return medicineApi.issue(medId, {
+          quantity: qty,
+          description: stockForm.description || undefined,
+        });
+      }
+      // dispose: qty==0 => backend interprets as "dispose all"
+      return medicineApi.dispose(medId, {
+        quantity: qty,
+        description: stockForm.description || undefined,
+      });
+    },
+    onSuccess: () => {
+      invalidateMedicineViews();
+      setStockOpen(null);
+      setStockForm({ quantity: '', description: '', storageLocationId: '' });
     },
   });
 
@@ -191,9 +233,20 @@ export default function MedicineDetailPage() {
           <CardTitle className="text-base">Lifecycle-події</CardTitle>
           <div className="flex items-center gap-2">
             {canManage && (
-              <Button size="sm" variant="outline" onClick={() => setMoveOpen(true)}>
-                <Truck className="h-3.5 w-3.5" /> Перемістити
-              </Button>
+              <>
+                <Button size="sm" variant="outline" onClick={() => setStockOpen('receive')}>
+                  <ArrowDownCircle className="h-3.5 w-3.5" /> Надходження
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setStockOpen('issue')}>
+                  <ArrowUpCircle className="h-3.5 w-3.5" /> Видача
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setStockOpen('dispose')}>
+                  <Trash2 className="h-3.5 w-3.5" /> Утилізація
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setMoveOpen(true)}>
+                  <Truck className="h-3.5 w-3.5" /> Перемістити
+                </Button>
+              </>
             )}
             <Button size="sm" onClick={() => setOpen(true)}>
               <Plus className="h-3.5 w-3.5" /> Додати подію
@@ -299,6 +352,73 @@ export default function MedicineDetailPage() {
               disabled={moveMutation.isPending || !moveForm.storageLocationId}>
               {moveMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               Перемістити
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={stockOpen !== null} onOpenChange={(o) => { if (!o) setStockOpen(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {stockOpen === 'receive'
+                ? 'Надходження'
+                : stockOpen === 'issue'
+                  ? 'Видача'
+                  : 'Утилізація'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Кількість</Label>
+              <Input
+                type="number"
+                min={stockOpen === 'dispose' ? 0 : 1}
+                value={stockForm.quantity}
+                onChange={(e) => setStockForm((p) => ({ ...p, quantity: e.target.value }))}
+                placeholder={stockOpen === 'dispose' ? '0 = утилізувати все' : 'Вкажіть кількість'}
+              />
+              {stockOpen === 'dispose' && (
+                <p className="text-xs text-muted-foreground">Якщо вкажеш 0, утилізується весь залишок</p>
+              )}
+            </div>
+
+            {stockOpen === 'receive' && (
+              <div className="space-y-1.5">
+                <Label>Локація (опціонально)</Label>
+                <select
+                  title="Локація для надходження"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground"
+                  value={stockForm.storageLocationId}
+                  onChange={(e) => setStockForm((p) => ({ ...p, storageLocationId: e.target.value }))}>
+                  <option value="">Не змінювати</option>
+                  {locations.map((loc) => (
+                    <option key={loc.locationId} value={loc.locationId}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <Label>Коментар (опціонально)</Label>
+              <Input
+                value={stockForm.description}
+                onChange={(e) => setStockForm((p) => ({ ...p, description: e.target.value }))}
+                placeholder="Напр. накладна / пацієнт / причина утилізації"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStockOpen(null)}>
+              Скасувати
+            </Button>
+            <Button
+              onClick={() => stockMutation.mutate()}
+              disabled={stockMutation.isPending || !stockForm.quantity}>
+              {stockMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Підтвердити
             </Button>
           </DialogFooter>
         </DialogContent>

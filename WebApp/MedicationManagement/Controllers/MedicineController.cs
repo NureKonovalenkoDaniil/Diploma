@@ -210,6 +210,133 @@ namespace MedicationManagement.Controllers
             }
         }
 
+        /// <summary>Надходження препарату: збільшує Quantity та створює lifecycle-подію Received.</summary>
+        [HttpPost("{id}/receive")]
+        [Authorize(Roles = "Administrator,Manager")]
+        public async Task<IActionResult> Receive(int id, [FromBody] ChangeMedicineQuantityDto dto)
+        {
+            if (dto is null) return BadRequest("Request body is required");
+            if (dto.Quantity <= 0) return BadRequest("Quantity must be a positive integer");
+
+            try
+            {
+                var user = User.Identity?.Name ?? "Unknown";
+                var (medicine, error) = await _medicineService.Receive(
+                    id,
+                    dto.Quantity,
+                    performedBy: user,
+                    storageLocationId: dto.StorageLocationId,
+                    description: dto.Description,
+                    relatedLocationId: dto.RelatedLocationId);
+
+                if (medicine is null)
+                {
+                    if (error == "Medicine not found") return NotFound(error);
+                    return BadRequest(error ?? "Failed to receive stock");
+                }
+
+                await _auditLogService.LogAction(
+                    "ReceiveMedicine",
+                    user,
+                    $"Received +{dto.Quantity} for medicine ID {id}.",
+                    false,
+                    entityType: "Medicine",
+                    entityId: id);
+
+                return Ok(medicine.ToDto());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to receive stock for medicine with ID {Id}", id);
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>Видача препарату: зменшує Quantity та створює lifecycle-подію Issued.</summary>
+        [HttpPost("{id}/issue")]
+        [Authorize(Roles = "Administrator,Manager")]
+        public async Task<IActionResult> Issue(int id, [FromBody] ChangeMedicineQuantityDto dto)
+        {
+            if (dto is null) return BadRequest("Request body is required");
+            if (dto.Quantity <= 0) return BadRequest("Quantity must be a positive integer");
+
+            try
+            {
+                var user = User.Identity?.Name ?? "Unknown";
+                var (medicine, error) = await _medicineService.Issue(
+                    id,
+                    dto.Quantity,
+                    performedBy: user,
+                    description: dto.Description,
+                    relatedLocationId: dto.RelatedLocationId);
+
+                if (medicine is null)
+                {
+                    if (error == "Medicine not found") return NotFound(error);
+                    return BadRequest(error ?? "Failed to issue stock");
+                }
+
+                await _auditLogService.LogAction(
+                    "IssueMedicine",
+                    user,
+                    $"Issued -{dto.Quantity} for medicine ID {id}.",
+                    false,
+                    entityType: "Medicine",
+                    entityId: id);
+
+                return Ok(medicine.ToDto());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to issue stock for medicine with ID {Id}", id);
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>Утилізація препарату: зменшує Quantity та створює lifecycle-подію Disposed.</summary>
+        [HttpPost("{id}/dispose")]
+        [Authorize(Roles = "Administrator,Manager")]
+        public async Task<IActionResult> Dispose(int id, [FromBody] ChangeMedicineQuantityDto dto)
+        {
+            if (dto is null) return BadRequest("Request body is required");
+            if (dto.Quantity < 0) return BadRequest("Quantity must be >= 0");
+
+            try
+            {
+                var user = User.Identity?.Name ?? "Unknown";
+                // For dispose: Quantity==0 means "dispose all".
+                int? quantity = dto.Quantity == 0 ? null : dto.Quantity;
+
+                var (medicine, error) = await _medicineService.Dispose(
+                    id,
+                    quantity,
+                    performedBy: user,
+                    description: dto.Description,
+                    relatedLocationId: dto.RelatedLocationId);
+
+                if (medicine is null)
+                {
+                    if (error == "Medicine not found") return NotFound(error);
+                    return BadRequest(error ?? "Failed to dispose stock");
+                }
+
+                await _auditLogService.LogAction(
+                    "DisposeMedicine",
+                    user,
+                    $"Disposed {(quantity.HasValue ? $"-{quantity.Value}" : "all")} for medicine ID {id}.",
+                    false,
+                    entityType: "Medicine",
+                    entityId: id);
+
+                return Ok(medicine.ToDto());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to dispose stock for medicine with ID {Id}", id);
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
         // Endpoint to delete a medicine by ID
         [HttpDelete("{id}")]
         [Authorize(Roles = "Administrator,Manager")]
