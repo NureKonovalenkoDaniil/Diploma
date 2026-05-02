@@ -16,12 +16,29 @@ namespace MedicationManagement.Controllers
         private readonly IServiceIoTDevice _iotDeviceService;
         private readonly IServiceAuditLog _auditLogService;
         private readonly ILogger<IoTDeviceController> _logger;
-
-        public IoTDeviceController(IServiceIoTDevice iotDeviceService, IServiceAuditLog auditLogService, ILogger<IoTDeviceController> logger)
+        public IoTDeviceController(
+            IServiceIoTDevice iotDeviceService,
+            IServiceAuditLog auditLogService,
+            ILogger<IoTDeviceController> logger)
         {
             _iotDeviceService = iotDeviceService;
             _auditLogService = auditLogService;
             _logger = logger;
+        }
+
+        [HttpPost("claim")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Claim([FromBody] DeviceClaimDto request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _iotDeviceService.ClaimDeviceSecret(request.DeviceId);
+            if (result.device == null || string.IsNullOrEmpty(result.deviceSecret))
+                return Conflict("Device is already claimed or not found");
+
+            await _auditLogService.LogAction("DeviceClaim", $"Device-{request.DeviceId}", "Device claimed and secret issued.", false);
+            return Ok(result.device.ToProvisionDto(result.deviceSecret));
         }
 
         [HttpPatch("setstatus/{deviceId}")]
@@ -70,11 +87,11 @@ namespace MedicationManagement.Controllers
             try
             {
                 var iotDevice = iotDeviceDto.ToEntity();
-                var result = await _iotDeviceService.Create(iotDevice);
-                if (result != null)
+                var created = await _iotDeviceService.CreateWithoutSecret(iotDevice);
+                if (created != null)
                 {
-                    await _auditLogService.LogAction("Create Sensor", User.Identity?.Name ?? "Unknown", $"Created sensor: {result.DeviceID}.", false);
-                    return Ok(result.ToDto());
+                    await _auditLogService.LogAction("Create Sensor", User.Identity?.Name ?? "Unknown", $"Created sensor: {created.DeviceID}.", false);
+                    return Ok(created.ToDto());
                 }
                 return BadRequest("Could not create IoT device");
             }
@@ -162,5 +179,6 @@ namespace MedicationManagement.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
     }
 }

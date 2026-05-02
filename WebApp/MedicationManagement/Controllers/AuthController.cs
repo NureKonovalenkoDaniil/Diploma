@@ -226,9 +226,9 @@ namespace MedicationManagement.Controllers
         {
             try
             {
-                var device = await _ioTDeviceService.ReadById(model.DeviceId);
+                var device = await _ioTDeviceService.ValidateDeviceSecret(model.DeviceId, model.DeviceSecret);
                 if (device == null)
-                    return Unauthorized("Invalid device ID");
+                    return Unauthorized("Invalid device credentials");
 
                 await _auditLogService.LogAction("DeviceLogin", $"Device-{model.DeviceId}", "Successful device login.", false);
 

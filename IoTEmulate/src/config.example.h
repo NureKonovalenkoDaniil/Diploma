@@ -9,4 +9,4 @@
 
 // Device identity and auth
 #define DEVICE_ID "ESP-0001"
-#define JWT_TOKEN "YOUR_DEVICE_JWT_TOKEN"
+#define DEVICE_SECRET ""

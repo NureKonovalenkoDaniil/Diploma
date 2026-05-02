@@ -16,11 +16,15 @@ DHT dht(DHTPIN, DHTTYPE);
 // Server URLs — будуються з config.h
 const String deviceConfigUrl = String(SERVER_BASE_URL) + "/api/iotdevice/" + String(DEVICE_ID);
 const String dataSendUrl     = String(SERVER_BASE_URL) + "/api/storagecondition";
-const String jwtToken        = JWT_TOKEN;
+const String authUrl         = String(SERVER_BASE_URL) + "/api/auth/device-login";
+const String claimUrl        = String(SERVER_BASE_URL) + "/api/iotdevice/claim";
 
 // Sensor parameters
 const String deviceID = DEVICE_ID;
 const int buzzerPin = 12; // GPIO-пін бузера
+
+String deviceSecret = DEVICE_SECRET;
+String jwtToken = "";
 
 // Порогові значення — завантажуються з сервера via fetchDeviceConfig()
 float minTemperature = 0.0;
@@ -39,9 +43,19 @@ const unsigned long configInterval = 60000; // 60 секунд
 
 unsigned long lastConfigTime = 0;
 
+bool fetchDeviceToken();
+bool claimDeviceSecret();
+
 // Отримати конфігурацію пристрою: порогові значення з сервера
 void fetchDeviceConfig() {
   if (WiFi.status() == WL_CONNECTED) {
+    if (jwtToken.isEmpty()) {
+      if (!fetchDeviceToken()) {
+        Serial.println("Failed to fetch device token. Skipping config sync.");
+        return;
+      }
+    }
+
     HTTPClient http;
     http.begin(client, deviceConfigUrl);
     http.addHeader("Authorization", "Bearer " + jwtToken);
@@ -75,6 +89,13 @@ void fetchDeviceConfig() {
 // Надіслати дані датчика на сервер
 void sendDataToServer(float temperature, float humidity) {
   if (WiFi.status() == WL_CONNECTED) {
+    if (jwtToken.isEmpty()) {
+      if (!fetchDeviceToken()) {
+        Serial.println("Failed to fetch device token. Skipping data send.");
+        return;
+      }
+    }
+
     HTTPClient http;
     http.begin(client, dataSendUrl);
     http.addHeader("Content-Type", "application/json");
@@ -133,8 +154,98 @@ void setup() {
 
   Serial.println("\nWiFi connected!");
 
+  fetchDeviceToken();
+
   // Завантажити конфігурацію порогів з сервера
   fetchDeviceConfig();
+}
+
+bool fetchDeviceToken() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi not connected!");
+    return false;
+  }
+
+  if (deviceSecret.isEmpty()) {
+    if (!claimDeviceSecret()) {
+      Serial.println("Claim failed. Device secret not available.");
+      return false;
+    }
+  }
+
+  HTTPClient http;
+  http.begin(client, authUrl);
+  http.addHeader("Content-Type", "application/json");
+
+  String jsonPayload = "{";
+  jsonPayload += "\"deviceId\": \"" + deviceID + "\",";
+  jsonPayload += "\"deviceSecret\": \"" + deviceSecret + "\"";
+  jsonPayload += "}";
+
+  int httpCode = http.POST(jsonPayload);
+  if (httpCode == 200) {
+    String payload = http.getString();
+    JsonDocument doc;
+    if (deserializeJson(doc, payload) == DeserializationError::Ok) {
+      const char* token = doc["token"];
+      if (token == nullptr) {
+        token = doc["Token"];
+      }
+      if (token != nullptr) {
+        jwtToken = String(token);
+        Serial.println("Device token received.");
+        http.end();
+        return true;
+      }
+    }
+    Serial.println("Failed to parse device token response.");
+  } else {
+    Serial.printf("Failed to fetch device token. HTTP code: %d\n", httpCode);
+    Serial.println(http.getString());
+  }
+
+  http.end();
+  return false;
+}
+
+bool claimDeviceSecret() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi not connected!");
+    return false;
+  }
+
+  HTTPClient http;
+  http.begin(client, claimUrl);
+  http.addHeader("Content-Type", "application/json");
+
+  String jsonPayload = "{";
+  jsonPayload += "\"deviceId\": \"" + deviceID + "\"";
+  jsonPayload += "}";
+
+  int httpCode = http.POST(jsonPayload);
+  if (httpCode == 200) {
+    String payload = http.getString();
+    JsonDocument doc;
+    if (deserializeJson(doc, payload) == DeserializationError::Ok) {
+      const char* secret = doc["deviceSecret"];
+      if (secret == nullptr) {
+        secret = doc["DeviceSecret"];
+      }
+      if (secret != nullptr) {
+        deviceSecret = String(secret);
+        Serial.println("Device secret provisioned.");
+        http.end();
+        return true;
+      }
+    }
+    Serial.println("Failed to parse claim response.");
+  } else {
+    Serial.printf("Claim failed. HTTP code: %d\n", httpCode);
+    Serial.println(http.getString());
+  }
+
+  http.end();
+  return false;
 }
 
 void loop() {

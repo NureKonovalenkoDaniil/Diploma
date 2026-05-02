@@ -34,6 +34,12 @@ namespace MedicationManagement.Models.DTOs
         float MaxHumidity
     );
 
+    /// <summary>DTO для створення IoT-пристрою з поверненням device secret.</summary>
+    public record IoTDeviceProvisionDto(
+        string DeviceSecret,
+        IoTDeviceDto Device
+    );
+
     public record StorageLocationDto(
         int LocationId,
         string Name,

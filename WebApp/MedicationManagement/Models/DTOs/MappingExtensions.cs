@@ -63,6 +63,14 @@ namespace MedicationManagement.Models.DTOs
             );
         }
 
+        public static IoTDeviceProvisionDto ToProvisionDto(this IoTDevice d, string deviceSecret)
+        {
+            return new IoTDeviceProvisionDto(
+                deviceSecret,
+                d.ToDto()
+            );
+        }
+
         public static IoTDevice ToEntity(this IoTDeviceDto d)
         {
             return new IoTDevice

@@ -50,5 +50,9 @@ namespace MedicationManagement.Models
 
         /// <summary>Максимально допустима відносна вологість (%)</summary>
         public float MaxHumidity { get; set; }
+
+        /// <summary>Хеш device secret для аутентифікації пристрою (одноразово видається адміну)</summary>
+        [StringLength(512)]
+        public string DeviceSecretHash { get; set; } = string.Empty;
     }
 }
