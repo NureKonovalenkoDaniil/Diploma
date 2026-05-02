@@ -2,7 +2,7 @@
 
 > Технічний аудит і план розвитку дипломного проєкту  
 > Дата аудиту: 2026-04-09  
-> Останнє оновлення: 2026-05-01 (підтвердження email, відновлення пароля, org-fix для expiry, приклади конфігів, оновлений .gitignore)  
+> Останнє оновлення: 2026-05-03 (план модернізації мобільного додатку — MOBILE_IMPROVEMENT_PLAN.md)  
 > Проведено: Antigravity AI
 
 ---
@@ -75,10 +75,7 @@
 
 1. Потрібні unit / integration тести для нових командних endpoint-ів (особливо: валідація залишку, multi-tenancy фільтри, транзакційність).
 2. `LoadTest.GET`/`LoadTest.POST` все ще мають hardcoded URL і JWT-токен — ризик витоку і неактуальність після змін (`DeviceID` string, multi-tenancy, статуси).
-3. Mobile застосунок відстає від backend:
-   - login очікує `token`, а API повертає `Token`;
-   - `IoTDevice.DeviceID` у backend string, а в mobile місцями парситься як int;
-   - URL бекенду захардкожений `http://10.0.2.2:5000`.
+3. Mobile застосунок потребує кардинальної модернізації (MVVM+Compose+Material3, план в [MOBILE_IMPROVEMENT_PLAN.md](MOBILE_IMPROVEMENT_PLAN.md)).
 4. Відсутній `docker-compose.yml` і документований “single command run” для демонстрації диплому (backend + db + frontend).
 5. Відсутні ER/C4 діаграми та узгоджений “happy path” сценарій демонстрації (life cycle + storage safety + incidents + audit).
 6. Підтвердження пошти залежить від SMTP-конфігурації; без валідних налаштувань листи не надсилаються.
@@ -563,20 +560,25 @@ MedicineLifecycleEvent -> StorageLocation (N:1, nullable)
 17.21. ~~`AuthContext.queryClient.clear()` при login/logout~~ ✅
 17.22. ~~`DashboardPage`: `StorageChart` з перемикачем між пристроями~~ ✅
 17.23. ~~`IoTDevicesPage`: `AlertDialog` перед видаленням + `Fragment key`~~ ✅
-17.24. ~~`StorageLocationsPage`: `DialogDescription` (aria-warning)~~ ✅ 18. Перевірити якість поточного коду (Retrofit, обробка помилок, URL) 19. Нові екрани: StorageIncidents, MedicineLifecycle
+17.24. ~~`StorageLocationsPage`: `DialogDescription` (aria-warning)~~ ✅
 
 ## Фаза 5 — Мобільний застосунок (2-3 дні)
 
-20. Проєкт Tests/MedicationManagement.Tests/ (xUnit)
-21. Unit-тести: ServiceMedicine, ServiceStorageCondition, ServiceStorageIncident
-22. Integration-тести через WebApplicationFactory
+20. Перевірити якість поточного коду (Retrofit, обробка помилок, URL)
+21. Нові екрани: StorageIncidents, MedicineLifecycle
+
+## Фаза 6 — Тести (2-3 дні)
+
+22. Проєкт Tests/MedicationManagement.Tests/ (xUnit)
+23. Unit-тести: ServiceMedicine, ServiceStorageCondition, ServiceStorageIncident
+24. Integration-тести через WebApplicationFactory
 
 ## Фаза 7 — DevOps та документація (1-2 дні)
 
-23. docker-compose.yml
-24. README.md
-25. ER-діаграма, C4-діаграма
-26. IMPLEMENTATION_ROADMAP.md
+25. docker-compose.yml
+26. README.md
+27. ER-діаграма, C4-діаграма
+28. IMPLEMENTATION_ROADMAP.md
 
 ---
 
