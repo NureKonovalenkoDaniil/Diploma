@@ -25,7 +25,7 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Отримати всі події lifecycle (всі препарати)</summary>
         [HttpGet]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> GetAll()
         {
             var events = await _lifecycleService.GetAll();
@@ -51,7 +51,7 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Додати нову подію lifecycle для препарату</summary>
         [HttpPost]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> AddEvent([FromBody] CreateMedicineLifecycleEventDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);

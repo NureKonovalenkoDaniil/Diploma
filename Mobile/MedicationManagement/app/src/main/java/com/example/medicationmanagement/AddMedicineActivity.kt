@@ -1,14 +1,25 @@
 package com.example.medicationmanagement
 
-import android.content.Intent
+import android.app.DatePickerDialog
 import android.os.Bundle
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
+import androidx.lifecycle.lifecycleScope
+import com.example.medicationmanagement.api.ApiClient
+import com.example.medicationmanagement.api.MedicineApi
+import com.example.medicationmanagement.model.Medicine
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 class AddMedicineActivity : AppCompatActivity() {
+
+    private val calendar = Calendar.getInstance()
+    private lateinit var expiryInput: EditText
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_medicine)
@@ -17,68 +28,86 @@ class AddMedicineActivity : AppCompatActivity() {
         val type = findViewById<EditText>(R.id.inputType)
         val category = findViewById<EditText>(R.id.inputCategory)
         val quantity = findViewById<EditText>(R.id.inputQuantity)
-        val expiry = findViewById<EditText>(R.id.inputExpiry)
-        val btn = findViewById<Button>(R.id.btnCreate)
+        expiryInput = findViewById(R.id.inputExpiry)
+        val btnCreate = findViewById<Button>(R.id.btnCreate)
 
-        btn.setOnClickListener {
+        // DatePicker for Expiry Date
+        val dateSetListener = DatePickerDialog.OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
+            calendar.set(Calendar.YEAR, year)
+            calendar.set(Calendar.MONTH, monthOfYear)
+            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+            updateDateInView()
+        }
+
+        expiryInput.setOnClickListener {
+            DatePickerDialog(
+                this, dateSetListener,
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            ).show()
+        }
+
+        btnCreate.setOnClickListener {
             val n = name.text.toString().trim()
             val t = type.text.toString().trim()
             val c = category.text.toString().trim()
-            val q = quantity.text.toString().trim()
-            val e = expiry.text.toString().trim()
+            val qStr = quantity.text.toString().trim()
+            val e = expiryInput.text.toString().trim()
 
-            if (n.isEmpty() || t.isEmpty() || c.isEmpty() || q.isEmpty() || e.isEmpty()) {
-                Toast.makeText(this, "Fill in all fields", Toast.LENGTH_SHORT).show()
+            if (n.isEmpty() || t.isEmpty() || c.isEmpty() || qStr.isEmpty() || e.isEmpty()) {
+                Toast.makeText(this, "Заповніть усі поля", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            createMedicine(n, t, c, q.toInt(), e)
+            val q = qStr.toIntOrNull()
+            if (q == null || q < 0) {
+                Toast.makeText(this, "Некоректна кількість", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            createMedicine(n, t, c, q, e)
         }
     }
 
+    private fun updateDateInView() {
+        val myFormat = "yyyy-MM-dd"
+        val sdf = SimpleDateFormat(myFormat, Locale.getDefault())
+        expiryInput.setText(sdf.format(calendar.time))
+    }
+
     private fun createMedicine(name: String, type: String, category: String, quantity: Int, expiryDate: String) {
-        Thread {
+        val btnCreate = findViewById<Button>(R.id.btnCreate)
+        btnCreate.isEnabled = false
+        btnCreate.text = "Створення..."
+
+        lifecycleScope.launch {
             try {
-                val token = getSharedPreferences("app_prefs", MODE_PRIVATE)
-                    .getString("token", "") ?: ""
+                val api = ApiClient.createService<MedicineApi>(this@AddMedicineActivity)
+                val newMedicine = Medicine(
+                    medicineID = 0,
+                    name = name,
+                    type = type,
+                    category = category,
+                    quantity = quantity,
+                    expiryDate = "${expiryDate}T00:00:00" // Append time for ISO 8601
+                )
+                
+                val response = api.createMedicine(newMedicine)
 
-                val url = URL("http://10.0.2.2:5000/api/medicine")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.setRequestProperty("Authorization", "Bearer $token")
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.doOutput = true
-
-                val json = JSONObject().apply {
-                    put("name", name)
-                    put("type", type)
-                    put("category", category)
-                    put("quantity", quantity)
-                    put("expiryDate", expiryDate)
-                }
-
-                conn.outputStream.use { it.write(json.toString().toByteArray()) }
-
-                val responseCode = conn.responseCode
-                if (responseCode == 200 || responseCode == 201) {
-                    runOnUiThread {
-                        Toast.makeText(this, "Created successfully", Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this, DashboardActivity::class.java))
-                        finish()
-                    }
+                if (response.isSuccessful) {
+                    Toast.makeText(this@AddMedicineActivity, "Препарат успішно додано", Toast.LENGTH_SHORT).show()
+                    finish()
                 } else {
-                    runOnUiThread {
-                        Toast.makeText(this, "Error: $responseCode", Toast.LENGTH_SHORT).show()
-                    }
+                    Toast.makeText(this@AddMedicineActivity, "Помилка: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    btnCreate.isEnabled = true
+                    btnCreate.text = "Create"
                 }
-
-                conn.disconnect()
-
             } catch (e: Exception) {
-                runOnUiThread {
-                    Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                }
+                Toast.makeText(this@AddMedicineActivity, "Помилка мережі", Toast.LENGTH_SHORT).show()
+                btnCreate.isEnabled = true
+                btnCreate.text = "Create"
             }
-        }.start()
+        }
     }
 }

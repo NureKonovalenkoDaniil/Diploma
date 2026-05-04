@@ -7,14 +7,22 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medicationmanagement.model.Medicine
+import com.google.android.material.button.MaterialButton
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.Date
 
-class MedicineAdapter(private var items: List<Medicine>) :
-    RecyclerView.Adapter<MedicineAdapter.MedViewHolder>() {
+class MedicineAdapter(
+    private var items: List<Medicine>,
+    private val onConsumeClick: (Medicine) -> Unit
+) : RecyclerView.Adapter<MedicineAdapter.MedViewHolder>() {
 
     class MedViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val name: TextView = itemView.findViewById(R.id.medName)
         val type: TextView = itemView.findViewById(R.id.medType)
-        val category: TextView = itemView.findViewById(R.id.medCategory)
+        val expiry: TextView = itemView.findViewById(R.id.medExpiry)
+        val quantity: TextView = itemView.findViewById(R.id.medQuantity)
+        val btnConsume: MaterialButton = itemView.findViewById(R.id.btnConsume)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MedViewHolder {
@@ -26,8 +34,33 @@ class MedicineAdapter(private var items: List<Medicine>) :
     override fun onBindViewHolder(holder: MedViewHolder, position: Int) {
         val item = items[position]
         holder.name.text = item.name
-        holder.type.text = item.type
-        holder.category.text = item.category
+        holder.type.text = "${item.type} | ${item.category}"
+        holder.quantity.text = item.quantity.toString()
+
+        // Форматування дати
+        try {
+            val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+            val formatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+            val date = parser.parse(item.expiryDate)
+            if (date != null) {
+                holder.expiry.text = "Дійсний до: ${formatter.format(date)}"
+                // Підсвітка протермінованих
+                if (date.before(Date())) {
+                    holder.expiry.setTextColor(holder.itemView.context.getColor(android.R.color.holo_red_dark))
+                    holder.expiry.text = "ПРОТЕРМІНОВАНО: ${formatter.format(date)}"
+                } else {
+                    holder.expiry.setTextColor(holder.itemView.context.getColor(android.R.color.darker_gray))
+                }
+            }
+        } catch (e: Exception) {
+            holder.expiry.text = item.expiryDate
+        }
+
+        // Обробка "Вжити"
+        holder.btnConsume.isEnabled = item.quantity > 0
+        holder.btnConsume.setOnClickListener {
+            onConsumeClick(item)
+        }
 
         holder.itemView.setOnClickListener {
             val context = holder.itemView.context

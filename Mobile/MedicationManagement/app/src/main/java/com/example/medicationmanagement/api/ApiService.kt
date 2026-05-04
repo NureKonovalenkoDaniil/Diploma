@@ -32,6 +32,9 @@ interface MedicineApi {
     @GET("api/medicine")
     suspend fun getMedicines(): Response<List<Medicine>>
 
+    @GET("api/medicine/{id}")
+    suspend fun getMedicine(@Path("id") id: Int): Response<Medicine>
+
     @POST("api/medicine")
     suspend fun createMedicine(@Body medicine: Medicine): Response<Medicine>
 
@@ -56,7 +59,8 @@ interface LifecycleApi {
     @POST("api/medicinelifecycle")
     suspend fun addEvent(@Body event: LifecycleEventRequest): Response<Any>
     
-    // We can add GET if we want to show history later
+    @GET("api/medicinelifecycle/medicine/{id}")
+    suspend fun getEventsByMedicineId(@Path("id") medicineId: Int): Response<List<com.example.medicationmanagement.model.LifecycleEvent>>
 }
 
 // ──────────────────────────────────────────
