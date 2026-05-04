@@ -562,10 +562,10 @@ MedicineLifecycleEvent -> StorageLocation (N:1, nullable)
 17.23. ~~`IoTDevicesPage`: `AlertDialog` перед видаленням + `Fragment key`~~ ✅
 17.24. ~~`StorageLocationsPage`: `DialogDescription` (aria-warning)~~ ✅
 
-## Фаза 5 — Мобільний застосунок (2-3 дні)
+## Фаза 5 — ~~Мобільний застосунок (2-3 дні)~~ ✅ ВИКОНАНО 2026-05-04
 
-20. Перевірити якість поточного коду (Retrofit, обробка помилок, URL)
-21. Нові екрани: StorageIncidents, MedicineLifecycle
+20. ~~Перевірити якість поточного коду (Retrofit, обробка помилок, URL)~~ ✅
+21. ~~Нові екрани: StorageIncidents, MedicineLifecycle~~ ✅ (Замінено на прагматичну реалізацію: Аптечка, Медичний щоденник, Датчики, Сповіщення)
 
 ## Фаза 6 — Тести (2-3 дні)
 
@@ -606,7 +606,7 @@ MedicineLifecycleEvent -> StorageLocation (N:1, nullable)
 | ~~GET /api/auth/me~~                      | ~~Відсутній~~                                                         | ✅ Додано Фаза 2                         |
 | Web frontend (wwwroot)                    | Є, Bootstrap + Vanilla JS                                             | Перенести у SPA (Фаза 4)                 |
 | Frontend SPA (Frontend/)                  | Відсутній                                                             | Додати (Vue.js або React) (Фаза 4)       |
-| Android Mobile (Kotlin+Compose)           | Є, 26 файлів                                                          | Доробити (нові екрани) (Фаза 5)          |
+| Android Mobile                            | Є, прагматично модернізовано                                          | ✅ Виконано (Фаза 5)                      |
 | IoT (ESP32 + Wokwi)                       | ~~Є, DHT22 НЕ ЧИТАЄТЬСЯ~~ DHT22 виправлено                            | Залишилось: URL/токен/deviceID hardcoded |
 | LoadTest GET/POST (NBomber)               | Є, hardcoded токен і URL                                              | Доробити (Фаза 6)                        |
 | Unit / Integration тести backend          | Відсутні                                                              | Додати (Фаза 6)                          |
@@ -629,4 +629,5 @@ _Оновлено 2026-04-28: Фаза 4.6 завершена — проведе
 _Оновлено 2026-04-28: Фаза 4.7 завершена — впроваджено ізоляцію даних на рівні сервісів (Data Filtering)._  
 _Оновлено 2026-04-28: Фаза 4.9 завершена — Frontend: ролі/isManager, IoTDevicesPage, прив'язка пристроїв._  
 _Оновлено 2026-04-29: Фаза 4.10 завершена — Bug-Fix: критичні проблеми multi-tenancy (OrganizationId=null у BackgroundService, backward compatibility фільтри, кеш React Query), рольова модель Manager, Dashboard з перемикачем пристроїв, AlertDialog для видалення. Backend: 0 помилок. Frontend: tsc 0 помилок, build успішний._  
-_Наступне оновлення — після завершення Фази 5 (Мобільний застосунок) або Фази 6 (Тести)._
+_Оновлено 2026-05-04: Фаза 5 завершена — прагматична модернізація мобільного додатку (Retrofit, Coroutines, BottomNavigation, Medicines, Lifecycle, IoT, Notifications)._  
+_Наступне оновлення — після завершення Фази 6 (Тести)._
