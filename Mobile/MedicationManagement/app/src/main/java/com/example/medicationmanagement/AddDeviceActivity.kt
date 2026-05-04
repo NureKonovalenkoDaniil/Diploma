@@ -1,15 +1,14 @@
 package com.example.medicationmanagement
 
-import android.content.Context
 import android.os.Bundle
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.medicationmanagement.model.IoTDevice
-import org.json.JSONObject
-import java.io.OutputStreamWriter
-import java.net.HttpURLConnection
-import java.net.URL
-import kotlin.concurrent.thread
+import androidx.lifecycle.lifecycleScope
+import com.example.medicationmanagement.api.ApiClient
+import com.example.medicationmanagement.api.IoTDeviceApi
+import kotlinx.coroutines.launch
 
 class AddDeviceActivity : AppCompatActivity() {
 
@@ -17,69 +16,57 @@ class AddDeviceActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_device)
 
-        val typeField = findViewById<EditText>(R.id.addType)
-        val locationField = findViewById<EditText>(R.id.addLocation)
-        val parametersField = findViewById<EditText>(R.id.addParams)
-        val isActiveCheck = findViewById<CheckBox>(R.id.addIsActive)
-        val minTempField = findViewById<EditText>(R.id.addMinTemp)
-        val maxTempField = findViewById<EditText>(R.id.addMaxTemp)
-        val minHumField = findViewById<EditText>(R.id.addMinHumidity)
-        val maxHumField = findViewById<EditText>(R.id.addMaxHumidity)
-        val addButton = findViewById<Button>(R.id.addDeviceBtn)
+        val inputId = findViewById<EditText>(R.id.inputId)
+        val inputLocation = findViewById<EditText>(R.id.inputLocation)
+        val btnAdd = findViewById<Button>(R.id.btnCreateDevice)
 
-        addButton.setOnClickListener {
-            val type = typeField.text.toString()
-            val location = locationField.text.toString()
-            val parameters = parametersField.text.toString()
-            val isActive = isActiveCheck.isChecked
-            val minTemp = minTempField.text.toString().toDoubleOrNull() ?: 0.0
-            val maxTemp = maxTempField.text.toString().toDoubleOrNull() ?: 0.0
-            val minHum = minHumField.text.toString().toDoubleOrNull() ?: 0.0
-            val maxHum = maxHumField.text.toString().toDoubleOrNull() ?: 0.0
+        btnAdd.setOnClickListener {
+            val deviceId = inputId.text.toString().trim()
+            val location = inputLocation.text.toString().trim()
 
-            val json = JSONObject().apply {
-                put("type", type)
-                put("location", location)
-                put("parameters", parameters)
-                put("isActive", isActive)
-                put("minTemperature", minTemp)
-                put("maxTemperature", maxTemp)
-                put("minHumidity", minHum)
-                put("maxHumidity", maxHum)
+            if (deviceId.isEmpty()) {
+                Toast.makeText(this, "Введіть ID датчика", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
 
-            val token = getSharedPreferences("MyPrefs", Context.MODE_PRIVATE).getString("token", null)
+            addDevice(deviceId, location, btnAdd)
+        }
+    }
 
-            thread {
-                try {
-                    val url = URL("http://10.0.2.2:5000/api/iotdevice")
-                    val connection = url.openConnection() as HttpURLConnection
-                    connection.requestMethod = "POST"
-                    connection.setRequestProperty("Content-Type", "application/json")
-                    connection.setRequestProperty("Authorization", "Bearer $token")
-                    connection.doOutput = true
+    private fun addDevice(deviceId: String, location: String, btn: Button) {
+        btn.isEnabled = false
+        btn.text = "Додавання..."
 
-                    val writer = OutputStreamWriter(connection.outputStream)
-                    writer.write(json.toString())
-                    writer.flush()
-                    writer.close()
+        // Default values for home user device registration
+        val deviceData = mapOf(
+            "deviceID" to deviceId,
+            "location" to location,
+            "type" to "Термометр",
+            "parameters" to "{}",
+            "isActive" to true,
+            "minTemperature" to 2.0f,
+            "maxTemperature" to 8.0f,
+            "minHumidity" to 30.0f,
+            "maxHumidity" to 60.0f
+        )
 
-                    val code = connection.responseCode
-                    runOnUiThread {
-                        if (code == 201 || code == 200) {
-                            Toast.makeText(this, "Device added", Toast.LENGTH_SHORT).show()
-                            setResult(RESULT_OK)
-                            finish()
-                        } else {
-                            Toast.makeText(this, "Failed to add: $code", Toast.LENGTH_LONG).show()
-                        }
-                    }
+        lifecycleScope.launch {
+            try {
+                val api = ApiClient.createService<IoTDeviceApi>(this@AddDeviceActivity)
+                val response = api.createDevice(deviceData)
 
-                } catch (e: Exception) {
-                    runOnUiThread {
-                        Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                    }
+                if (response.isSuccessful) {
+                    Toast.makeText(this@AddDeviceActivity, "Датчик успішно додано", Toast.LENGTH_SHORT).show()
+                    finish()
+                } else {
+                    Toast.makeText(this@AddDeviceActivity, "Помилка (Можливо, датчик вже прив'язаний)", Toast.LENGTH_SHORT).show()
+                    btn.isEnabled = true
+                    btn.text = "Додати"
                 }
+            } catch (e: Exception) {
+                Toast.makeText(this@AddDeviceActivity, "Помилка мережі", Toast.LENGTH_SHORT).show()
+                btn.isEnabled = true
+                btn.text = "Додати"
             }
         }
     }
