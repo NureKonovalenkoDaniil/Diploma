@@ -64,6 +64,20 @@ interface LifecycleApi {
 }
 
 // ──────────────────────────────────────────
+// 5. Notification API
+// ──────────────────────────────────────────
+interface NotificationApi {
+    @GET("api/notification")
+    suspend fun getNotifications(): Response<List<com.example.medicationmanagement.model.Notification>>
+
+    @PATCH("api/notification/{id}/read")
+    suspend fun markAsRead(@Path("id") notificationId: Int): Response<Any>
+
+    @PATCH("api/notification/read-all")
+    suspend fun markAllAsRead(): Response<Any>
+}
+
+// ──────────────────────────────────────────
 // IoT Device API
 // ──────────────────────────────────────────
 interface IoTDeviceApi {
