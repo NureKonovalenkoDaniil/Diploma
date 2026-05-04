@@ -4,11 +4,12 @@
     <string name="choose_language">Choose Language</string>
     <string name="language_ukrainian">Ukrainian</string>
     <string name="language_english">English</string>
-    <string name="medicines">Medicines</string>
-    <string name="devices">Devices</string>
+    <string name="medicines">Аптечка</string>
+    <string name="devices">Датчики</string>
+    <string name="notifications">Сповіщення</string>
     <string name="conditions">Conditions</string>
     <string name="logs">Logs</string>
-    <string name="settings">Settings</string>
+    <string name="settings">Налаштування</string>
     <string name="name">Name</string>
     <string name="type">Type</string>
     <string name="category">Category</string>

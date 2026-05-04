@@ -2,9 +2,14 @@ package com.example.medicationmanagement
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
+import android.view.Menu
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import com.example.medicationmanagement.ui.MedicinesFragment
+import com.example.medicationmanagement.ui.SensorsFragment
+import com.example.medicationmanagement.ui.NotificationsFragment
+import com.example.medicationmanagement.utils.TokenManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
@@ -15,29 +20,28 @@ class MainActivity : AppCompatActivity() {
 
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigation)
 
-        // Показати DashboardFragment при старті
-        loadFragment(DashboardFragment())
+        // Показати Аптечку при старті
+        loadFragment(MedicinesFragment())
 
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_medicines -> {
-                    loadFragment(DashboardFragment())
+                    loadFragment(MedicinesFragment())
                     true
                 }
                 R.id.nav_devices -> {
-                    loadFragment(DevicesFragment())
+                    loadFragment(SensorsFragment())
                     true
                 }
-                R.id.nav_conditions -> {
-                    loadFragment(StorageConditionsFragment()) // створимо пізніше
-                    true
-                }
-                R.id.nav_logs -> {
-                    loadFragment(LogsFragment()) // створимо пізніше
+                R.id.nav_notifications -> {
+                    loadFragment(NotificationsFragment())
                     true
                 }
                 R.id.nav_settings -> {
-                    loadFragment(SettingsFragment()) // уже реалізовано
+                    // Тимчасово: кнопка Settings просто робить Logout для тестування
+                    TokenManager.getInstance(this).clearToken()
+                    startActivity(Intent(this, LoginActivity::class.java))
+                    finish()
                     true
                 }
                 else -> false
