@@ -3,20 +3,25 @@ package com.example.medicationmanagement
 import android.content.Intent
 import android.os.Bundle
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
-import javax.net.ssl.HttpsURLConnection
+import androidx.lifecycle.lifecycleScope
+import com.example.medicationmanagement.api.ApiClient
+import com.example.medicationmanagement.api.AuthApi
+import com.example.medicationmanagement.api.RegisterRequest
+import kotlinx.coroutines.launch
 
 class RegisterActivity : AppCompatActivity() {
+    
+    private lateinit var registerBtn: Button
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
 
         val email = findViewById<EditText>(R.id.emailInput)
         val password = findViewById<EditText>(R.id.passwordInput)
-        val registerBtn = findViewById<Button>(R.id.registerBtn)
+        registerBtn = findViewById(R.id.registerBtn)
         val backToLogin = findViewById<TextView>(R.id.backToLogin)
 
         registerBtn.setOnClickListener {
@@ -28,7 +33,7 @@ class RegisterActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            register(mail, pass)
+            performRegister(mail, pass)
         }
 
         backToLogin.setOnClickListener {
@@ -37,43 +42,41 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    private fun register(email: String, password: String) {
-        Thread {
+    private fun performRegister(email: String, password: String) {
+        val originalText = registerBtn.text
+        registerBtn.isEnabled = false
+        registerBtn.text = "Loading..."
+        
+        lifecycleScope.launch {
             try {
-                val url = URL("http://10.0.2.2:5000/api/auth/register")
-                val connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = "POST"
-                connection.setRequestProperty("Content-Type", "application/json")
-                connection.doOutput = true
+                val api = ApiClient.createService<AuthApi>(this@RegisterActivity)
+                val response = api.register(RegisterRequest(email, password))
 
-                val json = JSONObject().apply {
-                    put("email", email)
-                    put("password", password)
-                }
-
-                connection.outputStream.use { it.write(json.toString().toByteArray()) }
-
-                val responseCode = connection.responseCode
-                if (responseCode == 200 || responseCode == 201) {
-                    runOnUiThread {
-                        Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show()
-                        startActivity(Intent(this, LoginActivity::class.java))
-                        finish()
-                    }
+                if (response.isSuccessful) {
+                    showEmailConfirmationDialog()
                 } else {
-                    val error = connection.errorStream?.bufferedReader()?.readText()
-                    runOnUiThread {
-                        Toast.makeText(this, "Registration failed: $error", Toast.LENGTH_LONG).show()
-                    }
+                    val code = response.code()
+                    Toast.makeText(this@RegisterActivity, "Registration failed: $code", Toast.LENGTH_LONG).show()
+                    registerBtn.isEnabled = true
+                    registerBtn.text = originalText
                 }
-
-                connection.disconnect()
-
             } catch (e: Exception) {
-                runOnUiThread {
-                    Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                }
+                Toast.makeText(this@RegisterActivity, "Network error: ${e.message}", Toast.LENGTH_LONG).show()
+                registerBtn.isEnabled = true
+                registerBtn.text = originalText
             }
-        }.start()
+        }
+    }
+    
+    private fun showEmailConfirmationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Реєстрація успішна")
+            .setMessage("На вашу пошту надіслано лист. Будь ласка, перейдіть за посиланням у листі для підтвердження акаунту, після чого ви зможете увійти в додаток.")
+            .setPositiveButton("ОК") { _, _ ->
+                startActivity(Intent(this@RegisterActivity, LoginActivity::class.java))
+                finish()
+            }
+            .setCancelable(false)
+            .show()
     }
 }
