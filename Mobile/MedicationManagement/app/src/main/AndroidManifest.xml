@@ -29,7 +29,6 @@
         <activity android:name=".MainActivity" />
         <activity android:name=".MedicineDetailsActivity" />
         <activity android:name=".RegisterActivity" />
-        <activity android:name=".DashboardActivity" />
         <activity android:name=".AddMedicineActivity" />
         <activity android:name=".EditMedicineActivity" />
         <activity android:name=".DeviceDetailsActivity" />
