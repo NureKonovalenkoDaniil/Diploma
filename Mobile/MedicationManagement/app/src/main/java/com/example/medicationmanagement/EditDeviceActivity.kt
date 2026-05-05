@@ -21,7 +21,7 @@ class EditDeviceActivity : AppCompatActivity() {
     private lateinit var maxHumidityInput: EditText
     private lateinit var saveBtn: Button
 
-    private var deviceId = -1
+    private var deviceId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,8 +36,8 @@ class EditDeviceActivity : AppCompatActivity() {
         maxHumidityInput = findViewById(R.id.editMaxHumidity)
         saveBtn = findViewById(R.id.saveDeviceBtn)
 
-        deviceId = intent.getIntExtra("deviceID", -1)
-        if (deviceId == -1) {
+        deviceId = intent.getStringExtra("deviceID")
+        if (deviceId == null) {
             Toast.makeText(this, "Device ID not found", Toast.LENGTH_SHORT).show()
             finish()
             return

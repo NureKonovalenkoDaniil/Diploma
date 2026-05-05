@@ -24,7 +24,7 @@ class DeviceDetailsActivity : AppCompatActivity() {
     private lateinit var editBtn: Button
     private lateinit var deleteBtn: Button
 
-    private var deviceId = -1
+    private var deviceId: String? = null
     private var currentStatus = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,8 +41,8 @@ class DeviceDetailsActivity : AppCompatActivity() {
         editBtn = findViewById(R.id.editDeviceBtn)
         deleteBtn = findViewById(R.id.deleteDeviceBtn)
 
-        deviceId = intent.getIntExtra("deviceID", -1)
-        if (deviceId == -1) {
+        deviceId = intent.getStringExtra("deviceID")
+        if (deviceId == null) {
             Toast.makeText(this, "Device ID not found", Toast.LENGTH_SHORT).show()
             finish()
             return

@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.medicationmanagement.MainActivity
 import com.example.medicationmanagement.NotificationAdapter
 import com.example.medicationmanagement.R
 

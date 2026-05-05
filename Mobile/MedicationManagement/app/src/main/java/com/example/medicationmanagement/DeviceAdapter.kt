@@ -29,7 +29,7 @@ class DeviceAdapter(
 
     override fun onBindViewHolder(holder: DeviceViewHolder, position: Int) {
         val item = items[position]
-        holder.name.text = item.deviceName
+        holder.name.text = item.deviceName ?: "Датчик ${item.deviceID}"
         holder.location.text = item.location ?: "Локація не вказана"
         holder.id.text = "ID: ${item.deviceID}"
 
@@ -45,10 +45,10 @@ class DeviceAdapter(
             val context = holder.itemView.context
             val intent = Intent(context, DeviceDetailsActivity::class.java).apply {
                 putExtra("deviceID", item.deviceID)
-                putExtra("deviceName", item.deviceName)
-                putExtra("location", item.location)
+                putExtra("deviceName", item.deviceName ?: "Датчик ${item.deviceID}")
+                putExtra("location", item.location ?: "")
                 putExtra("isActive", item.isActive)
-                putExtra("interval", item.checkIntervalSeconds)
+                putExtra("interval", item.checkIntervalSeconds ?: 60)
             }
             context.startActivity(intent)
         }

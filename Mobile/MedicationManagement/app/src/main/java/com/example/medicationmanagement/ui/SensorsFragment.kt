@@ -62,7 +62,7 @@ class SensorsFragment : Fragment() {
 
     private fun setupRecyclerView() {
         adapter = DeviceAdapter(emptyList()) { device, isActive ->
-            viewModel.toggleDeviceStatus(device.deviceID, !isActive) // Send original status because toggle negates it
+            viewModel.toggleDeviceStatus(device.deviceID, !isActive) // deviceID is now String
         }
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter

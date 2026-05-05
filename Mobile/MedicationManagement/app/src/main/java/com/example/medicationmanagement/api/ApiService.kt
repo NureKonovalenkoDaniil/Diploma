@@ -64,7 +64,21 @@ interface LifecycleApi {
 }
 
 // ──────────────────────────────────────────
-// 5. Notification API
+// IoT Device API
+// ──────────────────────────────────────────
+interface IoTDeviceApi {
+    @GET("api/iotdevice")
+    suspend fun getDevices(): Response<List<IoTDevice>>
+
+    @POST("api/iotdevice")
+    suspend fun createDevice(@Body device: Map<String, Any>): Response<IoTDevice>
+
+    @PATCH("api/iotdevice/setstatus/{id}")
+    suspend fun setDeviceStatus(@Path("id") deviceId: String, @Query("isActive") isActive: Boolean): Response<Any>
+}
+
+// ──────────────────────────────────────────
+// Notification API
 // ──────────────────────────────────────────
 interface NotificationApi {
     @GET("api/notification")
@@ -75,41 +89,4 @@ interface NotificationApi {
 
     @PATCH("api/notification/read-all")
     suspend fun markAllAsRead(): Response<Any>
-}
-
-// ──────────────────────────────────────────
-// IoT Device API
-// ──────────────────────────────────────────
-interface IoTDeviceApi {
-    @GET("api/iotdevice")
-    suspend fun getDevices(): Response<List<IoTDevice>>
-
-    @POST("api/iotdevice")
-    suspend fun createDevice(@Body device: Map<String, Any>): Response<IoTDevice>
-    
-    @PATCH("api/iotdevice/setstatus/{id}")
-    suspend fun setDeviceStatus(@Path("id") deviceId: String, @Query("isActive") isActive: Boolean): Response<Any>
-}
-
-// ──────────────────────────────────────────
-// Notification API
-// ──────────────────────────────────────────
-data class Notification(
-    val notificationId: Int,
-    val message: String,
-    val isRead: Boolean,
-    val createdAt: String,
-    val type: String,
-    val title: String
-)
-
-interface NotificationApi {
-    @GET("api/notification")
-    suspend fun getAllNotifications(): Response<List<Notification>>
-
-    @GET("api/notification/unread")
-    suspend fun getUnreadNotifications(): Response<List<Notification>>
-
-    @PATCH("api/notification/{id}/read")
-    suspend fun markAsRead(@Path("id") id: Int): Response<Unit>
 }

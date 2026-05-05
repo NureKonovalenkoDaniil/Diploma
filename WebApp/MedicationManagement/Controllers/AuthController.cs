@@ -76,7 +76,7 @@ namespace MedicationManagement.Controllers
 
                 await _auditLogService.LogAction("Register", model.Email, "Registered new user with role User.", false);
 
-                return Ok("User registered successfully!");
+                return Ok(new { message = "User registered successfully!" });
             }
             catch (Exception ex)
             {
@@ -168,7 +168,7 @@ namespace MedicationManagement.Controllers
                 return BadRequest("Email confirmation failed");
 
             await _auditLogService.LogAction("ConfirmEmail", user.Email ?? "Unknown", "Email confirmed.", false);
-            return Ok("Email confirmed successfully");
+            return Ok(new { message = "Email confirmed successfully" });
         }
 
         [HttpPost("resend-confirmation")]
