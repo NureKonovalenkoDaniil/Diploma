@@ -1,6 +1,5 @@
 package com.example.medicationmanagement
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -8,8 +7,10 @@ import androidx.lifecycle.lifecycleScope
 import com.example.medicationmanagement.api.ApiClient
 import com.example.medicationmanagement.api.NotificationApi
 import com.example.medicationmanagement.ui.MedicinesFragment
-import com.example.medicationmanagement.ui.SensorsFragment
 import com.example.medicationmanagement.ui.NotificationsFragment
+import com.example.medicationmanagement.ui.SensorsFragment
+import com.example.medicationmanagement.ui.SettingsFragment
+import com.example.medicationmanagement.ui.theme.AppPreferences
 import com.example.medicationmanagement.utils.TokenManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
@@ -19,6 +20,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bottomNav: BottomNavigationView
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AppPreferences.applyStoredPreferences(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -44,9 +46,7 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 R.id.nav_settings -> {
-                    TokenManager.getInstance(this).clearToken()
-                    startActivity(Intent(this, LoginActivity::class.java))
-                    finish()
+                    loadFragment(SettingsFragment())
                     true
                 }
                 else -> false
