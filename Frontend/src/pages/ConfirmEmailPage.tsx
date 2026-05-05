@@ -1,27 +1,42 @@
-import { useEffect, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { authApi } from '@/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+// Fallback toast for environments where '@/components/ui/use-toast' is unavailable
 
 export default function ConfirmEmailPage() {
-  const [params] = useSearchParams();
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [code, setCode] = useState('');
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const toast = ({ title, description }: { title?: string; description?: string }) => {
+    // simple fallback using alert so the page still provides feedback
+    alert(`${title ? title + '\n' : ''}${description ?? ''}`);
+  };
 
-  useEffect(() => {
-    const userId = params.get('userId');
-    const token = params.get('token');
-
-    if (!userId || !token) {
-      setStatus('error');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !code) {
+      toast({ title: 'Помилка', description: 'Заповніть всі поля' });
       return;
     }
 
-    authApi
-      .confirmEmail(userId, token)
-      .then(() => setStatus('success'))
-      .catch(() => setStatus('error'));
-  }, [params]);
+    try {
+      setLoading(true);
+      await authApi.confirmEmail({ email, code });
+      toast({ title: 'Успіх', description: 'Email підтверджено успішно. Тепер ви можете увійти.' });
+      navigate('/login');
+    } catch (error: any) {
+      toast({
+        title: 'Помилка',
+        description: error.response?.data || 'Невірний код або помилка сервера',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted/40 p-4">
@@ -29,28 +44,41 @@ export default function ConfirmEmailPage() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle>Підтвердження email</CardTitle>
-            <CardDescription>Перевіряємо посилання підтвердження</CardDescription>
+            <CardDescription>Введіть 6-значний код, надісланий на вашу пошту</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {status === 'loading' && <p>Обробка запиту...</p>}
-            {status === 'success' && (
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <p className="text-emerald-600 font-medium">Email підтверджено успішно.</p>
-                <Button asChild>
-                  <Link to="/login">Перейти до входу</Link>
-                </Button>
+                <label className="text-sm font-medium">Ваш Email</label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  required
+                />
               </div>
-            )}
-            {status === 'error' && (
               <div className="space-y-2">
-                <p className="text-destructive font-medium">
-                  Не вдалося підтвердити email. Перевірте посилання або повторіть спробу.
-                </p>
-                <Button variant="outline" asChild>
-                  <Link to="/login">Повернутися до входу</Link>
-                </Button>
+                <label className="text-sm font-medium">Код підтвердження</label>
+                <Input
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="123456"
+                  maxLength={6}
+                  className="text-center text-lg tracking-widest"
+                  required
+                />
               </div>
-            )}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Перевірка...' : 'Підтвердити'}
+              </Button>
+              <div className="text-center mt-4 text-sm">
+                <Link to="/login" className="text-primary hover:underline">
+                  Повернутися до входу
+                </Link>
+              </div>
+            </form>
           </CardContent>
         </Card>
       </div>

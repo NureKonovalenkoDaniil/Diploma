@@ -14,13 +14,13 @@ export default function ResetPasswordPage() {
   const [message, setMessage] = useState<string | null>(null);
 
   const email = params.get('email') || '';
-  const token = params.get('token') || '';
+  const [code, setCode] = useState('');
 
   const submit = async () => {
     setMessage(null);
-    if (!email || !token) {
+    if (!email || !code) {
       setStatus('error');
-      setMessage('Невірне посилання для скидання пароля.');
+      setMessage('Введіть код підтвердження.');
       return;
     }
     if (!password || password.length < 4) {
@@ -35,7 +35,7 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      await authApi.resetPassword({ email, token, newPassword: password });
+      await authApi.resetPassword({ email, code, newPassword: password });
       setStatus('success');
     } catch {
       setStatus('error');
@@ -61,6 +61,18 @@ export default function ResetPasswordPage() {
               </div>
             ) : (
               <>
+                <div className="space-y-2">
+                  <Label htmlFor="rp-code">Код з листа</Label>
+                  <Input
+                    id="rp-code"
+                    type="text"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    maxLength={6}
+                    placeholder="123456"
+                    className="text-center tracking-widest text-lg"
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="rp-password">Новий пароль</Label>
                   <Input

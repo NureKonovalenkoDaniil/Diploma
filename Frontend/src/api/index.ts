@@ -14,6 +14,7 @@ import type {
   ReplenishmentRecommendation,
   CreateNotificationDto,
   CreateMedicineRequest,
+  ConfirmEmailRequest,
 } from '@/types/api';
 
 // ──────────────────────────────────────────
@@ -25,10 +26,10 @@ export const authApi = {
       token: r.data.token || r.data.Token || '',
     })),
   forgotPassword: (email: string) => api.post('/api/auth/forgot-password', { email }),
-  resetPassword: (data: { email: string; token: string; newPassword: string }) =>
+  resetPassword: (data: { email: string; code: string; newPassword: string }) =>
     api.post('/api/auth/reset-password', data),
-  confirmEmail: (userId: string, token: string) =>
-    api.get('/api/auth/confirm-email', { params: { userId, token } }),
+  confirmEmail: (data: ConfirmEmailRequest) =>
+    api.post('/api/auth/confirm-email', data),
   resendConfirmation: (email: string) => api.post('/api/auth/resend-confirmation', { email }),
   me: () =>
     api

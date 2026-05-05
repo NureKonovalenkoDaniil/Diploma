@@ -130,6 +130,11 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface ConfirmEmailRequest {
+  email: string;
+  code: string;
+}
+
 export interface LoginResponse {
   token: string;
 }

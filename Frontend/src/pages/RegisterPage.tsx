@@ -88,8 +88,11 @@ export default function RegisterPage() {
                 <div className="text-4xl">✅</div>
                 <p className="font-semibold">Реєстрація успішна!</p>
                 <p className="text-sm text-muted-foreground">
-                  Перевірте пошту та підтвердіть email перед входом.
+                  На вашу пошту надіслано 6-значний код. Введіть його на наступній сторінці.
                 </p>
+                <Button className="w-full" onClick={() => navigate('/confirm-email')}>
+                  Ввести код
+                </Button>
                 <Button
                   variant="outline"
                   onClick={async () => {
@@ -105,9 +108,6 @@ export default function RegisterPage() {
                   Надіслати лист ще раз
                 </Button>
                 {resendStatus && <p className="text-xs text-muted-foreground">{resendStatus}</p>}
-                <Button variant="outline" onClick={() => navigate('/login')}>
-                  Перейти до входу
-                </Button>
               </div>
             ) : (
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

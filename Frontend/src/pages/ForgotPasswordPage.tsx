@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { authApi } from '@/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,12 +10,14 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'sent' | 'error'>('idle');
   const [message, setMessage] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const submit = async () => {
     setMessage(null);
     try {
       await authApi.forgotPassword(email);
       setStatus('sent');
+      navigate(`/reset-password?email=${encodeURIComponent(email)}`);
     } catch {
       setStatus('error');
       setMessage('Не вдалося надіслати лист. Спробуйте ще раз.');
@@ -28,16 +30,13 @@ export default function ForgotPasswordPage() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle>Відновлення пароля</CardTitle>
-            <CardDescription>Вкажіть email, щоб отримати посилання для скидання</CardDescription>
+            <CardDescription>Вкажіть email, щоб отримати 6-значний код для скидання</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {status === 'sent' ? (
               <div className="space-y-2 text-sm">
-                <p className="text-emerald-600 font-medium">Лист для відновлення надіслано.</p>
-                <p className="text-muted-foreground">Перевірте пошту та перейдіть за посиланням.</p>
-                <Button asChild variant="outline">
-                  <Link to="/login">Повернутися до входу</Link>
-                </Button>
+                <p className="text-emerald-600 font-medium">Код для відновлення надіслано.</p>
+                <p className="text-muted-foreground">Перехід на сторінку скидання...</p>
               </div>
             ) : (
               <>

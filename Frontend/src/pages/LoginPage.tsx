@@ -134,10 +134,13 @@ export default function LoginPage() {
 
               {errorType === 'unconfirmed' && (
                 <div className="space-y-2">
-                  <Button type="button" variant="outline" onClick={resendConfirmation}>
-                    Надіслати лист підтвердження ще раз
+                  <Button type="button" variant="outline" className="w-full" onClick={() => navigate('/confirm-email')}>
+                    Ввести код з листа
                   </Button>
-                  {resendStatus && <p className="text-xs text-muted-foreground">{resendStatus}</p>}
+                  <Button type="button" variant="ghost" className="w-full text-xs" onClick={resendConfirmation}>
+                    Надіслати код ще раз
+                  </Button>
+                  {resendStatus && <p className="text-xs text-muted-foreground text-center">{resendStatus}</p>}
                 </div>
               )}
 

@@ -72,7 +72,7 @@ namespace MedicationManagement.Controllers
                     return BadRequest(result.Errors);
 
                 await _userManager.AddToRoleAsync(user, "User");
-                await SendEmailConfirmationAsync(user);
+                await GenerateAndSendCodeAsync(user, "EmailConfirmation", "Підтвердження email", "<p>Ваш код підтвердження: <strong>{0}</strong></p>");
 
                 await _auditLogService.LogAction("Register", model.Email, "Registered new user with role User.", false);
 
@@ -140,7 +140,7 @@ namespace MedicationManagement.Controllers
                     return BadRequest(result.Errors);
 
                 await _userManager.AddToRoleAsync(user, "Manager");
-                await SendEmailConfirmationAsync(user);
+                await GenerateAndSendCodeAsync(user, "EmailConfirmation", "Підтвердження email", "<p>Ваш код підтвердження: <strong>{0}</strong></p>");
 
                 await _auditLogService.LogAction("CreateManager", User.Identity?.Name ?? "Unknown", $"Created manager {model.Email} for org {model.OrganizationId}.", false);
 
@@ -153,19 +153,22 @@ namespace MedicationManagement.Controllers
             }
         }
 
-        [HttpGet("confirm-email")]
-        public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
+        [HttpPost("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto model)
         {
-            if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(token))
-                return BadRequest("Invalid confirmation data");
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByEmailAsync(model.Email);
             if (user is null) return BadRequest("Invalid user");
 
-            var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
-            var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
-            if (!result.Succeeded)
-                return BadRequest("Email confirmation failed");
+            var storedCode = await _userManager.GetAuthenticationTokenAsync(user, "MedicationApp", "EmailConfirmation");
+            if (storedCode == null || storedCode != model.Code)
+                return BadRequest("Невірний або прострочений код");
+
+            user.EmailConfirmed = true;
+            await _userManager.UpdateAsync(user);
+            await _userManager.RemoveAuthenticationTokenAsync(user, "MedicationApp", "EmailConfirmation");
 
             await _auditLogService.LogAction("ConfirmEmail", user.Email ?? "Unknown", "Email confirmed.", false);
             return Ok(new { message = "Email confirmed successfully" });
@@ -184,7 +187,7 @@ namespace MedicationManagement.Controllers
             if (user.EmailConfirmed)
                 return Ok("Email is already confirmed.");
 
-            await SendEmailConfirmationAsync(user);
+            await GenerateAndSendCodeAsync(user, "EmailConfirmation", "Підтвердження email", "<p>Ваш код підтвердження: <strong>{0}</strong></p>");
             return Ok("Confirmation email sent.");
         }
 
@@ -198,7 +201,7 @@ namespace MedicationManagement.Controllers
             if (user == null || !user.EmailConfirmed)
                 return Ok("If the account exists, a reset email was sent.");
 
-            await SendPasswordResetAsync(user);
+            await GenerateAndSendCodeAsync(user, "PasswordReset", "Відновлення пароля", "<p>Ваш код відновлення: <strong>{0}</strong></p>");
             return Ok("Reset email sent.");
         }
 
@@ -212,10 +215,16 @@ namespace MedicationManagement.Controllers
             if (user == null)
                 return BadRequest("Invalid reset request");
 
-            var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Token));
-            var result = await _userManager.ResetPasswordAsync(user, decodedToken, model.NewPassword);
+            var storedCode = await _userManager.GetAuthenticationTokenAsync(user, "MedicationApp", "PasswordReset");
+            if (storedCode == null || storedCode != model.Code)
+                return BadRequest("Невірний або прострочений код");
+
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, resetToken, model.NewPassword);
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
+
+            await _userManager.RemoveAuthenticationTokenAsync(user, "MedicationApp", "PasswordReset");
 
             await _auditLogService.LogAction("ResetPassword", user.Email ?? "Unknown", "Password reset completed.", false);
             return Ok("Password reset successful");
@@ -443,31 +452,12 @@ namespace MedicationManagement.Controllers
             return tokenHandler.WriteToken(token);
         }
 
-        private async Task SendEmailConfirmationAsync(ApplicationUser user)
+        private async Task GenerateAndSendCodeAsync(ApplicationUser user, string purpose, string subject, string messageTemplate)
         {
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            var code = new Random().Next(100000, 999999).ToString();
+            await _userManager.SetAuthenticationTokenAsync(user, "MedicationApp", purpose, code);
 
-            var baseUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:5173";
-            var link = $"{baseUrl.TrimEnd('/')}/confirm-email?userId={Uri.EscapeDataString(user.Id)}&token={Uri.EscapeDataString(encodedToken)}";
-
-            var subject = "Підтвердження email";
-            var body = $"<p>Підтвердіть вашу адресу електронної пошти, натиснувши на посилання:</p><p><a href=\"{link}\">Підтвердити email</a></p>";
-
-            await _emailSender.SendAsync(user.Email ?? string.Empty, subject, body);
-        }
-
-        private async Task SendPasswordResetAsync(ApplicationUser user)
-        {
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-
-            var baseUrl = _configuration["Frontend:BaseUrl"] ?? "http://localhost:5173";
-            var link = $"{baseUrl.TrimEnd('/')}/reset-password?email={Uri.EscapeDataString(user.Email ?? string.Empty)}&token={Uri.EscapeDataString(encodedToken)}";
-
-            var subject = "Відновлення пароля";
-            var body = $"<p>Для відновлення пароля перейдіть за посиланням:</p><p><a href=\"{link}\">Скинути пароль</a></p>";
-
+            var body = string.Format(messageTemplate, code);
             await _emailSender.SendAsync(user.Email ?? string.Empty, subject, body);
         }
     }
