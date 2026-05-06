@@ -33,7 +33,9 @@ class NotificationsViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     val list = response.body() ?: emptyList()
                     // Сортуємо: спершу непрочитані, потім за датою спадання
-                    _notifications.value = list.sortedWith(compareBy({ it.isRead }, { -parseDate(it.createdAt) }))
+                    _notifications.value = list.sortedWith(
+                        compareBy<com.example.medicationmanagement.model.Notification>({ it.isRead }, { -parseDate(it.createdAt) })
+                    )
                 } else {
                     _error.value = "Помилка завантаження: ${response.code()}"
                 }

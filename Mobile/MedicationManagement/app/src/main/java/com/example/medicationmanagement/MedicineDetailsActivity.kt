@@ -79,7 +79,7 @@ class MedicineDetailsActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val events = response.body() ?: emptyList()
                     // Показуємо найновіші зверху
-                    adapter.updateEvents(events.sortedByDescending { it.eventDate })
+                    adapter.updateEvents(events.sortedByDescending { event: com.example.medicationmanagement.model.LifecycleEvent -> event.eventDate })
                 } else {
                     Toast.makeText(this@MedicineDetailsActivity, "Не вдалося завантажити щоденник", Toast.LENGTH_SHORT).show()
                 }
