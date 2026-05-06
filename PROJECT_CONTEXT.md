@@ -206,7 +206,23 @@ Frontend: у `MedicineDetailPage` додані кнопки **"Надходже�
   3. **Баг кешу React Query**: при переключенні між акаунтами кеш від адміна зберігався — менеджер бачив чужі дані до першого перезавантаження.
   4. **Доступ менеджера**: кнопки "Додати/Редагувати/Видалити" на сторінках Medicines, StorageLocations, IncidentsPage були доступні лише `isAdmin`, а не `isAdmin || isManager`.
   5. **403 Forbidden для менеджера**: `setstatus`, `UPDATE`, `DELETE` у `IoTDeviceController` мали тільки `Administrator` у `[Authorize(Roles)]`.
-- Що потрібно робити далі: Фаза 5 — Мобільний застосунок або Фаза 6 — Тести
+- Що потрібно робити далі: Фаза 6 — Тести або Фаза 7 — DevOps
+  
+### Запис 7 — Сесія 2026-05-05 (OTP Confirmation & Settings Fix)
+
+- Дата: 2026-05-05
+- Завдання: Впровадження надійної системи підтвердження пошти через 6-значні коди (OTP) та виправлення мобільних налаштувань.
+- Переглянуті файли / модулі:
+  - Backend: `AuthController.cs`, `ConfirmEmailDto.cs`, `ResetPasswordDto.cs`.
+  - Mobile: `ConfirmEmailActivity.kt`, `LoginActivity.kt`, `RegisterActivity.kt`, `SettingsFragment.kt`, `AppPreferences.kt`.
+  - Frontend: `ConfirmEmailPage.tsx`, `RegisterPage.tsx`, `LoginPage.tsx`, `api/index.ts`.
+- Основні висновки:
+  1. **Відмова від Deep Links**: Через обмеження емулятора Android (ERR_CONNECTION_REFUSED при переході на localhost) систему підтвердження пошти переведено з посилань на 6-значні коди.
+  2. **OTP Flow**: Коди генеруються на бекенді через `_userManager.SetAuthenticationTokenAsync` (без нових таблиць у БД).
+  3. **Mobile UX**: Додано екран вводу коду, автоматичний перехід після реєстрації та при помилці 403 (unconfirmed email).
+  4. **Frontend UX**: Оновлено сторінки реєстрації та входу для зручного переходу до вводу коду.
+  5. **Mobile Settings**: Реалізовано повноцінне перемикання теми (Light/Dark/System) та мови (UK/EN/System) з локальним збереженням.
+- Що потрібно робити далі: Фаза 6 — Тестування (Unit/Integration) та Фаза 7 — DevOps.
 
 ## 10. Журнал змін і рішень
 
@@ -569,12 +585,14 @@ Frontend: у `MedicineDetailPage` додані кнопки **"Надходже�
 - ✅ `IoTDevicesPage`: виправлено React warning (key prop: `<>` → `<Fragment key={...}>`)
 - ✅ `StorageLocationsPage`: додано `DialogDescription` (усунено aria-warning)
 
-5. **[ВИКОНАНО 2026-05-04]** ФАЗА 5 — Мобільний застосунок
+5. **[ВИКОНАНО 2026-05-05]** ФАЗА 5 — Мобільний застосунок
    - ✅ Переведено на Retrofit + Coroutines.
    - ✅ Навігація через BottomNavigationView.
    - ✅ Аптечка + Медичний щоденник (Lifecycle).
    - ✅ Сповіщення з підтримкою прочитання та Badge.
    - ✅ Спрощена реєстрація IoT-датчиків.
+   - ✅ **[NEW]** Впроваджено 6-значні OTP коди для підтвердження пошти (замість Deep Links).
+   - ✅ **[NEW]** Екран налаштувань: реалізовано зміну мови та теми застосунку.
 
 ## 12. Підтверджені нові сутності для диплома (реалізовано 2026-04-13)
 
