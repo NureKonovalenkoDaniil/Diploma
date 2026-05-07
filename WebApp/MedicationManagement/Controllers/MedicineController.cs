@@ -81,7 +81,7 @@ namespace MedicationManagement.Controllers
 
         // Endpoint to create a new medicine
         [HttpPost]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> Create([FromBody] CreateMedicineDto medicineDto)
         {
             if (!ModelState.IsValid)
@@ -145,7 +145,7 @@ namespace MedicationManagement.Controllers
 
         // Endpoint to update an existing medicine
         [HttpPatch("{id}")]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> Update(int id, [FromBody] JsonPatchDocument<Medicine> patchDoc)
         {
             if (patchDoc == null)
@@ -173,7 +173,7 @@ namespace MedicationManagement.Controllers
         /// Атомарне переміщення препарату: оновлює StorageLocationId і створює lifecycle-подію Moved.
         /// </summary>
         [HttpPost("{id}/move")]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> Move(int id, [FromBody] MoveMedicineDto dto)
         {
             if (dto is null) return BadRequest("Request body is required");
@@ -214,7 +214,7 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Надходження препарату: збільшує Quantity та створює lifecycle-подію Received.</summary>
         [HttpPost("{id}/receive")]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> Receive(int id, [FromBody] ChangeMedicineQuantityDto dto)
         {
             if (dto is null) return BadRequest("Request body is required");
@@ -256,7 +256,7 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Видача препарату: зменшує Quantity та створює lifecycle-подію Issued.</summary>
         [HttpPost("{id}/issue")]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> Issue(int id, [FromBody] ChangeMedicineQuantityDto dto)
         {
             if (dto is null) return BadRequest("Request body is required");
@@ -297,7 +297,7 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Утилізація препарату: зменшує Quantity та створює lifecycle-подію Disposed.</summary>
         [HttpPost("{id}/dispose")]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> Dispose(int id, [FromBody] ChangeMedicineQuantityDto dto)
         {
             if (dto is null) return BadRequest("Request body is required");
@@ -341,7 +341,7 @@ namespace MedicationManagement.Controllers
 
         // Endpoint to delete a medicine by ID
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> Delete(int id)
         {
             try

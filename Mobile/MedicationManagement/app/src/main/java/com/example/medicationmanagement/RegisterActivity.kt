@@ -55,7 +55,7 @@ class RegisterActivity : AppCompatActivity() {
                 val response = api.register(RegisterRequest(email, password))
 
                 if (response.isSuccessful) {
-                    // Перенаправити на екран введення OTP-коду підтвердження
+                    Toast.makeText(this@RegisterActivity, "Реєстрація успішна! Введіть код з пошти.", Toast.LENGTH_SHORT).show()
                     val intent = Intent(this@RegisterActivity, ConfirmEmailActivity::class.java)
                     intent.putExtra("email", email)
                     startActivity(intent)

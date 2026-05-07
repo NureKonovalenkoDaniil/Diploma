@@ -6,6 +6,7 @@
     <string name="language_english">Англійська</string>
     <string name="medicines">Медикаменти</string>
     <string name="devices">Пристрої</string>
+    <string name="notifications">Сповіщення</string>
     <string name="conditions">Умови</string>
     <string name="logs">Логи</string>
     <string name="settings">Налаштування</string>
@@ -25,7 +26,7 @@
     <string name="notifications_enabled">Сповіщення увімкнено</string>
     <string name="notifications_disabled">Сповіщення вимкнено</string>
     <string name="login_fields_required">Введіть електронну пошту та пароль</string>
-    <string name="login_failed">Не вдалося увійти</string>
+    <string name="login_failed">Невірний Email чи пароль. Спробуйте ще раз.</string>
     <string name="registration_not_configured">Реєстрація не налаштована в мобільному додатку</string>
     <string name="name">Назва</string>
     <string name="type">Тип</string>

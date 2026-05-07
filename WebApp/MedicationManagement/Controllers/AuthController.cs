@@ -130,7 +130,7 @@ namespace MedicationManagement.Controllers
                 {
                     UserName = model.Email,
                     Email = model.Email,
-                    EmailConfirmed = false,
+                    EmailConfirmed = true, // Email підтверджується автоматично — адмін є довіреною особою
                     SecurityStamp = Guid.NewGuid().ToString(),
                     OrganizationId = model.OrganizationId
                 };
@@ -140,7 +140,16 @@ namespace MedicationManagement.Controllers
                     return BadRequest(result.Errors);
 
                 await _userManager.AddToRoleAsync(user, "Manager");
-                await GenerateAndSendCodeAsync(user, "EmailConfirmation", "Підтвердження email", "<p>Ваш код підтвердження: <strong>{0}</strong></p>");
+
+                // Відправляємо вітальний лист із даними для входу
+                var welcomeBody = $"""
+                    <p>Вітаємо!</p>
+                    <p>Адміністратор вашої організації створив для вас обліковий запис менеджера у системі <strong>MedStorage</strong>.</p>
+                    <p><strong>Email для входу:</strong> {model.Email}</p>
+                    <p>Увійдіть у систему за посиланням: <a href="{_configuration["Frontend:BaseUrl"]}/login">{_configuration["Frontend:BaseUrl"]}/login</a></p>
+                    <p><em>Якщо ви не очікували цього повідомлення — проігноруйте його.</em></p>
+                    """;
+                await _emailSender.SendAsync(model.Email, "Ваш обліковий запис менеджера створено", welcomeBody);
 
                 await _auditLogService.LogAction("CreateManager", User.Identity?.Name ?? "Unknown", $"Created manager {model.Email} for org {model.OrganizationId}.", false);
 

@@ -45,14 +45,14 @@ class LoginActivity : AppCompatActivity() {
         }
 
         registerLink.setOnClickListener {
-            Toast.makeText(this, R.string.registration_not_configured, Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, RegisterActivity::class.java))
         }
     }
 
     private fun performLogin(email: String, password: String) {
         thread {
             try {
-                val url = URL("http://10.0.2.2:5000/api/auth/login")
+                val url = URL("http://10.0.2.2:5001/api/auth/login")
                 val connection = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "POST"
                     setRequestProperty("Content-Type", "application/json")

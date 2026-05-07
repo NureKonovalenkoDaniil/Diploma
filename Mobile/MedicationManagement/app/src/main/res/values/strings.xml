@@ -26,7 +26,7 @@
     <string name="notifications_enabled">Notifications are enabled</string>
     <string name="notifications_disabled">Notifications are disabled</string>
     <string name="login_fields_required">Please enter email and password</string>
-    <string name="login_failed">Login failed</string>
+    <string name="login_failed">Invalid Email or password. Try again.</string>
     <string name="registration_not_configured">Registration is not configured in the mobile app</string>
     <string name="name">Name</string>
     <string name="type">Type</string>

@@ -18,7 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/settings_title"
-            android:textAppearance="@style/TextAppearance.Material3.HeadlineMedium"
+            android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
             android:textStyle="bold" />
 
         <com.google.android.material.textview.MaterialTextView
@@ -27,7 +27,7 @@
             android:layout_marginTop="8dp"
             android:text="@string/settings_description"
             android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:textColor="?attr/colorOnSurface" />
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
@@ -59,7 +59,7 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/themeSystemButton"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        style="@style/Widget.Material3.Button.ElevatedButton"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -67,7 +67,7 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/themeLightButton"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        style="@style/Widget.Material3.Button.ElevatedButton"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -75,7 +75,7 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/themeDarkButton"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        style="@style/Widget.Material3.Button.ElevatedButton"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -110,7 +110,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textColor="?attr/colorOnSurface"
                     tools:text="Current language: system" />
 
                 <com.google.android.material.button.MaterialButtonToggleGroup
@@ -123,7 +123,7 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/languageSystemButton"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        style="@style/Widget.Material3.Button.ElevatedButton"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -131,7 +131,7 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/languageUkrButton"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        style="@style/Widget.Material3.Button.ElevatedButton"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -139,7 +139,7 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/languageEngButton"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        style="@style/Widget.Material3.Button.ElevatedButton"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -179,7 +179,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/logoutButton"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+            style="@style/Widget.Material3.Button.ElevatedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"

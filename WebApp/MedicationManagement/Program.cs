@@ -31,7 +31,7 @@ namespace MedicationManagement
 
             builder.WebHost.ConfigureKestrel(options =>
             {
-                options.ListenAnyIP(5000);
+                options.ListenAnyIP(5001);
             });
 
             var app = builder.Build();
@@ -80,16 +80,11 @@ namespace MedicationManagement
             // Add CORS for SPA Frontend (Фаза 4)
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("FrontendPolicy", policy =>
+                options.AddDefaultPolicy(policy =>
                 {
-                    policy.SetIsOriginAllowed(origin =>
-                        {
-                            var uri = new Uri(origin);
-                            return uri.Host == "localhost" || uri.Host == "127.0.0.1";
-                        })
+                    policy.AllowAnyOrigin()
                           .AllowAnyHeader()
-                          .AllowAnyMethod()
-                          .AllowCredentials();
+                          .AllowAnyMethod();
                 });
             });
 
@@ -219,8 +214,8 @@ namespace MedicationManagement
 
             app.UseRouting();
 
-            // Застосування CORS політики
-            app.UseCors("FrontendPolicy");
+            // Застосування CORS політики (Default)
+            app.UseCors();
 
             app.UseAuthentication();
             app.UseAuthorization();

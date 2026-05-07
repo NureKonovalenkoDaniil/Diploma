@@ -55,7 +55,7 @@ class EditDeviceActivity : AppCompatActivity() {
 
         thread {
             try {
-                val url = URL("http://10.0.2.2:5000/api/iotdevice/$deviceId")
+                val url = URL("http://10.0.2.2:5001/api/iotdevice/$deviceId")
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "GET"
                 conn.setRequestProperty("Authorization", "Bearer $token")
@@ -94,7 +94,7 @@ class EditDeviceActivity : AppCompatActivity() {
 
         thread {
             try {
-                val url = URL("http://10.0.2.2:5000/api/iotdevice/$deviceId")
+                val url = URL("http://10.0.2.2:5001/api/iotdevice/$deviceId")
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "PATCH"
                 conn.setRequestProperty("Authorization", "Bearer $token")

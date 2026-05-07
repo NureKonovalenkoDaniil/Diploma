@@ -128,7 +128,8 @@ function CreateManagerDialog({
           <DialogTitle>Додати менеджера</DialogTitle>
           <DialogDescription>
             Менеджер матиме доступ до управління препаратами, локаціями та пристроями у межах вашої
-            організації. Після створення на email буде надіслано лист для підтвердження пошти.
+            організації. Email підтверджується автоматично — менеджер отримає вітальний лист із
+            даними для входу.
           </DialogDescription>
         </DialogHeader>
 
@@ -358,7 +359,7 @@ export default function UsersPage() {
         onCreated={(email) => {
           qc.invalidateQueries({ queryKey: ['users'] });
           setSuccessMessage(
-            `Менеджера створено. На ${email} надіслано лист для підтвердження пошти.`,
+            `Менеджера ${email} успішно створено. На його пошту надіслано вітальний лист із даними для входу.`,
           );
         }}
       />
