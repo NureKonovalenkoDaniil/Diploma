@@ -1,10 +1,10 @@
 # План тестування (Фаза 6: Автоматизовані тести)
 
-## ✅ СТАТУС: Fase 6 Backend-тестування ЗАВЕРШЕНО (2026-05-07)
+## ✅ СТАТУС: Фаза 6 Backend + Frontend тестування ЗАВЕРШЕНО (2026-05-07)
 
-**Результат:** ✅ **36/36 тестів проходять успішно** (0 помилок, 0 попереджень)
+**Результат:** ✅ **56/56 тестів проходять успішно** (0 помилок, 0 попереджень)
 
-### Реалізовано Backend:
+### Реалізовано Backend (36 тестів):
 
 **Unit Tests (20 тестів):**
 
@@ -26,7 +26,7 @@
 - `MedicationManagement.IntegrationTests/MultiTenancyAndRbacTests.cs` — 8 тестів multi-tenancy та RBAC
   - Користувач бачить лише свої дані (OrganizationId фільтрація)
   - Manager може керувати сутностями, User — ні
-  - Недокладні Organiz ationId повернувши порожні списки
+  - Недокладні OrganizationId повертають порожні списки
   - **Результат:** ✅ 8/8 passing
 
 **Інфраструктура тестів:**
@@ -48,6 +48,96 @@ dotnet test --logger "console;verbosity=detailed"
 Build: 0 errors, 0 warnings
 Tests: 36 passed, 0 failed
 Duration: ~3.5 seconds total
+```
+
+---
+
+### Реалізовано Frontend (20 тестів):
+
+**Context Tests (11 тестів):**
+
+- `Frontend/src/contexts/AuthContext.test.tsx` — 11 тестів для AuthContext
+  - Ініціалізація з порожнім localStorage
+  - Відновлення сесії з localStorage при mount
+  - Парсинг ролей (Administrator, Manager, User) з JWT токена
+  - Логін та logout функціональність
+  - Очищення queryClient кешу при login/logout
+  - Обробка помилок authApi.me (видалення невалідного токена)
+  - **Результат:** ✅ 11/11 passing (219ms execution time)
+
+**Component Tests (9 тестів):**
+
+- `Frontend/src/pages/MedicinesPage.test.tsx` — 9 тестів для MedicinesPage
+  - Відображення кнопки "Додати" для Administrator та Manager
+  - Приховування кнопки "Додати" для User (RBAC перевірка)
+  - Відображення кнопок редагування/видалення для Administrator/Manager
+  - Приховування кнопок редагування/видалення для User
+  - Відображення списку препаратів
+  - Loading skeletons під час завантаження
+  - Empty state коли препарати не знайдені
+  - Фільтрація препаратів за пошуковим запитом
+  - **Результат:** ✅ 9/9 passing (489ms execution time)
+
+**Інфраструктура тестів:**
+
+- `Frontend/src/test/setup.ts` — налаштування Vitest з jsdom та @testing-library/jest-dom
+- `vite.config.ts` — конфігурація Vitest (globals, environment: jsdom, setupFiles)
+- Mocking: `vi.mock()` для API модулів та `useAuth` hook
+
+**Команда запуску:**
+
+```bash
+npm run test        # watch mode
+npm run test:run    # single run
+npm run test:ui     # UI mode
+```
+
+**Результат збірки:**
+
+```
+Test Files: 2 passed (2)
+Tests: 20 passed (20)
+Duration: ~2.95 seconds total
+```
+
+**Виправлення act() warnings (2026-05-08):**
+
+Первісно тести мали попереджування про `act()`:
+
+```
+An update to AuthProvider inside a test was not wrapped in act(...).
+```
+
+**Причина:** Прямі `.click()` на button елементах без обгортання React state-updates.
+
+**Розв'язок:** Замість `.click()` використано `userEvent.setup()` + `await user.click()`:
+
+```typescript
+// Раніше (з попередженнями):
+screen.getByText('Login').click();
+
+// Тепер (чистий консоль):
+const user = userEvent.setup();
+await user.click(screen.getByText('Login'));
+```
+
+**Результат:** ✅ 0 act() warnings, clean console output
+
+```
+
+---
+
+## Підсумок Фази 6
+
+**✅ ЗАВЕРШЕНО:** Backend + Frontend тестування
+
+| Компонент | Unit Tests | Integration Tests | Total |
+|:----------|:----------:|:-----------------:|:-----:|
+| Backend   | 20 ✅      | 16 ✅             | 36 ✅ |
+| Frontend  | —          | 20 ✅             | 20 ✅ |
+| **УСЬОГО**| **20** ✅  | **36** ✅         | **56** ✅ |
+
+**Наступна фаза:** Фаза 6 Mobile тестування / Фаза 7 — DevOps
 ```
 
 ---
@@ -81,11 +171,25 @@ Duration: ~3.5 seconds total
 
 **Статус:** ✅ 20 Unit + 16 Integration = 36/36 тестів passing
 
-### 1.2 Frontend (React + TypeScript)
+### 1.2 Frontend (React + TypeScript) — ✅ РЕАЛІЗОВАНО
 
-- **Vitest** — надшвидкий тестовий фреймворк для Vite.
-- **React Testing Library** — для тестування компонентів так, як з ними взаємодіє користувач.
-- **MSW (Mock Service Worker)** — (опціонально) для мокування API-запитів.
+**Інструменти та версії (реально використовуються):**
+
+- **Vitest 4.1.5** — надшвидкий тестовий фреймворк для Vite
+- **React Testing Library 16.3.2** — для тестування компонентів так, як з ними взаємодіє користувач
+- **@testing-library/jest-dom 6.9.1** — додаткові matchers для DOM assertions
+- **@testing-library/user-event 14.6.1** — симуляція користувацьких взаємодій
+- **jsdom 29.1.1** — DOM environment для Node.js тестів
+
+**Стратегія:**
+
+- Context Tests з mocking для `useAuth` hook
+- Component Tests з mocking API модулів (`medicineApi`, `locationApi`)
+- Перевірка RBAC логіки (відображення UI залежно від ролі)
+- Тестування user interactions (пошук, фільтрація)
+- Перевірка loading states та empty states
+
+**Статус:** ✅ 11 Context + 9 Component = 20/20 тестів passing
 
 ### 1.3 Mobile (Android Kotlin)
 
@@ -141,9 +245,64 @@ dotnet test MedicationManagement.IntegrationTests
 dotnet test --logger "console;verbosity=detailed"
 ```
 
-### Frontend (React + TypeScript) — ⏳ Планування
+### Frontend (React + TypeScript) — ✅ ЗАВЕРШЕНО
 
-Буде реалізовано на наступному етапі з Vitest + React Testing Library.
+**Створено тестові файли:**
+
+1. **`Frontend/src/test/setup.ts`** — налаштування тестового середовища
+   - Інтеграція @testing-library/jest-dom matchers
+   - Автоматичне cleanup після кожного тесту
+   - Глобальні налаштування для Vitest
+
+2. **`Frontend/src/contexts/AuthContext.test.tsx`** — 11 тестів для AuthContext
+   - `should throw error when useAuth is used outside AuthProvider` — перевірка помилки при використанні hook поза Provider
+   - `should initialize with no user when localStorage is empty` — ініціалізація без користувача
+   - `should restore session from localStorage on mount` — відновлення сесії з localStorage
+   - `should parse Administrator role correctly` — парсинг ролі Administrator з JWT
+   - `should parse Manager role correctly` — парсинг ролі Manager з JWT
+   - `should parse User role correctly` — парсинг ролі User з JWT
+   - `should handle login and set user data` — обробка логіну та встановлення даних користувача
+   - `should handle logout and clear user data` — обробка logout та очищення даних
+   - `should clear localStorage and state when authApi.me fails on mount` — очищення при помилці API
+   - `should clear queryClient cache on login` — очищення кешу при логіні
+   - `should clear queryClient cache on logout` — очищення кешу при logout
+   - **Dependencies:** Vitest, React Testing Library, mocked authApi
+
+3. **`Frontend/src/pages/MedicinesPage.test.tsx`** — 9 тестів для MedicinesPage
+   - `should show "Додати" button for Administrator` — відображення кнопки для Administrator
+   - `should show "Додати" button for Manager` — відображення кнопки для Manager
+   - `should NOT show "Додати" button for User` — приховування кнопки для User (RBAC)
+   - `should show edit and delete buttons for Administrator` — відображення кнопок редагування для Administrator
+   - `should NOT show edit and delete buttons for User` — приховування кнопок редагування для User
+   - `should display medicines list correctly` — коректне відображення списку препаратів
+   - `should show loading skeletons while fetching data` — відображення skeleton під час завантаження
+   - `should show empty state when no medicines found` — відображення empty state
+   - `should filter medicines by search query` — фільтрація препаратів за пошуком
+   - **Dependencies:** Vitest, React Testing Library, React Router, React Query, mocked API
+
+4. **`Frontend/vite.config.ts`** — конфігурація Vitest
+   - `test.globals: true` — глобальні функції (describe, it, expect)
+   - `test.environment: 'jsdom'` — DOM environment для тестів
+   - `test.setupFiles: './src/test/setup.ts'` — файл налаштування
+   - `test.css: true` — підтримка CSS imports у тестах
+
+5. **`Frontend/package.json`** — скрипти для запуску тестів
+   - `npm run test` — watch mode (автоматичний перезапуск при змінах)
+   - `npm run test:run` — single run (одноразовий запуск)
+   - `npm run test:ui` — UI mode (графічний інтерфейс для тестів)
+
+**Команда запуску тестів:**
+
+```bash
+# Усі тести
+npm run test:run
+
+# Watch mode
+npm run test
+
+# UI mode
+npm run test:ui
+```
 
 ### Mobile (Android Kotlin) — ⏳ Планування
 
@@ -296,19 +455,38 @@ dotnet test --logger "console;verbosity=detailed"
 
 ---
 
-### Крок 2: Frontend Setup. ⏳ Планування
+### Крок 2: Frontend Setup. ✅ ЗАВЕРШЕНО (2026-05-07)
 
-**План:**
+**Виконано:**
 
-- Ініціалізація Vitest у Vite проєкті (Frontend/)
-- Додавання React Testing Library для тестування компонентів
-- Написання тестів для:
-  - `AuthContext.tsx` — логіка збереження токену, парсингу ролей
-  - `MedicinesPage.tsx` — відображення кнопок залежно від ролі
-  - `AuthProvider` та `useAuth` hook
-  - Обробка помилок та Empty State компонентів
+- ✅ Ініціалізовано Vitest у Vite проєкті (Frontend/)
+- ✅ Додано React Testing Library та jsdom для тестування компонентів
+- ✅ Створено `src/test/setup.ts` з налаштуваннями тестового середовища
+- ✅ Налаштовано `vite.config.ts` з конфігурацією Vitest
+- ✅ Додано тестові скрипти до `package.json` (test, test:run, test:ui)
+- ✅ Написано 11 тестів для `AuthContext.tsx` — логіка токенів, ролей, login/logout
+- ✅ Написано 9 тестів для `MedicinesPage.tsx` — RBAC перевірки, відображення UI залежно від ролі
+- ✅ Перевірено обробку помилок та Empty State компонентів
+- ✅ **Фінальний результат: 20/20 тестів passing (0 помилок, 0 попереджень)**
 
-**Очікувані тести:** 8-12 тестів для основних UI компонентів
+**Команда запуску:**
+
+```bash
+npm run test:run
+```
+
+**Результат:**
+
+```
+Test Files: 2 passed (2)
+Tests: 20 passed (20)
+Duration: ~2.95 seconds
+```
+
+**Документація:**
+
+- Детальний опис тестів у [implementation_test_plan.md](implementation_test_plan.md)
+- Тестові файли: `AuthContext.test.tsx`, `MedicinesPage.test.tsx`
 
 ---
 
@@ -342,35 +520,49 @@ dotnet test --logger "console;verbosity=detailed"
 
 ## 5. Рівні тестування та покриття
 
-| Рівень            | Компонент            | Статус           | Кількість тестів | Результат         |
-| :---------------- | :------------------- | :--------------- | :--------------- | :---------------- |
-| Unit              | ServiceMedicine      | ✅ Завершено     | 20               | 20/20 passing     |
-| Integration       | AuthController       | ✅ Завершено     | 8                | 8/8 passing       |
-| Integration       | Multi-tenancy + RBAC | ✅ Завершено     | 8                | 8/8 passing       |
-| **Backend Total** | **ASP.NET Core**     | **✅ Завершено** | **36**           | **36/36 passing** |
-| Unit/Component    | React Components     | ⏳ Планування    | ~10              | TBD               |
-| Unit              | Android ViewModel    | ⏳ Планування    | ~8               | TBD               |
-| Unit              | C++ IoT Logic        | ⏳ Планування    | ~5               | TBD               |
+| Рівень             | Компонент            | Статус           | Кількість тестів | Результат         |
+| :----------------- | :------------------- | :--------------- | :--------------- | :---------------- |
+| Unit               | ServiceMedicine      | ✅ Завершено     | 20               | 20/20 passing     |
+| Integration        | AuthController       | ✅ Завершено     | 8                | 8/8 passing       |
+| Integration        | Multi-tenancy + RBAC | ✅ Завершено     | 8                | 8/8 passing       |
+| **Backend Total**  | **ASP.NET Core**     | **✅ Завершено** | **36**           | **36/36 passing** |
+| Context            | AuthContext          | ✅ Завершено     | 11               | 11/11 passing     |
+| Component          | MedicinesPage        | ✅ Завершено     | 9                | 9/9 passing       |
+| **Frontend Total** | **React + TS**       | **✅ Завершено** | **20**           | **20/20 passing** |
+| Unit               | Android ViewModel    | ⏳ Планування    | ~8               | TBD               |
+| Unit               | C++ IoT Logic        | ⏳ Планування    | ~5               | TBD               |
+| **ЗАГАЛОМ**        | **Full Stack**       | **🔄 В процесі** | **56/69**        | **56 passing**    |
 
 ---
 
 ## 6. Висновки та Next Steps
 
-**Фаза 6 Backend (2026-05-07) — ✅ УСПІШНО ЗАВЕРШЕНА**
+**Фаза 6 Backend + Frontend (2026-05-07) — ✅ УСПІШНО ЗАВЕРШЕНА**
 
-Все тестування backend-частини завершено. Система демонструє:
+Тестування backend та frontend частин завершено. Система демонструє:
 
-- ✅ Надійну бізнес-логіку (Unit-тести)
-- ✅ Безпечну архітектуру multi-tenancy (Integration-тести)
-- ✅ Коректні RBAC механізми (Integration-тести)
+- ✅ Надійну бізнес-логіку (Unit-тести Backend)
+- ✅ Безпечну архітектуру multi-tenancy (Integration-тести Backend)
+- ✅ Коректні RBAC механізми (Integration-тести Backend + Component-тести Frontend)
 - ✅ Обробку помилок та граничних випадків
+- ✅ Правильну роботу AuthContext (Context-тести Frontend)
+- ✅ Коректне відображення UI залежно від ролі користувача (Component-тести Frontend)
+
+**Поточний прогрес:**
+
+- ✅ Backend: 36/36 тестів (100%)
+- ✅ Frontend: 20/20 тестів (100%)
+- ⏳ Mobile: 0/8 тестів (0%)
+- ⏳ IoT: 0/5 тестів (0%)
+- **Загалом: 56/69 тестів (81%)**
 
 **Наступні кроки:**
 
-1. Frontend-тести (Крок 2) — для підтвердження UI логіки
-2. Mobile-тести (Крок 3) — для перевірки ViewModel архітектури
-3. IoT-тести (Крок 4) — для базового C++ покриття
-4. Фаза 7 — DevOps / Docker / Documentation
+1. ~~Backend-тести (Крок 1)~~ — ✅ завершено
+2. ~~Frontend-тести (Крок 2)~~ — ✅ завершено
+3. Mobile-тести (Крок 3) — для перевірки ViewModel архітектури
+4. IoT-тести (Крок 4) — для базового C++ покриття
+5. Фаза 7 — DevOps / Docker / Documentation
 
 > [!NOTE]
-> Повна реалізація всіх рівнів тестування продемонструє комісії розуміння moderne QA практик на всіх рівнях системи (Full-Stack Testing Approach).
+> Повна реалізація всіх рівнів тестування продемонструє комісії розуміння moderne QA практик на всіх рівнях системи (Full-Stack Testing Approach). Наразі покрито 81% запланованих тестів.
