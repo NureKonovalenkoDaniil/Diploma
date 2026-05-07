@@ -2,6 +2,7 @@ using MedicationManagement.DBContext;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -24,12 +25,22 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<DbContextOptions<MedicineStorageContext>>();
             services.RemoveAll<DbContextOptions<UserContext>>();
 
-            // Реєструємо InMemory бази даних
+            // Реєструємо InMemory бази даних з конфігурацією для ігнорування TransactionIgnoredWarning
             services.AddDbContext<MedicineStorageContext>(options =>
-                options.UseInMemoryDatabase(_dbName + "_main"));
+            {
+                options.UseInMemoryDatabase(_dbName + "_main");
+                // InMemory Database не підтримує транзакції, але наш код їх використовує.
+                // Замість того, щоб вигідати, ігноруємо попередження (оскільки це тестова БД).
+                options.ConfigureWarnings(w =>
+                    w.Ignore(InMemoryEventId.TransactionIgnoredWarning));
+            });
 
             services.AddDbContext<UserContext>(options =>
-                options.UseInMemoryDatabase(_dbName + "_users"));
+            {
+                options.UseInMemoryDatabase(_dbName + "_users");
+                options.ConfigureWarnings(w =>
+                    w.Ignore(InMemoryEventId.TransactionIgnoredWarning));
+            });
         });
 
         // Перевизначаємо конфігурацію для тестів

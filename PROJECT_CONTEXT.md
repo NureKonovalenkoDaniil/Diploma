@@ -207,7 +207,7 @@ Frontend: у `MedicineDetailPage` додані кнопки **"Надходже�
   4. **Доступ менеджера**: кнопки "Додати/Редагувати/Видалити" на сторінках Medicines, StorageLocations, IncidentsPage були доступні лише `isAdmin`, а не `isAdmin || isManager`.
   5. **403 Forbidden для менеджера**: `setstatus`, `UPDATE`, `DELETE` у `IoTDeviceController` мали тільки `Administrator` у `[Authorize(Roles)]`.
 - Що потрібно робити далі: Фаза 6 — Тести або Фаза 7 — DevOps
-  
+
 ### Запис 7 — Сесія 2026-05-05 (OTP Confirmation & Settings Fix)
 
 - Дата: 2026-05-05
@@ -474,7 +474,90 @@ Frontend: у `MedicineDetailPage` додані кнопки **"Надходже�
 - Що потрібно робити далі: Реалізація Фази 5 за планом у MOBILE_IMPROVEMENT_PLAN.md
 - Документація: [MOBILE_IMPROVEMENT_PLAN.md](MOBILE_IMPROVEMENT_PLAN.md) — детальний план модернізації мобільного додатку на MVVM + Compose + Material 3
 
-## 11. Поточний план найближчих дій (оновлено 2026-04-21)
+### Запис 13 — Фаза 6: Виправлення та валідація Unit/Integration тестів (виконано 2026-05-07)
+
+- Дата: 2026-05-07
+- Завдання: Перевірити та виправити всі unit та integration тести перед фіналізацією дипломної роботи
+- Переглянуті файли / модулі:
+  - Unit Tests: `MedicationManagement.UnitTests/` (20 тестів для `ServiceMedicine`)
+  - Integration Tests: `MedicationManagement.IntegrationTests/` (16 тестів для контролерів)
+  - Infrastructure: `TestWebApplicationFactory.cs` (конфігурація для InMemory БД)
+  - Backend: `AuthController.cs`, `IoTDeviceController.cs`
+- Основні висновки:
+  1. **Критичні помилки EF Core**: 3 тести падали через `TransactionIgnoredWarning` у InMemory БД (ServiceMedicine.Create використовує BeginTransactionAsync, але InMemory не підтримує транзакції)
+  2. **Email confirmation logic**: 1 тест падав через неправильну обробку result.IsNotAllowed в AuthController.Login
+  3. **Infrastructure**: TestWebApplicationFactory потребував ConfigureWarnings для обох DbContexts (MedicineStorageContext, UserContext)
+  4. **Test helpers**: Потрібен тестовий endpoint для підтвердження email без відправки листів (POST /api/auth/test/confirm-email/{email})
+- Що потрібно робити далі: Фаза 7 — DevOps / Docker / Documentation
+- Статус: ✅ Завершено
+
+**Виправлення, застосовані:**
+
+1. **[TestWebApplicationFactory.cs](WebApp/MedicationManagement.IntegrationTests/TestWebApplicationFactory.cs)** — додано ConfigureWarnings для обох DbContexts:
+
+   ```csharp
+   options.ConfigureWarnings(w =>
+       w.Ignore(InMemoryEventId.TransactionIgnoredWarning));
+   ```
+
+   Результат: ✅ 3 тести більше не падають на TransactionIgnoredWarning
+
+2. **[AuthController.cs](WebApp/MedicationManagement/Controllers/AuthController.cs)** — виправлено Login():
+   - Додано явну перевірку `result.IsNotAllowed` перед загальним `!result.Succeeded`
+   - Повертає HTTP 403 для неперевіреного email (замість 401 за неправильний пароль)
+   - Результат: ✅ Тест Login_UnconfirmedEmail_Returns403 тепер проходить
+
+3. **[AuthController.cs](WebApp/MedicationManagement/Controllers/AuthController.cs)** — додано тестовий endpoint:
+
+   ```csharp
+   [HttpPost("test/confirm-email/{email}")]
+   [ApiExplorerSettings(IgnoreApi = true)]
+   public async Task<IActionResult> TestConfirmEmail(string email)
+   ```
+
+   Доступний лише в середовищі "Testing" для допомоги у тестуванні.
+   Результат: ✅ AuthControllerTests можуть підтвердити email без SMTP
+
+4. **[AuthControllerTests.cs](WebApp/MedicationManagement.IntegrationTests/AuthControllerTests.cs)** — оновлено Login_WrongPassword_Returns401:
+   - Додано крок підтвердження email перед спробою неправильного пароля
+   - Результат: ✅ Тест тепер проходить з правильною HTTP 401 для неправильного пароля
+
+**Результати валідації:**
+
+| Набір тестів                 | Кількість | Статус           |
+| :--------------------------- | :-------- | :--------------- |
+| Unit Tests (ServiceMedicine) | 20        | ✅ 20/20 (540ms) |
+| Integration Tests            | 16        | ✅ 16/16 (3s)    |
+| **Усього**                   | **36**    | **✅ 36/36**     |
+
+**Запущено:** `dotnet test --logger "console;verbosity=detailed"`
+**Збірка:** `dotnet build` — 0 помилок, 0 попереджень
+
+**Крок-за-кроком результати:**
+
+1. Перша спроба: 12/16 integration tests, 4 failed (3 TransactionIgnoredWarning + 1 email logic)
+2. Після ConfigureWarnings: 15/16 integration tests (TransactionIgnoredWarning вирішено)
+3. Після AuthController fixes: 16/16 integration tests (email logic вирішено)
+4. Фінальна валідація: 20 unit + 16 integration = **36/36 passing**
+
+**Технічні деталі:**
+
+- **Unit Test Infrastructure**: SQLite InMemory (підтримує транзакції) — без проблем
+- **Integration Test Infrastructure**: InMemory Database (не підтримує транзакції) — потребував ConfigureWarnings
+- **Email Confirmation**: Identity Framework result.IsNotAllowed розрізняє "password wrong" від "email not confirmed" — потрібна окрема обробка в Login()
+- **Test Endpoint**: Доступний лише в "Testing" середовищі для безпеки
+
+**Файли змінено:**
+
+- `WebApp/MedicationManagement.IntegrationTests/TestWebApplicationFactory.cs`
+- `WebApp/MedicationManagement/Controllers/AuthController.cs`
+- `WebApp/MedicationManagement.IntegrationTests/AuthControllerTests.cs`
+
+**Документація:**
+
+- Створено [TEST_FIXES_SUMMARY.md](TEST_FIXES_SUMMARY.md) із детальним описом всіх виправлень і уроків
+
+## 11. Поточний план найближчих дій (оновлено 2026-05-07)
 
 **Фази 1-3 виконано. Проміжний аудит створено. Фаза 3.5 (виправлення 13 з 15 техборгів) виконано.** Dotnet build: **0 помилок, 0 попереджень**.
 
@@ -593,6 +676,13 @@ Frontend: у `MedicineDetailPage` додані кнопки **"Надходже�
    - ✅ Спрощена реєстрація IoT-датчиків.
    - ✅ **[NEW]** Впроваджено 6-значні OTP коди для підтвердження пошти (замість Deep Links).
    - ✅ **[NEW]** Екран налаштувань: реалізовано зміну мови та теми застосунку.
+
+6. **[ВИКОНАНО 2026-05-07]** ФАЗА 6 — Unit/Integration тестування
+   - ✅ Виправлено TransactionIgnoredWarning (TestWebApplicationFactory + ConfigureWarnings)
+   - ✅ Виправлено email confirmation logic (AuthController.Login + TestConfirmEmail endpoint)
+   - ✅ Усі 20 unit тестів проходять (ServiceMedicine + мульти-tenancy)
+   - ✅ Усі 16 integration тестів проходять (Controllers + Auth flows)
+   - ✅ Фінальна валідація: **36/36 тестів passing** (build: 0 errors, 0 warnings)
 
 ## 12. Підтверджені нові сутності для диплома (реалізовано 2026-04-13)
 

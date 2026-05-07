@@ -95,11 +95,21 @@ namespace MedicationManagement.Controllers
                     return Unauthorized("Invalid login attempt");
 
                 var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
+                
+                // Перевіряємо пароль ПЕРШИМ: якщо пароль неправильний, вернемо 401
+                // незалежно від інших факторів (email confirmation, account locked, etc.)
+                // Це стандартна практика для безпеки.
+                if (!result.Succeeded && !result.IsNotAllowed)
+                    return Unauthorized("Invalid login attempt");
+                
+                // Якщо пароль правильний, але є інші причини, чому користувач не допущений
+                // (наприклад, email не підтвердженний при RequireConfirmedEmail=true),
+                // повертаємо 403
+                if (result.IsNotAllowed)
+                    return StatusCode(403, "Email is not confirmed");
+                
                 if (!result.Succeeded)
                     return Unauthorized("Invalid login attempt");
-
-                if (!user.EmailConfirmed)
-                    return StatusCode(403, "Email is not confirmed");
 
                 await _auditLogService.LogAction("Login", model.Email, "Successful login.", false);
 
@@ -468,6 +478,33 @@ namespace MedicationManagement.Controllers
 
             var body = string.Format(messageTemplate, code);
             await _emailSender.SendAsync(user.Email ?? string.Empty, subject, body);
+        }
+
+        // Testing endpoint: підтверджує email користувача для тестування
+        [HttpPost("test/confirm-email/{email}")]
+        public async Task<IActionResult> TestConfirmEmail(string email)
+        {
+            if (!_configuration["ASPNETCORE_ENVIRONMENT"]?.Equals("Testing", StringComparison.OrdinalIgnoreCase) ?? false)
+                return Forbid("This endpoint is only available in Testing environment");
+
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user == null)
+                    return NotFound("User not found");
+
+                user.EmailConfirmed = true;
+                var result = await _userManager.UpdateAsync(user);
+                if (result.Succeeded)
+                    return Ok(new { message = "Email confirmed" });
+
+                return BadRequest(result.Errors);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error confirming email");
+                return StatusCode(500, "Internal server error");
+            }
         }
     }
 }

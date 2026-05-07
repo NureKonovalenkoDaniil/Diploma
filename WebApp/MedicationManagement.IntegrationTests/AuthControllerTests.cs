@@ -100,6 +100,9 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         // Arrange
         var email = $"wrongpass_{Guid.NewGuid():N}@test.com";
         await _client.PostAsJsonAsync("/api/auth/register", new { email, password = "Correct1234" });
+        
+        // Підтверджуємо email, щоб тест перевіряв саме неправильний пароль, а не статус email
+        await _client.PostAsync($"/api/auth/test/confirm-email/{email}", null);
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/auth/login", new { email, password = "WrongPassword" });
