@@ -1,46 +1,51 @@
 package com.example.medicationmanagement.ui
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.medicationmanagement.api.ApiClient
-import com.example.medicationmanagement.api.NotificationApi
+import com.example.medicationmanagement.api.RetrofitClient
 import com.example.medicationmanagement.model.Notification
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
 
+/**
+ * NotificationsViewModel — управління сповіщеннями з StateFlow для UI
+ */
 class NotificationsViewModel(private val context: Context) : ViewModel() {
 
-    private val api = ApiClient.createService<NotificationApi>(context)
+    private val notificationApi = RetrofitClient.getNotificationApi(context)
 
-    private val _notifications = MutableLiveData<List<Notification>>()
-    val notifications: LiveData<List<Notification>> get() = _notifications
+    private val _notifications = MutableStateFlow<List<Notification>>(emptyList())
+    val notifications: StateFlow<List<Notification>> = _notifications.asStateFlow()
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> get() = _isLoading
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _error = MutableLiveData<String?>()
-    val error: LiveData<String?> get() = _error
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     fun fetchNotifications() {
         _isLoading.value = true
         _error.value = null
         viewModelScope.launch {
             try {
-                val response = api.getNotifications()
+                val response = notificationApi.getNotifications()
                 if (response.isSuccessful) {
                     val list = response.body() ?: emptyList()
                     // Сортуємо: спершу непрочитані, потім за датою спадання
                     _notifications.value = list.sortedWith(
-                        compareBy<com.example.medicationmanagement.model.Notification>({ it.isRead }, { -parseDate(it.createdAt) })
+                        compareBy<Notification>({ it.isRead }, { -parseDate(it.createdAt) })
                     )
                 } else {
                     _error.value = "Помилка завантаження: ${response.code()}"
                 }
             } catch (e: Exception) {
-                _error.value = "Помилка мережі"
+                _error.value = "Помилка мережі: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
@@ -50,12 +55,14 @@ class NotificationsViewModel(private val context: Context) : ViewModel() {
     fun markAsRead(notificationId: Int) {
         viewModelScope.launch {
             try {
-                val response = api.markAsRead(notificationId)
+                val response = notificationApi.markAsRead(notificationId)
                 if (response.isSuccessful) {
                     fetchNotifications() // Перезавантажити список
+                } else {
+                    _error.value = "Помилка позначення: ${response.code()}"
                 }
             } catch (e: Exception) {
-                // Ignore silent errors for marking as read
+                _error.value = "Помилка: ${e.message}"
             }
         }
     }
@@ -63,19 +70,21 @@ class NotificationsViewModel(private val context: Context) : ViewModel() {
     fun markAllAsRead() {
         viewModelScope.launch {
             try {
-                val response = api.markAllAsRead()
+                val response = notificationApi.markAllAsRead()
                 if (response.isSuccessful) {
                     fetchNotifications()
+                } else {
+                    _error.value = "Помилка позначення: ${response.code()}"
                 }
             } catch (e: Exception) {
-                // Ignore silent errors
+                _error.value = "Помилка: ${e.message}"
             }
         }
     }
 
     private fun parseDate(dateStr: String): Long {
         try {
-            val parser = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.getDefault())
+            val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
             return parser.parse(dateStr)?.time ?: 0L
         } catch (e: Exception) {
             return 0L

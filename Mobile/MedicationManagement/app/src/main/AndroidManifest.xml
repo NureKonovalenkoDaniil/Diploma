@@ -23,7 +23,6 @@
 		<activity android:name=".MainActivity" android:exported="false" />
 		<activity android:name=".MedicineDetailsActivity" android:exported="false" />
 		<activity android:name=".RegisterActivity" android:exported="false" />
-		<activity android:name=".DashboardActivity" android:exported="false" />
 		<activity android:name=".AddMedicineActivity" android:exported="false" />
 		<activity android:name=".EditMedicineActivity" android:exported="false" />
 		<activity android:name=".DeviceDetailsActivity" android:exported="false" />

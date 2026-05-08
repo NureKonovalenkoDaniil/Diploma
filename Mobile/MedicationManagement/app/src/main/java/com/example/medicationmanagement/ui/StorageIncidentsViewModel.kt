@@ -5,21 +5,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.medicationmanagement.api.RetrofitClient
-import com.example.medicationmanagement.model.IoTDevice
+import com.example.medicationmanagement.api.StorageIncidentDto
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * SensorsViewModel — управління IoT датчиками та пристроями з StateFlow для UI
+ * StorageIncidentsViewModel — управління інцидентами зберігання з StateFlow для UI
  */
-class SensorsViewModel(private val context: Context) : ViewModel() {
+class StorageIncidentsViewModel(private val context: Context) : ViewModel() {
 
-    private val iotDeviceApi = RetrofitClient.getIoTDeviceApi(context)
+    private val storageIncidentApi = RetrofitClient.getStorageIncidentApi(context)
 
-    private val _devices = MutableStateFlow<List<IoTDevice>>(emptyList())
-    val devices: StateFlow<List<IoTDevice>> = _devices.asStateFlow()
+    private val _incidents = MutableStateFlow<List<StorageIncidentDto>>(emptyList())
+    val incidents: StateFlow<List<StorageIncidentDto>> = _incidents.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -27,14 +27,14 @@ class SensorsViewModel(private val context: Context) : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    fun fetchDevices() {
+    fun fetchIncidents() {
         _isLoading.value = true
         _error.value = null
         viewModelScope.launch {
             try {
-                val response = iotDeviceApi.getDevices()
+                val response = storageIncidentApi.getAll()
                 if (response.isSuccessful) {
-                    _devices.value = response.body() ?: emptyList()
+                    _incidents.value = response.body() ?: emptyList()
                 } else {
                     _error.value = "Помилка завантаження: ${response.code()}"
                 }
@@ -46,27 +46,27 @@ class SensorsViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-    fun toggleDeviceStatus(deviceId: String, isActive: Boolean) {
+    fun resolveIncident(incidentId: Int, resolution: String) {
         viewModelScope.launch {
             try {
-                val response = iotDeviceApi.setDeviceStatus(deviceId, !isActive)
+                val response = storageIncidentApi.resolve(incidentId, mapOf("comment" to resolution))
                 if (response.isSuccessful) {
-                    fetchDevices() // Reload list
+                    fetchIncidents()
                 } else {
-                    _error.value = "Не вдалося змінити статус: ${response.code()}"
+                    _error.value = "Не вдалося розв'язати інцидент: ${response.code()}"
                 }
             } catch (e: Exception) {
-                _error.value = "Помилка мережі: ${e.message}"
+                _error.value = "Помилка: ${e.message}"
             }
         }
     }
 }
 
-class SensorsViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
+class StorageIncidentsViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(SensorsViewModel::class.java)) {
+        if (modelClass.isAssignableFrom(StorageIncidentsViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return SensorsViewModel(context) as T
+            return StorageIncidentsViewModel(context) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

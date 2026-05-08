@@ -10,13 +10,18 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medicationmanagement.AddMedicineActivity
 import com.example.medicationmanagement.MedicineAdapter
 import com.example.medicationmanagement.R
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.launch
 
+/**
+ * MedicinesFragment — Головний екран списку препаратів з StateFlow
+ */
 class MedicinesFragment : Fragment() {
 
     private lateinit var viewModel: MedicinesViewModel
@@ -48,7 +53,7 @@ class MedicinesFragment : Fragment() {
         viewModel = ViewModelProvider(this, factory)[MedicinesViewModel::class.java]
 
         setupRecyclerView()
-        setupObservers()
+        setupFlowObservers()
 
         fabAddMedicine.setOnClickListener {
             startActivity(Intent(requireContext(), AddMedicineActivity::class.java))
@@ -57,37 +62,48 @@ class MedicinesFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        viewModel.fetchMedicines() // Reload data when returning to this screen
+        viewModel.fetchMedicines()
     }
 
     private fun setupRecyclerView() {
         adapter = MedicineAdapter(emptyList()) { medicine ->
-            viewModel.consumeMedicine(medicine)
+            // Quick Action: Issue (Вжити) — зменшити залишок на 1
+            viewModel.issueMedicine(medicine.medicineID, 1)
             Toast.makeText(requireContext(), "Вжито 1 шт. ${medicine.name}", Toast.LENGTH_SHORT).show()
         }
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
     }
 
-    private fun setupObservers() {
-        viewModel.medicines.observe(viewLifecycleOwner) { medicines ->
-            adapter.updateMedicines(medicines)
-            if (medicines.isEmpty()) {
-                emptyStateText.visibility = View.VISIBLE
-                recyclerView.visibility = View.GONE
-            } else {
-                emptyStateText.visibility = View.GONE
-                recyclerView.visibility = View.VISIBLE
+    private fun setupFlowObservers() {
+        // Observe medicines list using StateFlow
+        lifecycleScope.launch {
+            viewModel.medicines.collect { medicines ->
+                adapter.updateMedicines(medicines)
+                if (medicines.isEmpty()) {
+                    emptyStateText.visibility = View.VISIBLE
+                    recyclerView.visibility = View.GONE
+                } else {
+                    emptyStateText.visibility = View.GONE
+                    recyclerView.visibility = View.VISIBLE
+                }
             }
         }
 
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        // Observe loading state
+        lifecycleScope.launch {
+            viewModel.isLoading.collect { isLoading ->
+                progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            }
         }
 
-        viewModel.error.observe(viewLifecycleOwner) { errorMsg ->
-            if (errorMsg != null) {
-                Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_LONG).show()
+        // Observe errors
+        lifecycleScope.launch {
+            viewModel.error.collect { errorMsg ->
+                if (errorMsg != null) {
+                    Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_LONG).show()
+                    viewModel.clearError()
+                }
             }
         }
     }

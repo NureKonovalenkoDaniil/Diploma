@@ -10,12 +10,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medicationmanagement.AddDeviceActivity
 import com.example.medicationmanagement.DeviceAdapter
 import com.example.medicationmanagement.R
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.launch
 
 class SensorsFragment : Fragment() {
 
@@ -69,24 +71,30 @@ class SensorsFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        viewModel.devices.observe(viewLifecycleOwner) { devices ->
-            adapter.updateDevices(devices)
-            if (devices.isEmpty()) {
-                emptyStateText.visibility = View.VISIBLE
-                recyclerView.visibility = View.GONE
-            } else {
-                emptyStateText.visibility = View.GONE
-                recyclerView.visibility = View.VISIBLE
+        lifecycleScope.launch {
+            viewModel.devices.collect { devices ->
+                adapter.updateDevices(devices)
+                if (devices.isEmpty()) {
+                    emptyStateText.visibility = View.VISIBLE
+                    recyclerView.visibility = View.GONE
+                } else {
+                    emptyStateText.visibility = View.GONE
+                    recyclerView.visibility = View.VISIBLE
+                }
             }
         }
 
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        lifecycleScope.launch {
+            viewModel.isLoading.collect { isLoading ->
+                progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            }
         }
 
-        viewModel.error.observe(viewLifecycleOwner) { errorMsg ->
-            if (errorMsg != null) {
-                Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_LONG).show()
+        lifecycleScope.launch {
+            viewModel.error.collect { errorMsg ->
+                if (errorMsg != null) {
+                    Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_LONG).show()
+                }
             }
         }
     }

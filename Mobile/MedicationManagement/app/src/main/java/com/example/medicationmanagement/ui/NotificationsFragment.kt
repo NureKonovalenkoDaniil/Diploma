@@ -9,11 +9,13 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medicationmanagement.MainActivity
 import com.example.medicationmanagement.NotificationAdapter
 import com.example.medicationmanagement.R
+import kotlinx.coroutines.launch
 
 class NotificationsFragment : Fragment() {
 
@@ -70,33 +72,39 @@ class NotificationsFragment : Fragment() {
     }
 
     private fun setupObservers() {
-        viewModel.notifications.observe(viewLifecycleOwner) { notifications ->
-            adapter.updateNotifications(notifications)
-            
-            if (notifications.isEmpty()) {
-                emptyStateText.visibility = View.VISIBLE
-                recyclerView.visibility = View.GONE
-                btnMarkAllRead.visibility = View.GONE
-            } else {
-                emptyStateText.visibility = View.GONE
-                recyclerView.visibility = View.VISIBLE
+        lifecycleScope.launch {
+            viewModel.notifications.collect { notifications ->
+                adapter.updateNotifications(notifications)
                 
-                // Якщо є хоча б одне непрочитане, показуємо кнопку "Прочитати всі"
-                if (notifications.any { !it.isRead }) {
-                    btnMarkAllRead.visibility = View.VISIBLE
-                } else {
+                if (notifications.isEmpty()) {
+                    emptyStateText.visibility = View.VISIBLE
+                    recyclerView.visibility = View.GONE
                     btnMarkAllRead.visibility = View.GONE
+                } else {
+                    emptyStateText.visibility = View.GONE
+                    recyclerView.visibility = View.VISIBLE
+                    
+                    // Якщо є хоча б одне непрочитане, показуємо кнопку "Прочитати всі"
+                    if (notifications.any { !it.isRead }) {
+                        btnMarkAllRead.visibility = View.VISIBLE
+                    } else {
+                        btnMarkAllRead.visibility = View.GONE
+                    }
                 }
             }
         }
 
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        lifecycleScope.launch {
+            viewModel.isLoading.collect { isLoading ->
+                progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            }
         }
 
-        viewModel.error.observe(viewLifecycleOwner) { errorMsg ->
-            if (errorMsg != null) {
-                Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_LONG).show()
+        lifecycleScope.launch {
+            viewModel.error.collect { errorMsg ->
+                if (errorMsg != null) {
+                    Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
