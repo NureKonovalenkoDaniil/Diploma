@@ -1,31 +1,29 @@
 package com.example.medicationmanagement.ui
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.medicationmanagement.api.ApiClient
-import com.example.medicationmanagement.api.LifecycleApi
-import com.example.medicationmanagement.api.LifecycleEventRequest
-import com.example.medicationmanagement.api.MedicineApi
+import com.example.medicationmanagement.api.RetrofitClient
 import com.example.medicationmanagement.model.Medicine
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class MedicinesViewModel(private val context: Context) : ViewModel() {
 
-    private val medicineApi = ApiClient.createService<MedicineApi>(context)
-    private val lifecycleApi = ApiClient.createService<LifecycleApi>(context)
+    private val medicineApi = RetrofitClient.getMedicineApi(context)
+    private val medicineActionsApi = RetrofitClient.getMedicineActionsApi(context)
 
-    private val _medicines = MutableLiveData<List<Medicine>>()
-    val medicines: LiveData<List<Medicine>> get() = _medicines
+    private val _medicines = MutableStateFlow<List<Medicine>>(emptyList())
+    val medicines: StateFlow<List<Medicine>> = _medicines.asStateFlow()
 
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> get() = _isLoading
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _error = MutableLiveData<String?>()
-    val error: LiveData<String?> get() = _error
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     fun fetchMedicines() {
         _isLoading.value = true
@@ -46,41 +44,23 @@ class MedicinesViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-    fun consumeMedicine(medicine: Medicine) {
-        if (medicine.quantity <= 0) return
-
+    fun deleteMedicine(medicineId: Int) {
         viewModelScope.launch {
             try {
-                // 1. PATCH quantity (-1)
-                // JSON Patch protocol
-                val patchBody = listOf(
-                    mapOf(
-                        "op" to "replace",
-                        "path" to "/quantity",
-                        "value" to (medicine.quantity - 1)
-                    )
-                )
-                val patchResponse = medicineApi.updateMedicine(medicine.medicineID, patchBody)
-
-                if (patchResponse.isSuccessful) {
-                    // 2. POST Lifecycle Event
-                    val event = LifecycleEventRequest(
-                        medicineId = medicine.medicineID,
-                        eventType = "Dispensed",
-                        quantity = 1,
-                        description = "Вжито 1 шт. через мобільний додаток"
-                    )
-                    lifecycleApi.addEvent(event)
-                    
-                    // Reload list
+                val response = medicineApi.deleteMedicine(medicineId)
+                if (response.isSuccessful) {
                     fetchMedicines()
                 } else {
-                    _error.value = "Failed to update quantity: ${patchResponse.code()}"
+                    _error.value = "Failed to delete: ${response.code()}"
                 }
             } catch (e: Exception) {
                 _error.value = "Error: ${e.message}"
             }
         }
+    }
+
+    fun clearError() {
+        _error.value = null
     }
 }
 
