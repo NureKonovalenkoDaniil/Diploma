@@ -1,27 +1,32 @@
 # План модернізації мобільного застосунку
+
 ## Фаза 6.5: Mobile App as Full Web App Copy
 
 **Дата:** 2026-05-08  
 **Версія:** 1.0  
 **Ціль:** Перетворити мобільний застосунок на повноцінну копію веб-додатку з красивим та зручним інтерфейсом, збереженням всіх ролей та функцій.
 
+**Поточний стан:** Фаза 7.1 завершена, базова інфраструктура API та стан-менеджменту закрита.
+
 ---
 
 ## 1. Огляд поточного стану Mobile App
 
 ### 1.1 Що є зараз
-| Компонент | Статус | Проблеми |
-|:----------|:-------|:---------|
-| **Authentication** | ✅ Частково | OTP flow працює, але сам UI старий |
-| **API Integration** | ✅ Є | HttpURLConnection — складно розширяти |
-| **Navigation** | ❌ Застаріла | Menu/DrawerLayout замість BottomNav |
-| **Data Models** | ✅ Є | Старі моделі, відсутні нові поля |
-| **UI Design** | ❌ Очень погана | XML layouts без Material Components |
-| **Role-Based Access** | ❌ Немає | Всі екрани для всіх користувачів |
-| **Дизайн система** | ❌ Немає | Без Material 3 / Compose |
-| **State Management** | ❌ Немає | Прямі HTTP-запити без ViewModel |
+
+| Компонент             | Статус          | Проблеми                              |
+| :-------------------- | :-------------- | :------------------------------------ |
+| **Authentication**    | ✅ Частково     | OTP flow працює, але сам UI старий    |
+| **API Integration**   | ✅ Є            | HttpURLConnection — складно розширяти |
+| **Navigation**        | ❌ Застаріла    | Menu/DrawerLayout замість BottomNav   |
+| **Data Models**       | ✅ Є            | Старі моделі, відсутні нові поля      |
+| **UI Design**         | ❌ Очень погана | XML layouts без Material Components   |
+| **Role-Based Access** | ❌ Немає        | Всі екрани для всіх користувачів      |
+| **Дизайн система**    | ❌ Немає        | Без Material 3 / Compose              |
+| **State Management**  | ❌ Немає        | Прямі HTTP-запити без ViewModel       |
 
 ### 1.2 Поточні Activities/Screens
+
 ```
 Activities:
   ├─ LoginActivity              (Login, OTP confirm)
@@ -50,10 +55,13 @@ Fragments (потрібні):
 ## 2. Архітектурні зміни (Обов'язкові)
 
 ### 2.1 Міграція на Retrofit (замість HttpURLConnection)
+
 **Причина:** Поточний HTTP-клієнт мотає, немає перехоплювачів,難管理.
 
 **План:**
+
 1. Додати `build.gradle.kts`:
+
    ```kotlin
    implementation("com.squareup.retrofit2:retrofit:2.9.0")
    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
@@ -62,44 +70,45 @@ Fragments (потрібні):
    ```
 
 2. Створити `ApiService.kt` з інтерфейсами для всіх контролерів:
+
    ```kotlin
    interface AuthApi {
        @POST("api/auth/register")
        suspend fun register(@Body request: RegisterRequest): ApiResponse<AuthResponse>
-       
+
        @POST("api/auth/login")
        suspend fun login(@Body request: LoginRequest): ApiResponse<AuthResponse>
-       
+
        @GET("api/auth/me")
        suspend fun getMe(): ApiResponse<UserDto>
    }
-   
+
    interface MedicineApi {
        @GET("api/medicine")
        suspend fun getAll(): ApiResponse<List<MedicineDto>>
-       
+
        @POST("api/medicine")
        suspend fun create(@Body dto: CreateMedicineDto): ApiResponse<MedicineDto>
-       
+
        @PUT("api/medicine/{id}")
        suspend fun update(@Path("id") id: Int, @Body dto: MedicineDto): ApiResponse<MedicineDto>
-       
+
        @DELETE("api/medicine/{id}")
        suspend fun delete(@Path("id") id: Int): ApiResponse<Unit>
-       
+
        @POST("api/medicine/{id}/move")
        suspend fun move(@Path("id") id: Int, @Body request: MoveRequest): ApiResponse<MedicineDto>
-       
+
        @POST("api/medicine/{id}/receive")
        suspend fun receive(@Path("id") id: Int, @Body request: QuantityRequest): ApiResponse<MedicineDto>
-       
+
        @POST("api/medicine/{id}/issue")
        suspend fun issue(@Path("id") id: Int, @Body request: QuantityRequest): ApiResponse<MedicineDto>
-       
+
        @POST("api/medicine/{id}/dispose")
        suspend fun dispose(@Path("id") id: Int, @Body request: QuantityRequest): ApiResponse<MedicineDto>
    }
-   
+
    // Аналогічно для інших контролерів:
    interface StorageLocationApi { ... }
    interface NotificationApi { ... }
@@ -111,23 +120,24 @@ Fragments (потрібні):
    ```
 
 3. Створити `RetrofitClient.kt`:
+
    ```kotlin
    object RetrofitClient {
        private const val BASE_URL = "http://10.0.2.2:5000/"  // Для emulator
-       
+
        private val client = OkHttpClient.Builder()
            .addInterceptor(TokenInterceptor())
            .addInterceptor(HttpLoggingInterceptor().apply {
                level = HttpLoggingInterceptor.Level.BODY
            })
            .build()
-       
+
        fun getRetrofit(): Retrofit = Retrofit.Builder()
            .baseUrl(BASE_URL)
            .client(client)
            .addConverterFactory(GsonConverterFactory.create())
            .build()
-       
+
        fun getAuthApi(): AuthApi = getRetrofit().create(AuthApi::class.java)
        fun getMedicineApi(): MedicineApi = getRetrofit().create(MedicineApi::class.java)
        // ... інші API
@@ -140,7 +150,7 @@ Fragments (потрібні):
        override fun intercept(chain: Interceptor.Chain): Response {
            val originalRequest = chain.request()
            val token = tokenManager.getToken()
-           
+
            val newRequest = if (token != null) {
                originalRequest.newBuilder()
                    .addHeader("Authorization", "Bearer $token")
@@ -148,28 +158,31 @@ Fragments (потрібні):
            } else {
                originalRequest
            }
-           
+
            return chain.proceed(newRequest)
        }
    }
    ```
 
 ### 2.2 Стан-менеджмент (ViewModel + StateFlow / LiveData)
+
 **Причина:** Захист від втрати даних при повороті екрану, одиниця управління станом.
 
 **План:**
+
 1. Для кожного екрана створити свій `ViewModel`:
+
    ```kotlin
    class MedicinesViewModel(private val medicineApi: MedicineApi) : ViewModel() {
        private val _medicines = MutableStateFlow<List<MedicineDto>>(emptyList())
        val medicines: StateFlow<List<MedicineDto>> = _medicines.asStateFlow()
-       
+
        private val _isLoading = MutableStateFlow(false)
        val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-       
+
        private val _error = MutableStateFlow<String?>(null)
        val error: StateFlow<String?> = _error.asStateFlow()
-       
+
        fun loadMedicines() {
            viewModelScope.launch {
                _isLoading.value = true
@@ -194,13 +207,15 @@ Fragments (потрібні):
    ```
 
 ### 2.3 Global Error Handling & Logout on 401
+
 **План:**
+
 1. Створити `HttpException` handler у `Interceptor`:
    ```kotlin
    class ErrorInterceptor(private val context: Context) : Interceptor {
        override fun intercept(chain: Interceptor.Chain): Response {
            val response = chain.proceed(chain.request())
-           
+
            if (response.code == 401) {
                // Очистити токен і редиректити на Login
                TokenManager(context).clearToken()
@@ -208,7 +223,7 @@ Fragments (потрібні):
                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                context.startActivity(intent)
            }
-           
+
            return response
        }
    }
@@ -219,7 +234,9 @@ Fragments (потрібні):
 ## 3. UI/UX Модернізація
 
 ### 3.1 Дизайн Система (Material 3)
+
 **Залежності:**
+
 ```kotlin
 implementation("androidx.compose.material3:material3:1.1.1")
 implementation("androidx.compose.ui:ui:1.5.4")
@@ -228,6 +245,7 @@ implementation("com.google.android.material:material:1.10.0")
 ```
 
 **Кольорова схема (темна/світла):**
+
 ```kotlin
 // colors.xml (Light)
 <color name="primary">#1976D2</color>
@@ -245,8 +263,11 @@ implementation("com.google.android.material:material:1.10.0")
 ```
 
 ### 3.2 Навігація (BottomNavigationView)
+
 **План:**
+
 1. Замінити `DrawerLayout` на `BottomNavigationView` з 5-6 вкладок:
+
    ```
    ┌─────────────────────────────────┐
    │  📊 Dashboard / Сповіщення      │
@@ -278,13 +299,16 @@ implementation("com.google.android.material:material:1.10.0")
    ```
 
 ### 3.3 Компоненти UI (Material Components)
+
 **Видалити:**
+
 - Старі `EditText` → використовувати `TextInputLayout` + `TextInputEditText`
 - Звичайні `Button` → `Material Button`
 - Простий `RecyclerView` → `RecyclerView` + `Material Card` з тінями
 - Діалоги → `MaterialAlertDialog`
 
 **Приклади:**
+
 ```xml
 <!-- modern_text_input.xml -->
 <com.google.android.material.textfield.TextInputLayout
@@ -310,7 +334,9 @@ implementation("com.google.android.material:material:1.10.0")
 ```
 
 ### 3.4 Стани Loading / Error / Empty
+
 **Для кожного списку:**
+
 ```xml
 <!-- fragment_medicines.xml -->
 <FrameLayout>
@@ -318,7 +344,7 @@ implementation("com.google.android.material:material:1.10.0")
     <ProgressBar
         android:id="@+id/loading"
         android:layout_gravity="center" />
-    
+
     <!-- Error message -->
     <LinearLayout
         android:id="@+id/error_container"
@@ -327,7 +353,7 @@ implementation("com.google.android.material:material:1.10.0")
         <TextView android:id="@+id/error_text" />
         <Button android:id="@+id/retry_button" />
     </LinearLayout>
-    
+
     <!-- Empty state -->
     <LinearLayout
         android:id="@+id/empty_container"
@@ -336,7 +362,7 @@ implementation("com.google.android.material:material:1.10.0")
         <ImageView android:src="@drawable/ic_empty" />
         <TextView android:text="@string/no_medicines" />
     </LinearLayout>
-    
+
     <!-- Successful data -->
     <RecyclerView
         android:id="@+id/medicines_list" />
@@ -348,6 +374,7 @@ implementation("com.google.android.material:material:1.10.0")
 ## 4. Функціональність (по вкладкам)
 
 ### 4.1 💊 ВКЛАДКА: Препарати (MedicinesFragment)
+
 **Функції:**
 | # | Функція | Ролі | Деталі |
 |:--|:--------|:-----|:-------|
@@ -363,6 +390,7 @@ implementation("com.google.android.material:material:1.10.0")
 | 10 | **Move препарату** | Admin/Mgr | Вибір датчика/локації |
 
 **Екран деталей препарату:**
+
 ```
 ┌────────────────────────────────┐
 │ ← Назва препарату              │ (заголовок)
@@ -388,6 +416,7 @@ implementation("com.google.android.material:material:1.10.0")
 ```
 
 ### 4.2 🏠 ВКЛАДКА: Датчики (StorageLocationsFragment)
+
 **Функції:**
 | # | Функція | Ролі | Деталі |
 |:--|:--------|:-----|:-------|
@@ -398,6 +427,7 @@ implementation("com.google.android.material:material:1.10.0")
 | 5 | Редагування назви | Admin/Mgr | Inline edit або діалог |
 
 **Екран датчика (деталі):**
+
 ```
 ┌────────────────────────────────┐
 │ ← Датчик: Холодильник          │
@@ -419,6 +449,7 @@ implementation("com.google.android.material:material:1.10.0")
 ```
 
 ### 4.3 🔔 ВКЛАДКА: Сповіщення (NotificationsFragment)
+
 **Функції:**
 | # | Функція | Ролі | Деталі |
 |:--|:--------|:-----|:-------|
@@ -430,6 +461,7 @@ implementation("com.google.android.material:material:1.10.0")
 | 6 | Фільтрація | All | По типу (All / Expiry / Incident) |
 
 **Екран сповіщень:**
+
 ```
 ┌────────────────────────────────┐
 │ 🔔 Сповіщення        [👁️: 5]   │
@@ -448,6 +480,7 @@ implementation("com.google.android.material:material:1.10.0")
 ```
 
 ### 4.4 ⚙️ ВКЛАДКА: Налаштування (SettingsFragment)
+
 **Функції:**
 | # | Функція | Ролі | Деталі |
 |:--|:--------|:-----|:-------|
@@ -458,6 +491,7 @@ implementation("com.google.android.material:material:1.10.0")
 | 5 | Logout | All | Confirm dialog, очищення токена |
 
 ### 4.5 📋 ВКЛАДКА: Інциденти (IncidentsFragment) — Видима для Manager+
+
 **Функції:**
 | # | Функція | Ролі | Деталі |
 |:--|:--------|:-----|:-------|
@@ -467,6 +501,7 @@ implementation("com.google.android.material:material:1.10.0")
 | 4 | Розв'язання (Resolve) | Mgr/Admin | Кнопка, Confirm, запис коментаря |
 
 ### 4.6 👥 ВКЛАДКА: Користувачи (UsersFragment) — Лише для Admin
+
 **Функції:**
 | # | Функція | Ролі | Деталі |
 |:--|:--------|:-----|:-------|
@@ -475,6 +510,7 @@ implementation("com.google.android.material:material:1.10.0")
 | 3 | Зміна ролі користувача | Admin | Dialog / inline edit |
 
 ### 4.7 📊 ВКЛАДКА: Журнал (AuditLogFragment) — Лише для Admin
+
 **Функції:**
 | # | Функція | Ролі | Деталі |
 |:--|:--------|:-----|:-------|
@@ -490,38 +526,39 @@ implementation("com.google.android.material:material:1.10.0")
 ### 5.1 Матриця Доступу (по вкладкам і функціям)
 
 | Вкладка / Функція | User | Manager | Administrator | Device |
-|:------------------|:----:|:-------:|:--------------:|:------:|
-| **Препарати:**    |      |         |                |        |
-| Перегляд          | ✅   | ✅      | ✅             | —      |
-| Додавання         | ❌   | ✅      | ✅             | —      |
-| Редагування       | ❌   | ✅      | ✅             | —      |
-| Видалення         | ❌   | ✅      | ✅             | —      |
-| Quick Actions     | ✅   | ✅      | ✅             | —      |
-| **Датчики:**      |      |         |                |        |
-| Перегляд          | ✅   | ✅      | ✅             | —      |
-| Додавання         | ❌   | ✅      | ✅             | —      |
-| Редагування       | ❌   | ✅      | ✅             | —      |
-| Видалення         | ❌   | ✅      | ✅             | —      |
-| **Сповіщення:**   |      |         |                |        |
-| Перегляд          | ✅   | ✅      | ✅             | —      |
-| Позначити читане  | ✅   | ✅      | ✅             | —      |
-| **Інциденти:**    |      |         |                |        |
-| Перегляд          | ❌   | ✅      | ✅             | —      |
-| Видалення         | ❌   | ❌      | ✅             | —      |
-| Розв'язання       | ❌   | ✅      | ✅             | —      |
-| **Користувачи:**  |      |         |                |        |
-| Перегляд          | ❌   | ❌      | ✅             | —      |
-| Видалення         | ❌   | ❌      | ✅             | —      |
-| Зміна ролі        | ❌   | ❌      | ✅             | —      |
-| **Журнал:**       |      |         |                |        |
-| Перегляд          | ❌   | ❌      | ✅             | —      |
-| Фільтрація        | ❌   | ❌      | ✅             | —      |
-| **Налаштування:** |      |         |                |        |
-| Тема / Мова       | ✅   | ✅      | ✅             | —      |
-| Зміна пароля      | ✅   | ✅      | ✅             | —      |
-| Logout            | ✅   | ✅      | ✅             | —      |
+| :---------------- | :--: | :-----: | :-----------: | :----: |
+| **Препарати:**    |      |         |               |        |
+| Перегляд          |  ✅  |   ✅    |      ✅       |   —    |
+| Додавання         |  ❌  |   ✅    |      ✅       |   —    |
+| Редагування       |  ❌  |   ✅    |      ✅       |   —    |
+| Видалення         |  ❌  |   ✅    |      ✅       |   —    |
+| Quick Actions     |  ✅  |   ✅    |      ✅       |   —    |
+| **Датчики:**      |      |         |               |        |
+| Перегляд          |  ✅  |   ✅    |      ✅       |   —    |
+| Додавання         |  ❌  |   ✅    |      ✅       |   —    |
+| Редагування       |  ❌  |   ✅    |      ✅       |   —    |
+| Видалення         |  ❌  |   ✅    |      ✅       |   —    |
+| **Сповіщення:**   |      |         |               |        |
+| Перегляд          |  ✅  |   ✅    |      ✅       |   —    |
+| Позначити читане  |  ✅  |   ✅    |      ✅       |   —    |
+| **Інциденти:**    |      |         |               |        |
+| Перегляд          |  ❌  |   ✅    |      ✅       |   —    |
+| Видалення         |  ❌  |   ❌    |      ✅       |   —    |
+| Розв'язання       |  ❌  |   ✅    |      ✅       |   —    |
+| **Користувачи:**  |      |         |               |        |
+| Перегляд          |  ❌  |   ❌    |      ✅       |   —    |
+| Видалення         |  ❌  |   ❌    |      ✅       |   —    |
+| Зміна ролі        |  ❌  |   ❌    |      ✅       |   —    |
+| **Журнал:**       |      |         |               |        |
+| Перегляд          |  ❌  |   ❌    |      ✅       |   —    |
+| Фільтрація        |  ❌  |   ❌    |      ✅       |   —    |
+| **Налаштування:** |      |         |               |        |
+| Тема / Мова       |  ✅  |   ✅    |      ✅       |   —    |
+| Зміна пароля      |  ✅  |   ✅    |      ✅       |   —    |
+| Logout            |  ✅  |   ✅    |      ✅       |   —    |
 
 ### 5.2 Реалізація у коді
+
 ```kotlin
 // RoleHelper.kt
 object RoleHelper {
@@ -538,7 +575,7 @@ class MedicinesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val userRole = authViewModel.currentRole
         val canEdit = RoleHelper.canManageMedicines(userRole)
-        
+
         binding.addButton.isVisible = canEdit
         binding.deleteButton.isVisible = canEdit
         binding.editButton.isVisible = canEdit
@@ -551,6 +588,7 @@ class MedicinesFragment : Fragment() {
 ## 6. Дизайн-макети (описові)
 
 ### 6.1 Початковий екран (Splash / Auth)
+
 ```
 ┌────────────────────────────────┐
 │           [Логотип]            │
@@ -566,6 +604,7 @@ class MedicinesFragment : Fragment() {
 ```
 
 ### 6.2 Main Activity (BottomNav)
+
 ```
 ┌────────────────────────────────┐
 │  [Логотип / Заголовок]         │
@@ -581,6 +620,7 @@ class MedicinesFragment : Fragment() {
 ```
 
 ### 6.3 RecyclerView Item (Препарат)
+
 ```
 ┌────────────────────────────────┐
 │ [Мініатюра] │ Назва препарату   │ (Left-click: Details)
@@ -595,7 +635,10 @@ class MedicinesFragment : Fragment() {
 ## 7. План реалізації (за пріоритетом)
 
 ### ФАЗА 7.1: Infrastructure & API (Тиждень 1)
+
+**Статус:** ✅ Завершено
 **Завдання:**
+
 - [ ] Додати Retrofit залежності
 - [ ] Створити ApiService інтерфейси для всіх контролерів
 - [ ] Реалізувати TokenInterceptor
@@ -603,7 +646,10 @@ class MedicinesFragment : Fragment() {
 - [ ] Налаштувати RetrofitClient singleton
 - [ ] Створити ViewModel базові класи
 
+**Короткий підсумок:** Реалізовано RetrofitClient, інтерцептори, API-інтерфейси та основні ViewModel/Fragment зв'язки для мобільного застосунку.
+
 **Файли для створення:**
+
 - `api/ApiService.kt` (інтерфейси)
 - `api/RetrofitClient.kt`
 - `api/TokenInterceptor.kt`
@@ -614,7 +660,9 @@ class MedicinesFragment : Fragment() {
 - `utils/RoleHelper.kt`
 
 ### ФАЗА 7.2: UI Modernization (Тиждень 2)
+
 **Завдання:**
+
 - [ ] Замінити DrawerLayout на BottomNavigationView
 - [ ] Оновити colors.xml з Material 3 палітрою
 - [ ] Оновити styles.xml (Theme.MaterialComponents)
@@ -623,6 +671,7 @@ class MedicinesFragment : Fragment() {
 - [ ] Додати Loading / Error / Empty state UI
 
 **Файли для модифікування:**
+
 - `res/layout/activity_main.xml` (BottomNav)
 - `res/menu/bottom_nav_menu.xml` (Меню)
 - `res/values/colors.xml`
@@ -633,7 +682,9 @@ class MedicinesFragment : Fragment() {
 - та ін.
 
 ### ФАЗА 7.3: Логіка вкладок (Тиждень 3-4)
+
 **Завдання:**
+
 - [ ] MedicinesFragment: Список, фільтр, RBAC
 - [ ] MedicinesDetailActivity: Деталі, Quick Actions, Lifecycle
 - [ ] StorageLocationsFragment: Список датчиків, деталі з графіками
@@ -641,6 +692,7 @@ class MedicinesFragment : Fragment() {
 - [ ] SettingsFragment: Тема, мова, профіль, logout
 
 **Файли для створення:**
+
 - `fragments/MedicinesFragment.kt`
 - `fragments/StorageLocationsFragment.kt`
 - `fragments/NotificationsFragment.kt`
@@ -650,7 +702,9 @@ class MedicinesFragment : Fragment() {
 - `fragments/AuditLogFragment.kt` (Admin)
 
 ### ФАЗА 7.4: Advanced Features (Тиждень 5)
+
 **Завдання:**
+
 - [ ] Quick Actions (Вжити/Видати/Утилізувати) з API
 - [ ] Move препарату між датчиками
 - [ ] Real-time polling для Notifications (кожні 30 сек)
@@ -659,7 +713,9 @@ class MedicinesFragment : Fragment() {
 - [ ] Теми (Light/Dark)
 
 ### ФАЗА 7.5: Testing & Polish (Тиждень 6)
+
 **Завдання:**
+
 - [ ] Unit Tests для ViewModels
 - [ ] Integration Tests для API endpoints
 - [ ] UI Tests (Espresso) для головних flow'ів
@@ -677,38 +733,38 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
-    
+
     // Material Components
     implementation("com.google.android.material:material:1.10.0")
-    
+
     // Lifecycle & ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.1")
-    
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    
+
     // Retrofit & OkHttp
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
-    
+
     // Gson
     implementation("com.google.code.gson:gson:2.10.1")
-    
+
     // JWT Decode
     implementation("com.auth0:java-jwt:4.4.0")
-    
+
     // Navigation
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.5")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.5")
-    
+
     // Charts (опціонально для графіків датчиків)
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
-    
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
@@ -723,17 +779,20 @@ dependencies {
 **Мобільний застосунок буде вважатися готовим, коли:**
 
 ✅ **Архітектура:**
+
 - [ ] Retrofit інтегрований, всі API тесовані
 - [ ] ViewModel + StateFlow запроваджені для всіх вкладок
 - [ ] TokenManager та Error Handling працюють надійно
 
 ✅ **UI/UX:**
+
 - [ ] BottomNavigationView з 5-7 вкладками функціонує
 - [ ] Всі 15+ екранів оновлені на Material Components
 - [ ] Loading / Error / Empty states розроблені й протестовані
 - [ ] Light & Dark теми перемикаються без помилок
 
 ✅ **Функціональність:**
+
 - [ ] Користувач може увійти / зареєструватися / вийти
 - [ ] Користувач може переглядати, додавати, редагувати, видаляти препарати
 - [ ] Quick Actions (Вжити/Видати) записують Lifecycle события
@@ -742,12 +801,14 @@ dependencies {
 - [ ] RBAC працює: User не бачить Інциденти, Admin не бачить Users
 
 ✅ **Якість:**
+
 - [ ] Жодних 🔴 Red errors у Logcat при нормальному використанні
 - [ ] Додаток не падає при повороті екрану
 - [ ] Сповіщення оновлюються кожні 30 сек (polling)
 - [ ] Токен автоматично очищається при 401 помилці
 
 ✅ **Тестування:**
+
 - [ ] Unit Tests для всіх ViewModels (>=10 тестів)
 - [ ] Integration Tests для API endpoints (>=5 тестів)
 - [ ] UI Tests для основних flow'ів (>=3 тести)
@@ -757,6 +818,7 @@ dependencies {
 ## 10. Документація розробника
 
 ### 10.1 Запуск проєкту
+
 ```bash
 # 1. Синхронізація Gradle
 ./gradlew sync
@@ -772,6 +834,7 @@ dependencies {
 ```
 
 ### 10.2 Структура проєкту після модернізації
+
 ```
 Mobile/MedicationManagement/app/src/main/
 ├─ java/com/example/medicationmanagement/
