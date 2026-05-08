@@ -6,6 +6,7 @@
     <string name="language_english">English</string>
     <string name="medicines">Medicines</string>
     <string name="devices">Devices</string>
+    <string name="locations">Locations</string>
     <string name="notifications">Notifications</string>
     <string name="conditions">Conditions</string>
     <string name="logs">Logs</string>
@@ -49,6 +50,8 @@
     <string name="device_status">Status</string>
     <string name="device_type">Device Type</string>
     <string name="device_search_hint">Search device...</string>
+    <string name="storage_locations_title">Storage Locations</string>
+    <string name="storage_locations_empty">No storage locations yet.\nTap + to add a location.</string>
     <string name="device_temp_range">Temperature Range</string>
     <string name="device_humidity_range">Humidity Range</string>
     <string name="toggle_device">Toggle Device Status</string>

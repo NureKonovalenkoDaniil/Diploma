@@ -29,6 +29,7 @@ class MedicinesFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var progressBar: ProgressBar
+    private lateinit var emptyStateContainer: View
     private lateinit var emptyStateText: TextView
     private lateinit var fabAddMedicine: FloatingActionButton
 
@@ -40,6 +41,7 @@ class MedicinesFragment : Fragment() {
         
         recyclerView = view.findViewById(R.id.medicinesRecyclerView)
         progressBar = view.findViewById(R.id.progressBar)
+        emptyStateContainer = view.findViewById(R.id.emptyStateContainer)
         emptyStateText = view.findViewById(R.id.emptyStateText)
         fabAddMedicine = view.findViewById(R.id.fabAddMedicine)
 
@@ -81,9 +83,11 @@ class MedicinesFragment : Fragment() {
             viewModel.medicines.collect { medicines ->
                 adapter.updateMedicines(medicines)
                 if (medicines.isEmpty()) {
+                    emptyStateContainer.visibility = View.VISIBLE
                     emptyStateText.visibility = View.VISIBLE
                     recyclerView.visibility = View.GONE
                 } else {
+                    emptyStateContainer.visibility = View.GONE
                     emptyStateText.visibility = View.GONE
                     recyclerView.visibility = View.VISIBLE
                 }

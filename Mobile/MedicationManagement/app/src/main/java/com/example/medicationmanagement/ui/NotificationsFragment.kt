@@ -24,6 +24,7 @@ class NotificationsFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var progressBar: ProgressBar
+    private lateinit var emptyStateContainer: View
     private lateinit var emptyStateText: TextView
     private lateinit var btnMarkAllRead: TextView
 
@@ -35,6 +36,7 @@ class NotificationsFragment : Fragment() {
         
         recyclerView = view.findViewById(R.id.notificationsRecyclerView)
         progressBar = view.findViewById(R.id.progressBar)
+        emptyStateContainer = view.findViewById(R.id.emptyStateContainer)
         emptyStateText = view.findViewById(R.id.emptyStateText)
         btnMarkAllRead = view.findViewById(R.id.btnMarkAllRead)
 
@@ -77,10 +79,12 @@ class NotificationsFragment : Fragment() {
                 adapter.updateNotifications(notifications)
                 
                 if (notifications.isEmpty()) {
+                    emptyStateContainer.visibility = View.VISIBLE
                     emptyStateText.visibility = View.VISIBLE
                     recyclerView.visibility = View.GONE
                     btnMarkAllRead.visibility = View.GONE
                 } else {
+                    emptyStateContainer.visibility = View.GONE
                     emptyStateText.visibility = View.GONE
                     recyclerView.visibility = View.VISIBLE
                     

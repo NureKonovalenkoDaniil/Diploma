@@ -145,6 +145,7 @@ Fragments (потрібні):
    ```
 
 4. Створити `TokenInterceptor.kt`:
+
    ```kotlin
    class TokenInterceptor(private val tokenManager: TokenManager) : Interceptor {
        override fun intercept(chain: Interceptor.Chain): Response {
@@ -211,6 +212,7 @@ Fragments (потрібні):
 **План:**
 
 1. Створити `HttpException` handler у `Interceptor`:
+
    ```kotlin
    class ErrorInterceptor(private val context: Context) : Interceptor {
        override fun intercept(chain: Interceptor.Chain): Response {
@@ -639,12 +641,12 @@ class MedicinesFragment : Fragment() {
 **Статус:** ✅ Завершено
 **Завдання:**
 
-- [ ] Додати Retrofit залежності
-- [ ] Створити ApiService інтерфейси для всіх контролерів
-- [ ] Реалізувати TokenInterceptor
-- [ ] Реалізувати ErrorInterceptor (401 logout)
-- [ ] Налаштувати RetrofitClient singleton
-- [ ] Створити ViewModel базові класи
+- [x] Додати Retrofit залежності
+- [x] Створити ApiService інтерфейси для всіх контролерів
+- [x] Реалізувати TokenInterceptor
+- [x] Реалізувати ErrorInterceptor (401 logout)
+- [x] Налаштувати RetrofitClient singleton
+- [x] Створити ViewModel базові класи
 
 **Короткий підсумок:** Реалізовано RetrofitClient, інтерцептори, API-інтерфейси та основні ViewModel/Fragment зв'язки для мобільного застосунку.
 
@@ -661,14 +663,18 @@ class MedicinesFragment : Fragment() {
 
 ### ФАЗА 7.2: UI Modernization (Тиждень 2)
 
+**Статус:** ✅ Завершено
+
 **Завдання:**
 
-- [ ] Замінити DrawerLayout на BottomNavigationView
-- [ ] Оновити colors.xml з Material 3 палітрою
-- [ ] Оновити styles.xml (Theme.MaterialComponents)
-- [ ] Розбити MainActivity на Fragments (по вкладкам)
-- [ ] Оновити всі XML layouts на Material Components
-- [ ] Додати Loading / Error / Empty state UI
+- [x] Замінити DrawerLayout на BottomNavigationView
+- [x] Оновити colors.xml з Material 3 палітрою
+- [x] Оновити styles.xml (Theme.MaterialComponents)
+- [x] Розбити MainActivity на Fragments (по вкладках)
+- [x] Оновити всі XML layouts на Material Components
+- [x] Додати Loading / Error / Empty state UI
+
+**Підсумок:** завершено оновлення головного екрана, списків препаратів, сповіщень, датчиків, локацій та історії подій препарату у Material 3 стилі.
 
 **Файли для модифікування:**
 

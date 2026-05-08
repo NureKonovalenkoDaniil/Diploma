@@ -6,6 +6,7 @@
     <string name="language_english">Англійська</string>
     <string name="medicines">Медикаменти</string>
     <string name="devices">Пристрої</string>
+    <string name="locations">Локації</string>
     <string name="notifications">Сповіщення</string>
     <string name="conditions">Умови</string>
     <string name="logs">Логи</string>
@@ -49,6 +50,8 @@
     <string name="device_status">Статус</string>
     <string name="device_type">Тип пристрою</string>
     <string name="device_search_hint">Пошук пристрою...</string>
+    <string name="storage_locations_title">Локації зберігання</string>
+    <string name="storage_locations_empty">Поки що немає локацій зберігання.\nНатисніть +, щоб додати локацію.</string>
     <string name="device_temp_range">Діапазон температури</string>
     <string name="device_humidity_range">Діапазон вологості</string>
     <string name="toggle_device">Перемкнути статус пристрою</string>

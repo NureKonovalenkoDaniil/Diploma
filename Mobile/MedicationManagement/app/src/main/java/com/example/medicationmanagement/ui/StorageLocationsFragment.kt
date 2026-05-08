@@ -19,7 +19,10 @@ import com.example.medicationmanagement.R
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
 
-class SensorsFragment : Fragment() {
+/**
+ * StorageLocationsFragment — окрема вкладка для локацій зберігання, побудована на існуючих IoT-даних.
+ */
+class StorageLocationsFragment : Fragment() {
 
     private lateinit var viewModel: SensorsViewModel
     private lateinit var adapter: DeviceAdapter
@@ -28,19 +31,19 @@ class SensorsFragment : Fragment() {
     private lateinit var progressBar: ProgressBar
     private lateinit var emptyStateContainer: View
     private lateinit var emptyStateText: TextView
-    private lateinit var fabAddSensor: FloatingActionButton
+    private lateinit var fabAddLocation: FloatingActionButton
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater.inflate(R.layout.fragment_sensors, container, false)
-        
-        recyclerView = view.findViewById(R.id.sensorsRecyclerView)
+    ): View {
+        val view = inflater.inflate(R.layout.fragment_storage_locations, container, false)
+
+        recyclerView = view.findViewById(R.id.storageLocationsRecyclerView)
         progressBar = view.findViewById(R.id.progressBar)
         emptyStateContainer = view.findViewById(R.id.emptyStateContainer)
         emptyStateText = view.findViewById(R.id.emptyStateText)
-        fabAddSensor = view.findViewById(R.id.fabAddSensor)
+        fabAddLocation = view.findViewById(R.id.fabAddLocation)
 
         return view
     }
@@ -54,7 +57,7 @@ class SensorsFragment : Fragment() {
         setupRecyclerView()
         setupObservers()
 
-        fabAddSensor.setOnClickListener {
+        fabAddLocation.setOnClickListener {
             startActivity(Intent(requireContext(), AddDeviceActivity::class.java))
         }
     }
@@ -66,7 +69,7 @@ class SensorsFragment : Fragment() {
 
     private fun setupRecyclerView() {
         adapter = DeviceAdapter(emptyList()) { device, isActive ->
-            viewModel.toggleDeviceStatus(device.deviceID, !isActive) // deviceID is now String
+            viewModel.toggleDeviceStatus(device.deviceID, !isActive)
         }
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
