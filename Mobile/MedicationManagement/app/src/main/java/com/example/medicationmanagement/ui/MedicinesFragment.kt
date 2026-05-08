@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -16,7 +17,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.medicationmanagement.AddMedicineActivity
 import com.example.medicationmanagement.MedicineAdapter
 import com.example.medicationmanagement.R
+import com.example.medicationmanagement.utils.RoleHelper
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 
 /**
@@ -31,7 +34,11 @@ class MedicinesFragment : Fragment() {
     private lateinit var progressBar: ProgressBar
     private lateinit var emptyStateContainer: View
     private lateinit var emptyStateText: TextView
+    private lateinit var searchInput: TextInputEditText
     private lateinit var fabAddMedicine: FloatingActionButton
+
+    private var allMedicines: List<com.example.medicationmanagement.model.Medicine> = emptyList()
+    private var searchQuery: String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -43,6 +50,7 @@ class MedicinesFragment : Fragment() {
         progressBar = view.findViewById(R.id.progressBar)
         emptyStateContainer = view.findViewById(R.id.emptyStateContainer)
         emptyStateText = view.findViewById(R.id.emptyStateText)
+        searchInput = view.findViewById(R.id.medicineSearchInput)
         fabAddMedicine = view.findViewById(R.id.fabAddMedicine)
 
         return view
@@ -56,6 +64,14 @@ class MedicinesFragment : Fragment() {
 
         setupRecyclerView()
         setupFlowObservers()
+
+        val currentRole = RoleHelper.getCurrentRole(requireContext())
+        fabAddMedicine.visibility = if (RoleHelper.canManageMedicines(currentRole)) View.VISIBLE else View.GONE
+
+        searchInput.addTextChangedListener { text ->
+            searchQuery = text?.toString().orEmpty()
+            applyFilter()
+        }
 
         fabAddMedicine.setOnClickListener {
             startActivity(Intent(requireContext(), AddMedicineActivity::class.java))
@@ -81,16 +97,8 @@ class MedicinesFragment : Fragment() {
         // Observe medicines list using StateFlow
         lifecycleScope.launch {
             viewModel.medicines.collect { medicines ->
-                adapter.updateMedicines(medicines)
-                if (medicines.isEmpty()) {
-                    emptyStateContainer.visibility = View.VISIBLE
-                    emptyStateText.visibility = View.VISIBLE
-                    recyclerView.visibility = View.GONE
-                } else {
-                    emptyStateContainer.visibility = View.GONE
-                    emptyStateText.visibility = View.GONE
-                    recyclerView.visibility = View.VISIBLE
-                }
+                allMedicines = medicines
+                applyFilter()
             }
         }
 
@@ -109,6 +117,30 @@ class MedicinesFragment : Fragment() {
                     viewModel.clearError()
                 }
             }
+        }
+    }
+
+    private fun applyFilter() {
+        val filteredMedicines = if (searchQuery.isBlank()) {
+            allMedicines
+        } else {
+            val query = searchQuery.trim().lowercase()
+            allMedicines.filter { medicine ->
+                medicine.name.lowercase().contains(query) ||
+                    medicine.type.lowercase().contains(query) ||
+                    medicine.category.lowercase().contains(query)
+            }
+        }
+
+        adapter.updateMedicines(filteredMedicines)
+        if (filteredMedicines.isEmpty()) {
+            emptyStateContainer.visibility = View.VISIBLE
+            emptyStateText.visibility = View.VISIBLE
+            recyclerView.visibility = View.GONE
+        } else {
+            emptyStateContainer.visibility = View.GONE
+            emptyStateText.visibility = View.GONE
+            recyclerView.visibility = View.VISIBLE
         }
     }
 }
