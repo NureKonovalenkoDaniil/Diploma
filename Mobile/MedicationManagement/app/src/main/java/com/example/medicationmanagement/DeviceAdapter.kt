@@ -15,6 +15,7 @@ class DeviceAdapter(
 ) : RecyclerView.Adapter<DeviceAdapter.DeviceViewHolder>() {
 
     class DeviceViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val card: com.google.android.material.card.MaterialCardView = itemView as com.google.android.material.card.MaterialCardView
         val name: TextView = itemView.findViewById(R.id.deviceName)
         val location: TextView = itemView.findViewById(R.id.deviceLocation)
         val id: TextView = itemView.findViewById(R.id.deviceId)
@@ -39,6 +40,19 @@ class DeviceAdapter(
 
         holder.statusSwitch.setOnCheckedChangeListener { _, isChecked ->
             onStatusChange(item, isChecked)
+        }
+
+        // Visual indicator: active -> accent stroke, inactive -> outline muted
+        try {
+            if (item.isActive) {
+                holder.card.strokeColor = holder.itemView.context.getColor(android.R.color.holo_green_dark)
+                holder.card.strokeWidth = 3
+            } else {
+                holder.card.strokeColor = holder.itemView.context.getColor(android.R.color.darker_gray)
+                holder.card.strokeWidth = 1
+            }
+        } catch (_: Exception) {
+            // ignore color setting on older devices
         }
 
         holder.itemView.setOnClickListener {

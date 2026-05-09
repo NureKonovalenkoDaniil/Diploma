@@ -44,6 +44,32 @@
                     android:text="Прочитати всі" />
             </LinearLayout>
 
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipFilterGroup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipAll"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:checked="true"
+                    android:text="Усі" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipExpiry"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:text="Термін" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipIncident"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:text="Інциденти" />
+
+            </com.google.android.material.chip.ChipGroup>
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/notificationsRecyclerView"
                 android:layout_width="match_parent"

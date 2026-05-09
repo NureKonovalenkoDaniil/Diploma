@@ -54,6 +54,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp" />
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/chartCondition"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginBottom="12dp" />
 
         <Button
             android:id="@+id/toggleDeviceBtn"

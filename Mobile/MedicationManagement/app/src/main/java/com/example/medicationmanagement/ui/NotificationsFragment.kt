@@ -27,6 +27,10 @@ class NotificationsFragment : Fragment() {
     private lateinit var emptyStateContainer: View
     private lateinit var emptyStateText: TextView
     private lateinit var btnMarkAllRead: TextView
+    private lateinit var chipFilterGroup: com.google.android.material.chip.ChipGroup
+    private lateinit var chipAll: com.google.android.material.chip.Chip
+    private lateinit var chipExpiry: com.google.android.material.chip.Chip
+    private lateinit var chipIncident: com.google.android.material.chip.Chip
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,6 +43,10 @@ class NotificationsFragment : Fragment() {
         emptyStateContainer = view.findViewById(R.id.emptyStateContainer)
         emptyStateText = view.findViewById(R.id.emptyStateText)
         btnMarkAllRead = view.findViewById(R.id.btnMarkAllRead)
+        chipFilterGroup = view.findViewById(R.id.chipFilterGroup)
+        chipAll = view.findViewById(R.id.chipAll)
+        chipExpiry = view.findViewById(R.id.chipExpiry)
+        chipIncident = view.findViewById(R.id.chipIncident)
 
         return view
     }
@@ -57,6 +65,10 @@ class NotificationsFragment : Fragment() {
             Toast.makeText(requireContext(), "Всі сповіщення позначено як прочитані", Toast.LENGTH_SHORT).show()
             (activity as? MainActivity)?.updateNotificationBadge()
         }
+
+        chipAll.setOnClickListener { applyFilter("all") }
+        chipExpiry.setOnClickListener { applyFilter("expiry") }
+        chipIncident.setOnClickListener { applyFilter("incident") }
     }
 
     override fun onResume() {
@@ -76,7 +88,20 @@ class NotificationsFragment : Fragment() {
     private fun setupObservers() {
         lifecycleScope.launch {
             viewModel.notifications.collect { notifications ->
-                adapter.updateNotifications(notifications)
+                // Apply current chip filter
+                val selectedFilter = when {
+                    chipExpiry.isChecked -> "expiry"
+                    chipIncident.isChecked -> "incident"
+                    else -> "all"
+                }
+
+                val filtered = when (selectedFilter) {
+                    "expiry" -> notifications.filter { it.type.contains("expiry", true) }
+                    "incident" -> notifications.filter { it.type.contains("incident", true) }
+                    else -> notifications
+                }
+
+                adapter.updateNotifications(filtered)
                 
                 if (notifications.isEmpty()) {
                     emptyStateContainer.visibility = View.VISIBLE

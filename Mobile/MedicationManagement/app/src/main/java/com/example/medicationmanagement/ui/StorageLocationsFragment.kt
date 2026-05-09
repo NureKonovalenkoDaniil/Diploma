@@ -17,6 +17,7 @@ import com.example.medicationmanagement.AddDeviceActivity
 import com.example.medicationmanagement.DeviceAdapter
 import com.example.medicationmanagement.R
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.example.medicationmanagement.utils.RoleHelper
 import kotlinx.coroutines.launch
 
 /**
@@ -59,6 +60,12 @@ class StorageLocationsFragment : Fragment() {
 
         fabAddLocation.setOnClickListener {
             startActivity(Intent(requireContext(), AddDeviceActivity::class.java))
+        }
+
+        // RBAC: show add button only for Manager/Admin
+        val role = RoleHelper.getCurrentRole(requireContext())
+        if (!RoleHelper.isManager(role)) {
+            fabAddLocation.hide()
         }
     }
 

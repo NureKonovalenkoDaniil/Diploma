@@ -78,11 +78,17 @@ interface IoTDeviceApi {
     @GET("api/iotdevice")
     suspend fun getDevices(): Response<List<IoTDevice>>
 
+    @GET("api/iotdevice/{id}")
+    suspend fun getDevice(@Path("id") id: String): Response<IoTDevice>
+
     @POST("api/iotdevice")
     suspend fun createDevice(@Body device: Map<String, Any>): Response<IoTDevice>
 
     @PATCH("api/iotdevice/setstatus/{id}")
     suspend fun setDeviceStatus(@Path("id") deviceId: String, @Query("isActive") isActive: Boolean): Response<Any>
+
+    @DELETE("api/iotdevice/{id}")
+    suspend fun deleteDevice(@Path("id") id: String): Response<Unit>
 }
 
 // ──────────────────────────────────────────

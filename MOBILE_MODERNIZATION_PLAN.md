@@ -693,9 +693,9 @@ class MedicinesFragment : Fragment() {
 
 - [x] MedicinesFragment: Список, фільтр, RBAC
 - [x] MedicinesDetailActivity: Деталі, Quick Actions, Lifecycle
-- [ ] StorageLocationsFragment: Список датчиків, деталі з графіками
-- [ ] NotificationsFragment: Список, фільтр, позначення читаних
-- [ ] SettingsFragment: Тема, мова, профіль, logout
+- [x] StorageLocationsFragment: Список датчиків, деталі з графіками
+- [x] NotificationsFragment: Список, фільтр, позначення читаних
+- [x] SettingsFragment: Тема, мова, профіль, logout
 
 **Файли для створення:**
 
