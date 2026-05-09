@@ -17,7 +17,7 @@
         <item name="android:colorBackground">@color/brand_background</item>
         <item name="colorSurface">@color/brand_surface</item>
         <item name="colorOnSurface">@color/brand_on_surface</item>
-        <item name="colorSurfaceVariant">@color/brand_background</item>
+        <item name="colorSurfaceVariant">@color/brand_surface</item>
         <item name="colorOnSurfaceVariant">@color/brand_on_surface_variant</item>
 
         <!-- Error Colors -->
@@ -27,6 +27,6 @@
         <!-- System UI -->
         <item name="android:statusBarColor">?attr/colorSurface</item>
         <item name="android:navigationBarColor">?attr/colorSurface</item>
-        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>

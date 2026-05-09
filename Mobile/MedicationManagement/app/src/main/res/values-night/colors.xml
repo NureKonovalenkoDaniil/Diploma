@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Theme Palette (High Contrast) -->
+    <color name="brand_primary">#ADC6FF</color>
+    <color name="brand_primary_container">#004494</color>
+    <color name="brand_on_primary">#002E69</color>
+    <color name="brand_on_primary_container">#D8E2FF</color>
+
+    <color name="brand_secondary">#81D5D6</color>
+    <color name="brand_secondary_container">#005051</color>
+    <color name="brand_on_secondary">#003738</color>
+    <color name="brand_on_secondary_container">#C7F3F3</color>
+
+    <color name="brand_surface">#1A1C1E</color>
+    <color name="brand_on_surface">#E2E2E6</color>
+    <color name="brand_on_surface_variant">#C4C6D0</color>
+
+    <color name="brand_background">#111315</color>
+
+    <color name="brand_error">#F2B8B5</color>
+    <color name="brand_on_error">#601410</color>
+
+    <!-- Legacy / Utils (Inverted for safety in some legacy layouts) -->
+    <color name="unread_bg">#252932</color>
+    <color name="black">#FFFFFF</color>
+    <color name="white">#1A1C1E</color>
+</resources>

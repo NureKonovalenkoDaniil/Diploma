@@ -83,6 +83,7 @@ class LoginActivity : AppCompatActivity() {
                     }
 
                     TokenManager.getInstance(this).saveToken(token)
+                    TokenManager.getInstance(this).saveUserEmail(email)
                     runOnUiThread {
                         startActivity(Intent(this, MainActivity::class.java))
                         finish()

@@ -73,7 +73,7 @@ class NotificationAdapter(
             holder.title.setTypeface(null, Typeface.NORMAL)
             holder.message.setTypeface(null, Typeface.NORMAL)
             holder.unreadDot.visibility = View.GONE
-            holder.card.setCardBackgroundColor(holder.itemView.context.getColor(android.R.color.white))
+            holder.card.setCardBackgroundColor(holder.itemView.context.getColor(R.color.white))
         }
 
         holder.itemView.setOnClickListener {

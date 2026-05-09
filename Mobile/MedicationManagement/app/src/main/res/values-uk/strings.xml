@@ -95,4 +95,14 @@
     <string name="log_timestamp">Часова мітка</string>
     <string name="log_audit">Аудит логів</string>
     <string name="log_search">Пошук логів...</string>
+    <string name="navigation_drawer_open">Відкрити бічне меню</string>
+    <string name="navigation_drawer_close">Закрити бічне меню</string>
+    <string name="nav_header_app_icon">Іконка додатка</string>
+    <string name="nav_header_default_email">user@example.com</string>
+    <string name="notifications_title">Ваші сповіщення</string>
+    <string name="notifications_mark_all_read">Прочитати всі</string>
+    <string name="notifications_filter_all">Усі</string>
+    <string name="notifications_filter_expiry">Термін</string>
+    <string name="notifications_filter_incident">Інциденти</string>
+    <string name="notifications_empty_state">Немає нових сповіщень</string>
 </resources>

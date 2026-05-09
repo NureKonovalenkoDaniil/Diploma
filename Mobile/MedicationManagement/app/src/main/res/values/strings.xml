@@ -107,4 +107,14 @@
     <string name="delete_user_message">Delete user %1$s?</string>
     <string name="change_user_role">Change user role</string>
     <string name="no_audit_logs">No audit logs found</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_app_icon">App Icon</string>
+    <string name="nav_header_default_email">user@example.com</string>
+    <string name="notifications_title">Your Notifications</string>
+    <string name="notifications_mark_all_read">Mark All Read</string>
+    <string name="notifications_filter_all">All</string>
+    <string name="notifications_filter_expiry">Expiry</string>
+    <string name="notifications_filter_incident">Incidents</string>
+    <string name="notifications_empty_state">No new notifications</string>
 </resources>

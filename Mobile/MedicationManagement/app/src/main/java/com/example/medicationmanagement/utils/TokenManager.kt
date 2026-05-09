@@ -10,12 +10,20 @@ class TokenManager(context: Context) {
         prefs.edit().putString(KEY_TOKEN, token).apply()
     }
 
+    fun saveUserEmail(email: String) {
+        prefs.edit().putString(KEY_USER_EMAIL, email).apply()
+    }
+
+    fun getUserEmail(): String? {
+        return prefs.getString(KEY_USER_EMAIL, null)
+    }
+
     fun getToken(): String? {
         return prefs.getString(KEY_TOKEN, null)
     }
 
     fun clearToken() {
-        prefs.edit().remove(KEY_TOKEN).apply()
+        prefs.edit().remove(KEY_TOKEN).remove(KEY_USER_EMAIL).apply()
     }
 
     fun isLoggedIn(): Boolean {
@@ -24,6 +32,7 @@ class TokenManager(context: Context) {
 
     companion object {
         private const val KEY_TOKEN = "jwt_token"
+        private const val KEY_USER_EMAIL = "user_email"
         
         @Volatile
         private var INSTANCE: TokenManager? = null
