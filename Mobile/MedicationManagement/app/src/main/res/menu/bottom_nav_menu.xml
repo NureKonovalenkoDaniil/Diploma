@@ -4,5 +4,7 @@
     <item android:id="@+id/nav_devices" android:icon="@drawable/ic_device" android:title="@string/devices"/>
     <item android:id="@+id/nav_locations" android:icon="@drawable/ic_condition" android:title="@string/locations"/>
     <item android:id="@+id/nav_notifications" android:icon="@drawable/ic_notification" android:title="@string/notifications"/>
+    <item android:id="@+id/nav_users" android:icon="@drawable/ic_users" android:title="@string/users"/>
+    <item android:id="@+id/nav_audit_log" android:icon="@drawable/ic_logs" android:title="@string/log_audit"/>
     <item android:id="@+id/nav_settings" android:icon="@drawable/ic_settings" android:title="@string/settings"/>
 </menu>

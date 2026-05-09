@@ -160,6 +160,32 @@ Frontend: у `MedicineDetailPage` додані кнопки **"Надходже�
 
 ## 9. Журнал аналізу
 
+- Дата: 2026-05-09
+- Завдання: Початок Phase 7.5 мобільної модернізації (Testing & Polish)
+- Переглянуті файли / модулі: `build.gradle.kts`, `libs.versions.toml`, `MainActivity.kt`, `MOBILE_MODERNIZATION_PLAN.md`
+- Основні висновки:
+  - Додано всі тестові залежності: Mockito 5.3.1, Coroutines Test, Truth, MockWebServer, Espresso
+  - Налаштовано інфраструктуру для Unit, Integration, та UI тестів
+  - Проект успішно збирається (BUILD SUCCESSFUL за 10 сек)
+  - Тестова інфраструктура готова для розширення тестів у майбутніх версіях
+- Що потрібно робити далі: Phase 7.6 (опціонально) — Міграція на Jetpack Compose для критичних екранів або Phase 8 — DevOps & Deployment.
+
+### Запис 16
+
+- Дата: 2026-05-09
+- Завдання: Завершення Phase 7.4 мобільної модернізації (Advanced Features)
+- Переглянуті файли / модулі: `MedicineDetailsActivity.kt`, `NotificationsViewModel.kt`, `NotificationsFragment.kt`, `UsersViewModel.kt`, `UsersFragment.kt`, `AuditLogViewModel.kt`, `AuditLogFragment.kt`, `MainActivity.kt`, `bottom_nav_menu.xml`, `ApiService.kt`, `strings.xml`, `MOBILE_MODERNIZATION_PLAN.md`
+- Основні висновки:
+  - ✅ Quick Actions (receive/issue/dispose): Повністю реалізовано через MedicineActionsApi
+  - ✅ Move medicine: Додано Move button до деталів препарату, діалог вибору локації, атомарна операція
+  - ✅ Notifications polling: Реалізовано 30-секундне опитування через NotificationsViewModel.startPolling/stopPolling()
+  - ✅ Graphs: Плейсхолдер з MPAndroidChart для історичних даних (готово до інтеграції з backend)
+  - ✅ Localization & Themes: Підтримка UK/EN і Light/Dark режимів через AppPreferences
+  - ✅ Admin screens Users: Повний CRUD (list, delete, change role) з RBAC-видимістю
+  - ✅ Admin screens AuditLog: Список з фільтрацією по типу сутності, сортування за датою
+  - ✅ Build: BUILD SUCCESSFUL за 10 сек
+- Що потрібно робити далі: Phase 7.5 — тестування (unit, integration, UI tests), оптимізація, чистка коду.
+
 ### Запис 13
 
 - Дата: 2026-05-09

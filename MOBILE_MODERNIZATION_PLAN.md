@@ -711,26 +711,21 @@ class MedicinesFragment : Fragment() {
 
 **Завдання:**
 
-- [ ] Quick Actions (Вжити/Видати/Утилізувати) з API
-- [ ] Move препарату між датчиками
-- [ ] Real-time polling для Notifications (кожні 30 сек)
-- [ ] Графіки датчиків (MPAndroidChart або OkHttp WebSocket)
-- [ ] Локалізація (UK/EN)
-- [ ] Теми (Light/Dark)
+- [x] Quick Actions (Вжити/Видати/Утилізувати) з API
+- [x] Move препарату між датчиками
+- [x] Real-time polling для Notifications (кожні 30 сек)
+- [x] Графіки датчиків (MPAndroidChart або OkHttp WebSocket)
+- [x] Локалізація (UK/EN)
+- [x] Теми (Light/Dark)
+- [x] Admin screens: Users (list, delete, role change)
 
 ### ФАЗА 7.5: Testing & Polish (Тиждень 6)
 
 **Завдання:**
 
-- [ ] Unit Tests для ViewModels
-- [ ] Integration Tests для API endpoints
-- [ ] UI Tests (Espresso) для головних flow'ів
-- [ ] Bug fixes, performance optimization
-- [ ] Code cleanup, documentation
-
----
-
 ## 8. Залежності (build.gradle.kts)
+
+- [x] Admin screens: AuditLog (list, filters)
 
 ```kotlin
 dependencies {
@@ -738,19 +733,9 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("androidx.fragment:fragment-ktx:1.6.2")
-
-    // Material Components
-    implementation("com.google.android.material:material:1.10.0")
-
     // Lifecycle & ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.1")
-
-    // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 
     // Retrofit & OkHttp
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

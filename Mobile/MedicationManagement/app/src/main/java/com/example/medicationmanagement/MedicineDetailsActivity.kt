@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
 import android.view.View
-import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -16,10 +15,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medicationmanagement.api.ApiClient
 import com.example.medicationmanagement.api.LifecycleApi
-import com.example.medicationmanagement.api.LifecycleEventRequest
 import com.example.medicationmanagement.api.MedicineApi
 import com.example.medicationmanagement.api.MedicineActionsApi
+import com.example.medicationmanagement.api.MoveRequest
+import com.example.medicationmanagement.api.StorageLocationApi
 import com.example.medicationmanagement.model.Medicine
+import com.example.medicationmanagement.api.StorageLocationDto
 import com.example.medicationmanagement.utils.RoleHelper
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -40,6 +41,7 @@ class MedicineDetailsActivity : AppCompatActivity() {
     private lateinit var btnDelete: MaterialButton
     private lateinit var btnReceive: MaterialButton
     private lateinit var btnIssue: MaterialButton
+    private lateinit var btnMove: MaterialButton
     private lateinit var btnDispose: MaterialButton
 
     private var currentMedicine: Medicine? = null
@@ -65,6 +67,7 @@ class MedicineDetailsActivity : AppCompatActivity() {
         btnDelete = findViewById(R.id.btnDelete)
         btnReceive = findViewById(R.id.btnReceive)
         btnIssue = findViewById(R.id.btnIssue)
+        btnMove = findViewById(R.id.btnMove)
         btnDispose = findViewById(R.id.btnDispose)
 
         bindMedicineHeader(name, type, category, quantity, expiry)
@@ -109,6 +112,43 @@ class MedicineDetailsActivity : AppCompatActivity() {
             }
         }
 
+        btnMove.setOnClickListener {
+            if (medicineID == -1) return@setOnClickListener
+
+            lifecycleScope.launch {
+                try {
+                    val storageApi = ApiClient.createService<StorageLocationApi>(this@MedicineDetailsActivity)
+                    val resp = storageApi.getAll()
+                    if (!resp.isSuccessful) {
+                        Toast.makeText(this@MedicineDetailsActivity, R.string.network_error, Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+
+                    val locations = resp.body() ?: emptyList<StorageLocationDto>()
+                    if (locations.isEmpty()) {
+                        Toast.makeText(this@MedicineDetailsActivity, R.string.no_storage_locations, Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+
+                    val names = locations.map { it.name }.toTypedArray()
+                    var selectedIndex = 0
+
+                    MaterialAlertDialogBuilder(this@MedicineDetailsActivity)
+                        .setTitle(R.string.select_target_location)
+                        .setSingleChoiceItems(names, 0) { _, which -> selectedIndex = which }
+                        .setPositiveButton(R.string.move) { _, _ ->
+                            val target = locations[selectedIndex]
+                            performMoveToLocation(target.id)
+                        }
+                        .setNegativeButton(R.string.cancel, null)
+                        .show()
+
+                } catch (e: Exception) {
+                    Toast.makeText(this@MedicineDetailsActivity, R.string.network_error, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
         btnDispose.setOnClickListener {
             showQuantityDialog(
                 title = getString(R.string.medicine_action_dispose),
@@ -138,6 +178,7 @@ class MedicineDetailsActivity : AppCompatActivity() {
 
         btnEdit.isVisible = canManage
         btnDelete.isVisible = canManage
+        btnMove.isVisible = canManage
         btnDispose.isVisible = canManage
     }
 
@@ -249,6 +290,36 @@ class MedicineDetailsActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 Toast.makeText(this@MedicineDetailsActivity, e.message ?: getString(R.string.medicine_action_failed_generic), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun performMoveToLocation(targetLocationId: Int) {
+        if (medicineID == -1) return
+
+        lifecycleScope.launch {
+            try {
+                val api = ApiClient.createService<MedicineActionsApi>(this@MedicineDetailsActivity)
+                val response = api.move(medicineID, MoveRequest(targetLocationId, null))
+
+                if (response.isSuccessful) {
+                    response.body()?.let { updatedMedicine ->
+                        currentMedicine = updatedMedicine
+                        bindMedicineHeader(
+                            updatedMedicine.name,
+                            updatedMedicine.type,
+                            updatedMedicine.category,
+                            updatedMedicine.quantity,
+                            currentMedicine?.expiryDate ?: detailExpiryDate.text.toString()
+                        )
+                    }
+                    loadDiary()
+                    Toast.makeText(this@MedicineDetailsActivity, R.string.medicine_move_success, Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@MedicineDetailsActivity, R.string.medicine_move_failed, Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@MedicineDetailsActivity, R.string.network_error, Toast.LENGTH_SHORT).show()
             }
         }
     }

@@ -95,4 +95,16 @@
     <string name="log_timestamp">Timestamp</string>
     <string name="log_audit">Audit Logs</string>
     <string name="log_search">Search logs...</string>
+    <string name="move">Move</string>
+    <string name="select_target_location">Select target location</string>
+    <string name="no_storage_locations">No storage locations available</string>
+    <string name="medicine_move_success">Medicine moved successfully</string>
+    <string name="medicine_move_failed">Failed to move medicine</string>
+    <string name="users">Users</string>
+    <string name="no_users">No users found</string>
+    <string name="role">Role</string>
+    <string name="confirm_delete_user">Delete user?</string>
+    <string name="delete_user_message">Delete user %1$s?</string>
+    <string name="change_user_role">Change user role</string>
+    <string name="no_audit_logs">No audit logs found</string>
 </resources>

@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medicationmanagement.MainActivity
+import com.example.medicationmanagement.model.Notification
 import com.example.medicationmanagement.NotificationAdapter
 import com.example.medicationmanagement.R
 import kotlinx.coroutines.launch
@@ -69,6 +70,15 @@ class NotificationsFragment : Fragment() {
         chipAll.setOnClickListener { applyFilter("all") }
         chipExpiry.setOnClickListener { applyFilter("expiry") }
         chipIncident.setOnClickListener { applyFilter("incident") }
+
+        // Start polling when fragment view is created
+        viewModel.startPolling()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Stop polling when fragment view is destroyed
+        viewModel.stopPolling()
     }
 
     override fun onResume() {
@@ -88,6 +98,9 @@ class NotificationsFragment : Fragment() {
     private fun setupObservers() {
         lifecycleScope.launch {
             viewModel.notifications.collect { notifications ->
+                // store current notifications for filtering
+                currentNotifications = notifications
+
                 // Apply current chip filter
                 val selectedFilter = when {
                     chipExpiry.isChecked -> "expiry"
@@ -123,6 +136,13 @@ class NotificationsFragment : Fragment() {
             }
         }
 
+        // keep badge updated when list changes (optional)
+        lifecycleScope.launch {
+            viewModel.notifications.collect { list ->
+                (activity as? MainActivity)?.updateNotificationBadge()
+            }
+        }
+
         lifecycleScope.launch {
             viewModel.isLoading.collect { isLoading ->
                 progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
@@ -136,5 +156,36 @@ class NotificationsFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private var currentNotifications: List<Notification> = emptyList()
+
+    private fun applyFilter(filter: String) {
+        // update chip selection
+        when (filter) {
+            "expiry" -> {
+                chipExpiry.isChecked = true
+                chipAll.isChecked = false
+                chipIncident.isChecked = false
+            }
+            "incident" -> {
+                chipIncident.isChecked = true
+                chipAll.isChecked = false
+                chipExpiry.isChecked = false
+            }
+            else -> {
+                chipAll.isChecked = true
+                chipExpiry.isChecked = false
+                chipIncident.isChecked = false
+            }
+        }
+
+        val filtered = when (filter) {
+            "expiry" -> currentNotifications.filter { it.type.contains("expiry", true) }
+            "incident" -> currentNotifications.filter { it.type.contains("incident", true) }
+            else -> currentNotifications
+        }
+
+        adapter.updateNotifications(filtered)
     }
 }

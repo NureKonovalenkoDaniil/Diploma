@@ -6,12 +6,15 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.medicationmanagement.R
 import com.example.medicationmanagement.api.NotificationApi
+import com.example.medicationmanagement.ui.AuditLogFragment
 import com.example.medicationmanagement.ui.MedicinesFragment
 import com.example.medicationmanagement.ui.NotificationsFragment
 import com.example.medicationmanagement.ui.StorageLocationsFragment
 import com.example.medicationmanagement.ui.SensorsFragment
 import com.example.medicationmanagement.ui.SettingsFragment
+import com.example.medicationmanagement.ui.UsersFragment
 import com.example.medicationmanagement.ui.theme.AppPreferences
+import com.example.medicationmanagement.utils.RoleHelper
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
@@ -29,6 +32,12 @@ class MainActivity : AppCompatActivity() {
         topAppBar = findViewById(R.id.topAppBar)
         bottomNav = findViewById(R.id.bottomNavigation)
         setSupportActionBar(topAppBar)
+
+        // Show/hide admin menu items based on role
+        val userRole = RoleHelper.getCurrentRole(this)
+        val isAdmin = RoleHelper.isAdmin(userRole)
+        bottomNav.menu.findItem(R.id.nav_users)?.isVisible = isAdmin
+        bottomNav.menu.findItem(R.id.nav_audit_log)?.isVisible = isAdmin
 
         loadFragment(MedicinesFragment())
         updateToolbarTitle(R.string.medicines)
@@ -56,6 +65,16 @@ class MainActivity : AppCompatActivity() {
                     // It will be updated accurately on next resume
                     bottomNav.removeBadge(R.id.nav_notifications)
                     updateToolbarTitle(R.string.notifications)
+                    true
+                }
+                R.id.nav_users -> {
+                    loadFragment(UsersFragment())
+                    updateToolbarTitle(R.string.users)
+                    true
+                }
+                R.id.nav_audit_log -> {
+                    loadFragment(AuditLogFragment())
+                    updateToolbarTitle(R.string.log_audit)
                     true
                 }
                 R.id.nav_settings -> {
