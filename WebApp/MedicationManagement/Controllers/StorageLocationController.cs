@@ -1,10 +1,10 @@
 using MedicationManagement.Enums;
 using MedicationManagement.Models;
+using MedicationManagement.Models.DTOs;
 using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MedicationManagement.Models.DTOs;
 
 namespace MedicationManagement.Controllers
 {
@@ -43,17 +43,17 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Створити нову локацію зберігання</summary>
         [HttpPost]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> Create([FromBody] StorageLocationDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var location = new StorageLocation
             {
-                Name          = dto.Name,
-                Address       = dto.Address,
-                LocationType  = Enum.TryParse<StorageLocationType>(dto.LocationType, out var lt) ? lt : StorageLocationType.Other,
-                IoTDeviceId   = dto.IoTDeviceId,
+                Name = dto.Name,
+                Address = dto.Address,
+                LocationType = Enum.TryParse<StorageLocationType>(dto.LocationType, out var lt) ? lt : StorageLocationType.Other,
+                IoTDeviceId = dto.IoTDeviceId,
                 // OrganizationId підставляється автоматично у сервісі
             };
 
@@ -68,17 +68,17 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Оновити локацію зберігання</summary>
         [HttpPut("{id}")]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> Update(int id, [FromBody] StorageLocationDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var location = new StorageLocation
             {
-                Name         = dto.Name,
-                Address      = dto.Address,
+                Name = dto.Name,
+                Address = dto.Address,
                 LocationType = Enum.TryParse<StorageLocationType>(dto.LocationType, out var lt2) ? lt2 : StorageLocationType.Other,
-                IoTDeviceId  = dto.IoTDeviceId,
+                IoTDeviceId = dto.IoTDeviceId,
             };
 
             var updated = await _locationService.Update(id, location);
@@ -94,7 +94,7 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Видалити локацію зберігання</summary>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> Delete(int id)
         {
             var success = await _locationService.Delete(id);

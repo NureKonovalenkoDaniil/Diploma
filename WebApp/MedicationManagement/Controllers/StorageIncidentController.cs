@@ -1,10 +1,10 @@
 using MedicationManagement.Enums;
 using MedicationManagement.Models;
+using MedicationManagement.Models.DTOs;
 using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MedicationManagement.Models.DTOs;
 
 namespace MedicationManagement.Controllers
 {
@@ -51,7 +51,7 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Створити новий інцидент (зазвичай викликається фоновим сервісом)</summary>
         [HttpPost]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> Create([FromBody] CreateStorageIncidentDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -69,7 +69,7 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Позначити інцидент як вирішений</summary>
         [HttpPatch("{id}/resolve")]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> Resolve(int id)
         {
             var resolved = await _incidentService.Resolve(id);

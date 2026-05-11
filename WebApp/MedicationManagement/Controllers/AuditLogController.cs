@@ -1,13 +1,13 @@
+using MedicationManagement.Models.DTOs;
 using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MedicationManagement.Models.DTOs;
 
 namespace MedicationManagement.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Roles = "Administrator,User")]
     public class AuditLogController : ControllerBase
     {
         private readonly IServiceAuditLog _auditLogService;

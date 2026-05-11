@@ -1,11 +1,11 @@
 using MedicationManagement.Models;
+using MedicationManagement.Models.DTOs;
 using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using MedicationManagement.Models.DTOs;
 
 namespace MedicationManagement.Controllers
 {
@@ -28,7 +28,7 @@ namespace MedicationManagement.Controllers
 
         // Endpoint to get medicines with low stock
         [HttpGet("low-stock")]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> GetLowStockMedicines([FromQuery] int threshold = 10)
         {
             try
@@ -46,7 +46,7 @@ namespace MedicationManagement.Controllers
 
         // Endpoint to get medicines that are expiring before a certain date
         [HttpGet("expiring")]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> GetExpiringMedicines([FromQuery] int daysThreshold = 7)
         {
             try
@@ -64,7 +64,7 @@ namespace MedicationManagement.Controllers
 
         // Endpoint to get replenishment recommendations for low stock medicines
         [HttpGet("replenishment-recommendations")]
-        [Authorize(Roles = "Administrator,Manager")]
+        [Authorize(Roles = "Administrator,Manager,User")]
         public async Task<IActionResult> GetReplenishmentRecommendations()
         {
             try

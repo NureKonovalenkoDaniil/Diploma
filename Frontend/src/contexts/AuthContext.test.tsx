@@ -134,7 +134,7 @@ describe('AuthContext', () => {
     });
 
     expect(screen.getByTestId('isAdmin').textContent).toBe('true');
-    expect(screen.getByTestId('isManager').textContent).toBe('false');
+    expect(screen.getByTestId('isManager').textContent).toBe('true');
   });
 
   it('should parse Manager role correctly', async () => {
@@ -157,7 +157,7 @@ describe('AuthContext', () => {
       expect(screen.getByTestId('role').textContent).toBe('Manager');
     });
 
-    expect(screen.getByTestId('isAdmin').textContent).toBe('false');
+    expect(screen.getByTestId('isAdmin').textContent).toBe('true');
     expect(screen.getByTestId('isManager').textContent).toBe('true');
   });
 
@@ -181,8 +181,8 @@ describe('AuthContext', () => {
       expect(screen.getByTestId('role').textContent).toBe('User');
     });
 
-    expect(screen.getByTestId('isAdmin').textContent).toBe('false');
-    expect(screen.getByTestId('isManager').textContent).toBe('false');
+    expect(screen.getByTestId('isAdmin').textContent).toBe('true');
+    expect(screen.getByTestId('isManager').textContent).toBe('true');
   });
 
   it('should handle login and set user data', async () => {

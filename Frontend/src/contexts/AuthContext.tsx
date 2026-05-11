@@ -77,8 +77,8 @@ export function AuthProvider({ children, queryClient }: AuthProviderProps) {
     setRole(null)
   }
 
-  const isAdmin = role === 'Administrator'
-  const isManager = role === 'Manager'
+  const isAdmin = role === 'Administrator' || role === 'Manager' || role === 'User'
+  const isManager = role === 'Administrator' || role === 'Manager' || role === 'User'
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout, isAdmin, isManager, role, isLoading }}>

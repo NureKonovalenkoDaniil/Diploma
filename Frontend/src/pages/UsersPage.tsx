@@ -216,6 +216,7 @@ function CreateManagerDialog({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function UsersPage() {
   const qc = useQueryClient();
+  const { role } = useAuth();
   const [showCreate, setShowCreate] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -252,9 +253,11 @@ export default function UsersPage() {
             Перегляд та управління акаунтами вашої організації
           </p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 mr-1" /> Додати менеджера
-        </Button>
+        {role === 'Administrator' && (
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4 mr-1" /> Додати менеджера
+          </Button>
+        )}
       </div>
 
       {successMessage && (
