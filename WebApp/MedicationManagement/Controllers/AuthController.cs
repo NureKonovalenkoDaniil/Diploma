@@ -271,7 +271,7 @@ namespace MedicationManagement.Controllers
         }
 
         [HttpPost("create-role")]
-        [Authorize(Roles = "Administrator,Manager,User")]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> CreateRole([FromBody] RoleDto roleDto)
         {
             if (string.IsNullOrWhiteSpace(roleDto.RoleName))
@@ -303,7 +303,7 @@ namespace MedicationManagement.Controllers
         }
 
         [HttpPost("assign-role")]
-        [Authorize(Roles = "Administrator,Manager,User")]
+        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> AddUserToRole([FromBody] RoleDto roleDto)
         {
             try
@@ -331,9 +331,9 @@ namespace MedicationManagement.Controllers
             }
         }
 
-        /// <summary>Отримати список усіх користувачів (Administrator, Manager, User)</summary>
+        /// <summary>Отримати список усіх користувачів (Administrator only)</summary>
         [HttpGet("users")]
-        [Authorize(Roles = "Administrator,Manager,User", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Roles = "Administrator", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> GetUsers()
         {
             try

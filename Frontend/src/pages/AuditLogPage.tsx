@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { auditApi } from '@/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { Navigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +29,13 @@ const severityVariant = (s: string): 'destructive' | 'warning' | 'info' => {
 };
 
 export default function AuditLogPage() {
+  const { isAdmin } = useAuth();
+
+  // Redirect if not admin
+  if (!isAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   const [filters, setFilters] = useState<Filters>({ from: '', to: '', user: '', action: '' });
   const [applied, setApplied] = useState<Partial<Filters>>({});
 

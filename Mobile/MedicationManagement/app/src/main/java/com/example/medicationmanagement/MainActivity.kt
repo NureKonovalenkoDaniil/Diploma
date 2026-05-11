@@ -56,9 +56,10 @@ class MainActivity : AppCompatActivity() {
 
         // Show/hide admin menu items based on role
         val userRole = RoleHelper.getCurrentRole(this)
-        val isAdmin = RoleHelper.isAdmin(userRole)
-        navigationView.menu.findItem(R.id.nav_users)?.isVisible = isAdmin
-        navigationView.menu.findItem(R.id.nav_audit_log)?.isVisible = isAdmin
+        val canViewUsers = RoleHelper.canManageUsers(userRole)
+        val canViewAuditLog = RoleHelper.canViewAuditLog(userRole)
+        navigationView.menu.findItem(R.id.nav_users)?.isVisible = canViewUsers
+        navigationView.menu.findItem(R.id.nav_audit_log)?.isVisible = canViewAuditLog
 
         if (savedInstanceState == null) {
             loadFragment(MedicinesFragment())

@@ -7,7 +7,7 @@ namespace MedicationManagement.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Administrator,User")]
+    [Authorize(Roles = "Administrator")]
     public class AuditLogController : ControllerBase
     {
         private readonly IServiceAuditLog _auditLogService;

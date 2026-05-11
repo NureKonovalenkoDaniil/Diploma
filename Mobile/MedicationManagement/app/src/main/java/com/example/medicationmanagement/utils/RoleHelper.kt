@@ -19,9 +19,47 @@ object RoleHelper {
         }
     }
 
-    fun isAdmin(role: String?): Boolean = role == "Administrator" || role == "Manager" || role == "User"
+    // ────────────────────────────────────────────────────────
+    // RBAC: Administrator | Manager | User | Device
+    // ────────────────────────────────────────────────────────
 
-    fun isManager(role: String?): Boolean = role == "Administrator" || role == "Manager" || role == "User"
+    /**
+     * Administrator має весь доступ
+     */
+    fun isAdmin(role: String?): Boolean = role == "Administrator"
 
-    fun canManageMedicines(role: String?): Boolean = isManager(role)
+    /**
+     * Manager та Administrator можуть управляти ресурсами (окрім користувачів та логів)
+     */
+    fun isManager(role: String?): Boolean = role == "Administrator" || role == "Manager"
+
+    /**
+     * User та Manager можуть переглядати та редагувати препарати, датчики, інциденти
+     */
+    fun canManageMedicines(role: String?): Boolean = role in listOf("Administrator", "Manager", "User")
+
+    /**
+     * Тільки Administrator може створювати/видаляти/редагувати користувачів
+     */
+    fun canManageUsers(role: String?): Boolean = isAdmin(role)
+
+    /**
+     * Тільки Administrator може переглядати журнал аудиту
+     */
+    fun canViewAuditLog(role: String?): Boolean = isAdmin(role)
+
+    /**
+     * User та Manager можуть виконувати Quick Actions
+     */
+    fun canPerformQuickActions(role: String?): Boolean = canManageMedicines(role)
+
+    /**
+     * Manager та Administrator можуть вирішувати інциденти
+     */
+    fun canResolveIncidents(role: String?): Boolean = isManager(role)
+
+    /**
+     * Тільки Administrator може видаляти інциденти
+     */
+    fun canDeleteIncidents(role: String?): Boolean = isAdmin(role)
 }
