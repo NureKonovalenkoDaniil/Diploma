@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
 
         // Show/hide admin menu items based on role
         val userRole = RoleHelper.getCurrentRole(this)
-        val canViewUsers = RoleHelper.canManageUsers(userRole)
+        val canViewUsers = RoleHelper.canViewUsers(userRole)
         val canViewAuditLog = RoleHelper.canViewAuditLog(userRole)
         navigationView.menu.findItem(R.id.nav_users)?.isVisible = canViewUsers
         navigationView.menu.findItem(R.id.nav_audit_log)?.isVisible = canViewAuditLog

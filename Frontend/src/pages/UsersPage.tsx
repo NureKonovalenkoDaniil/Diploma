@@ -217,12 +217,7 @@ function CreateManagerDialog({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function UsersPage() {
   const qc = useQueryClient();
-  const { role, isAdmin } = useAuth();
-
-  // Redirect if not admin
-  if (!isAdmin) {
-    return <Navigate to="/dashboard" replace />;
-  }
+  const { role } = useAuth();
 
   const [showCreate, setShowCreate] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);

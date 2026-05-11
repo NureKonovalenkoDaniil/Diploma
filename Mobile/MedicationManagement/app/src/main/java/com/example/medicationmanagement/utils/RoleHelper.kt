@@ -54,6 +54,11 @@ object RoleHelper {
     fun canPerformQuickActions(role: String?): Boolean = canManageMedicines(role)
 
     /**
+     * Доступ до списку користувачів мають усі людські ролі; створення менеджерів лишається тільки для Administrator
+     */
+    fun canViewUsers(role: String?): Boolean = role in listOf("Administrator", "Manager", "User")
+
+    /**
      * Manager та Administrator можуть вирішувати інциденти
      */
     fun canResolveIncidents(role: String?): Boolean = isManager(role)

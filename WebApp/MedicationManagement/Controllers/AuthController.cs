@@ -331,9 +331,9 @@ namespace MedicationManagement.Controllers
             }
         }
 
-        /// <summary>Отримати список усіх користувачів (Administrator only)</summary>
+        /// <summary>Отримати список усіх користувачів (Administrator, Manager, User)</summary>
         [HttpGet("users")]
-        [Authorize(Roles = "Administrator", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Roles = "Administrator,Manager,User", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> GetUsers()
         {
             try
