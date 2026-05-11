@@ -331,9 +331,9 @@ namespace MedicationManagement.Controllers
             }
         }
 
-        /// <summary>Отримати список усіх користувачів (Administrator, Manager, User)</summary>
+        /// <summary>Отримати список усіх користувачів (тільки Administrator)</summary>
         [HttpGet("users")]
-        [Authorize(Roles = "Administrator,Manager,User", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Roles = "Administrator", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> GetUsers()
         {
             try
@@ -366,9 +366,9 @@ namespace MedicationManagement.Controllers
             }
         }
 
-        /// <summary>Видалити користувача (Administrator, Manager, User)</summary>
+        /// <summary>Видалити користувача (тільки Administrator)</summary>
         [HttpDelete("users/{id}")]
-        [Authorize(Roles = "Administrator,Manager,User", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Roles = "Administrator", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> DeleteUser(string id)
         {
             try

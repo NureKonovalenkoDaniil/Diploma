@@ -37,22 +37,17 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Створити сповіщення</summary>
         [HttpPost]
-        [Authorize(Roles = "Administrator,Manager,User")]
+        [Authorize(Roles = "Administrator,Manager")]
         public async Task<IActionResult> Create([FromBody] CreateNotificationDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var created = await _notificationService.Create(
-                dto.Type,
-
-                dto.Title,
-
-                dto.Message,
-
-                dto.TargetRole,
-
-                dto.RelatedEntityType,
-
+                dto.Type, 
+                dto.Title, 
+                dto.Message, 
+                dto.TargetRole, 
+                dto.RelatedEntityType, 
                 dto.RelatedEntityId);
 
             return Ok(created.ToDto());

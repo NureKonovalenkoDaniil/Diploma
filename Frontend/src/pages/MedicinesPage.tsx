@@ -4,6 +4,7 @@ import { Plus, Search, Pencil, Trash2, Loader2, ChevronRight } from 'lucide-reac
 import { useNavigate } from 'react-router-dom';
 import { medicineApi, locationApi } from '@/api';
 import type { MedicineDto } from '@/types/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -262,6 +263,8 @@ function MedicineForm({
 }
 
 export default function MedicinesPage() {
+  const { isAdmin, isManager } = useAuth();
+  const canManage = isAdmin || isManager;
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
@@ -345,13 +348,15 @@ export default function MedicinesPage() {
           <h1 className="text-2xl font-bold">Препарати</h1>
           <p className="text-muted-foreground">Управління медичними препаратами</p>
         </div>
-        <Button
-          onClick={() => {
-            setSelected(null);
-            setDialogMode('create');
-          }}>
-          <Plus className="h-4 w-4" /> Додати
-        </Button>
+        {canManage && (
+          <Button
+            onClick={() => {
+              setSelected(null);
+              setDialogMode('create');
+            }}>
+            <Plus className="h-4 w-4" /> Додати
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -388,7 +393,7 @@ export default function MedicinesPage() {
                   <TableHead>Термін</TableHead>
                   <TableHead>Статус</TableHead>
                   <TableHead>Локація</TableHead>
-                  <TableHead className="text-right">Дії</TableHead>
+                  {canManage && <TableHead className="text-right">Дії</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -418,31 +423,33 @@ export default function MedicinesPage() {
                         <TableCell className="text-muted-foreground">
                           {m.storageLocationName ?? '—'}
                         </TableCell>
-                        <TableCell className="text-right">
-                          <div
-                            className="flex items-center justify-end gap-1"
-                            onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setSelected(m);
-                                setDialogMode('edit');
-                              }}>
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => deleteMutation.mutate(m.medicineID)}>
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon">
-                              <ChevronRight className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                        {canManage && (
+                          <TableCell className="text-right">
+                            <div
+                              className="flex items-center justify-end gap-1"
+                              onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setSelected(m);
+                                  setDialogMode('edit');
+                                }}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => deleteMutation.mutate(m.medicineID)}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon">
+                                <ChevronRight className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })

@@ -3,6 +3,7 @@ import { useState, Fragment } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { iotApi } from '@/api';
 import type { IoTDeviceDto } from '@/types/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -41,6 +42,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function IoTDevicesPage() {
+  const { isAdmin, isManager } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -122,117 +124,123 @@ export default function IoTDevicesPage() {
             {activeCount} з {devices.length} активних датчиків
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>Зареєструвати пристрій</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Реєстрація нового IoT-пристрою</DialogTitle>
-              <DialogDescription>
-                Введіть серійний номер датчика (DeviceId) та параметри.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="deviceId" className="text-right">
-                  DeviceId
-                </Label>
-                <Input
-                  id="deviceId"
-                  value={newDevice.deviceID}
-                  onChange={(e) => setNewDevice({ ...newDevice, deviceID: e.target.value })}
-                  className="col-span-3"
-                  placeholder="Наприклад, ESP-8800"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="location" className="text-right">
-                  Розташування
-                </Label>
-                <Input
-                  id="location"
-                  value={newDevice.location}
-                  onChange={(e) => setNewDevice({ ...newDevice, location: e.target.value })}
-                  className="col-span-3"
-                  placeholder="Холодильник 1"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="type" className="text-right">
-                  Тип
-                </Label>
-                <Input
-                  id="type"
-                  value={newDevice.type}
-                  onChange={(e) => setNewDevice({ ...newDevice, type: e.target.value })}
-                  className="col-span-3"
-                  placeholder="DHT22"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">Темп. (°C)</Label>
-                <div className="col-span-3 flex gap-2">
+        {(isAdmin || isManager) && (
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>Зареєструвати пристрій</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Реєстрація нового IoT-пристрою</DialogTitle>
+                <DialogDescription>
+                  Введіть серійний номер датчика (DeviceId) та параметри.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="deviceId" className="text-right">
+                    DeviceId
+                  </Label>
                   <Input
-                    type="number"
-                    value={newDevice.minTemp}
-                    onChange={(e) =>
-                      setNewDevice({ ...newDevice, minTemp: Number(e.target.value) })
-                    }
-                    placeholder="Min"
-                  />
-                  <Input
-                    type="number"
-                    value={newDevice.maxTemp}
-                    onChange={(e) =>
-                      setNewDevice({ ...newDevice, maxTemp: Number(e.target.value) })
-                    }
-                    placeholder="Max"
+                    id="deviceId"
+                    value={newDevice.deviceID}
+                    onChange={(e) => setNewDevice({ ...newDevice, deviceID: e.target.value })}
+                    className="col-span-3"
+                    placeholder="Наприклад, ESP-8800"
                   />
                 </div>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">Вологість (%)</Label>
-                <div className="col-span-3 flex gap-2">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="location" className="text-right">
+                    Розташування
+                  </Label>
                   <Input
-                    type="number"
-                    value={newDevice.minHum}
-                    onChange={(e) => setNewDevice({ ...newDevice, minHum: Number(e.target.value) })}
-                    placeholder="Min"
-                  />
-                  <Input
-                    type="number"
-                    value={newDevice.maxHum}
-                    onChange={(e) => setNewDevice({ ...newDevice, maxHum: Number(e.target.value) })}
-                    placeholder="Max"
+                    id="location"
+                    value={newDevice.location}
+                    onChange={(e) => setNewDevice({ ...newDevice, location: e.target.value })}
+                    className="col-span-3"
+                    placeholder="Холодильник 1"
                   />
                 </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="type" className="text-right">
+                    Тип
+                  </Label>
+                  <Input
+                    id="type"
+                    value={newDevice.type}
+                    onChange={(e) => setNewDevice({ ...newDevice, type: e.target.value })}
+                    className="col-span-3"
+                    placeholder="DHT22"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">Темп. (°C)</Label>
+                  <div className="col-span-3 flex gap-2">
+                    <Input
+                      type="number"
+                      value={newDevice.minTemp}
+                      onChange={(e) =>
+                        setNewDevice({ ...newDevice, minTemp: Number(e.target.value) })
+                      }
+                      placeholder="Min"
+                    />
+                    <Input
+                      type="number"
+                      value={newDevice.maxTemp}
+                      onChange={(e) =>
+                        setNewDevice({ ...newDevice, maxTemp: Number(e.target.value) })
+                      }
+                      placeholder="Max"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right">Вологість (%)</Label>
+                  <div className="col-span-3 flex gap-2">
+                    <Input
+                      type="number"
+                      value={newDevice.minHum}
+                      onChange={(e) =>
+                        setNewDevice({ ...newDevice, minHum: Number(e.target.value) })
+                      }
+                      placeholder="Min"
+                    />
+                    <Input
+                      type="number"
+                      value={newDevice.maxHum}
+                      onChange={(e) =>
+                        setNewDevice({ ...newDevice, maxHum: Number(e.target.value) })
+                      }
+                      placeholder="Max"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Скасувати
-              </Button>
-              <Button
-                onClick={() =>
-                  registerMutation.mutate({
-                    deviceID: newDevice.deviceID,
-                    location: newDevice.location,
-                    type: newDevice.type,
-                    minTemperature: newDevice.minTemp,
-                    maxTemperature: newDevice.maxTemp,
-                    minHumidity: newDevice.minHum,
-                    maxHumidity: newDevice.maxHum,
-                    isActive: true,
-                    parameters: '{}',
-                  })
-                }
-                disabled={!newDevice.deviceID || registerMutation.isPending}>
-                Зареєструвати
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Скасувати
+                </Button>
+                <Button
+                  onClick={() =>
+                    registerMutation.mutate({
+                      deviceID: newDevice.deviceID,
+                      location: newDevice.location,
+                      type: newDevice.type,
+                      minTemperature: newDevice.minTemp,
+                      maxTemperature: newDevice.maxTemp,
+                      minHumidity: newDevice.minHum,
+                      maxHumidity: newDevice.maxHum,
+                      isActive: true,
+                      parameters: '{}',
+                    })
+                  }
+                  disabled={!newDevice.deviceID || registerMutation.isPending}>
+                  Зареєструвати
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -292,7 +300,7 @@ export default function IoTDevicesPage() {
                   <TableHead>Статус</TableHead>
                   <TableHead>Діапазон темп.</TableHead>
                   <TableHead>Діапазон вол.</TableHead>
-                  <TableHead>Дії</TableHead>
+                  {(isAdmin || isManager) && <TableHead>Дії</TableHead>}
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -318,48 +326,50 @@ export default function IoTDevicesPage() {
                       <TableCell className="text-sm">
                         {d.minHumidity}% – {d.maxHumidity}%
                       </TableCell>
-                      <TableCell
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex items-center gap-1">
-                        <Button
-                          variant={d.isActive ? 'outline' : 'default'}
-                          size="sm"
-                          onClick={() =>
-                            toggleMutation.mutate({ id: d.deviceID, active: !d.isActive })
-                          }>
-                          {d.isActive ? 'Вимкнути' : 'Увімкнути'}
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => setEditingDevice(d)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Видалити пристрій?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Пристрій <strong>{d.deviceID}</strong> ({d.location}) буде назавжди
-                                видалено з системи. Цю дію неможливо скасувати.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Скасувати</AlertDialogCancel>
-                              <AlertDialogAction
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                onClick={() => deleteMutation.mutate(d.deviceID)}>
-                                Видалити
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </TableCell>
+                      {(isAdmin || isManager) && (
+                        <TableCell
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center gap-1">
+                          <Button
+                            variant={d.isActive ? 'outline' : 'default'}
+                            size="sm"
+                            onClick={() =>
+                              toggleMutation.mutate({ id: d.deviceID, active: !d.isActive })
+                            }>
+                            {d.isActive ? 'Вимкнути' : 'Увімкнути'}
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => setEditingDevice(d)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Видалити пристрій?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Пристрій <strong>{d.deviceID}</strong> ({d.location}) буде
+                                  назавжди видалено з системи. Цю дію неможливо скасувати.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Скасувати</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  onClick={() => deleteMutation.mutate(d.deviceID)}>
+                                  Видалити
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
+                      )}
                       <TableCell>
                         <ChevronRight
                           className={`h-4 w-4 text-muted-foreground transition-transform ${expanded === d.deviceID ? 'rotate-90' : ''}`}
@@ -368,7 +378,9 @@ export default function IoTDevicesPage() {
                     </TableRow>
                     {expanded === d.deviceID && (
                       <TableRow key={`${d.deviceID}-exp`}>
-                        <TableCell colSpan={8} className="bg-muted/30 p-4">
+                        <TableCell
+                          colSpan={isAdmin || isManager ? 8 : 7}
+                          className="bg-muted/30 p-4">
                           <p className="mb-2 text-sm font-medium">
                             Останні показники умов зберігання
                           </p>
@@ -404,11 +416,11 @@ export default function IoTDevicesPage() {
         </CardContent>
       </Card>
       {/* Edit Device Dialog */}
-      {editingDevice && (
+      {(isAdmin || isManager) && editingDevice && (
         <Dialog open={!!editingDevice} onOpenChange={(open) => !open && setEditingDevice(null)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Редагування пристрою</DialogTitle>
+              <DialogTitle>Редагування пристрою {editingDevice.deviceID}</DialogTitle>
               <DialogDescription>Змініть параметри пристрою.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">

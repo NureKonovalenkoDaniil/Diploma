@@ -1,7 +1,7 @@
-using MedicationManagement.Models.DTOs;
 using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MedicationManagement.Models.DTOs;
 
 namespace MedicationManagement.Controllers
 {

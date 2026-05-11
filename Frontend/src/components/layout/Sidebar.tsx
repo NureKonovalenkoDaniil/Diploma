@@ -19,16 +19,20 @@ const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Дашборд' },
   { to: '/medicines', icon: Pill, label: 'Препарати' },
   { to: '/storage-locations', icon: MapPin, label: 'Локації' },
-  { to: '/iot-devices', icon: Cpu, label: 'Датчики' },
-  { to: '/users', icon: Users, label: 'Користувачі' },
   { to: '/incidents', icon: AlertTriangle, label: 'Інциденти', badge: 'incidents' },
   { to: '/notifications', icon: Bell, label: 'Сповіщення', badge: 'notifications' },
 ];
 
-const adminItems = [{ to: '/audit-log', icon: ClipboardList, label: 'Журнал аудиту' }];
+const managerItems = [{ to: '/iot-devices', icon: Cpu, label: 'Інвентар пристроїв' }];
+
+const adminItems = [
+  { to: '/users', icon: Users, label: 'Користувачі' },
+  { to: '/audit-log', icon: ClipboardList, label: 'Журнал аудиту' },
+];
 
 export function Sidebar() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isManager } = useAuth();
+  const canManageDevices = isAdmin || isManager;
 
   // Polling for active incidents count
   const { data: activeIncidents = [] } = useQuery({
@@ -96,6 +100,25 @@ export function Sidebar() {
               </NavLink>
             </li>
           ))}
+
+          {canManageDevices &&
+            managerItems.map((item) => (
+              <li key={item.to}>
+                <NavLink
+                  to={item.to}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
+                    )
+                  }>
+                  <item.icon className="h-4 w-4 shrink-0" />
+                  {item.label}
+                </NavLink>
+              </li>
+            ))}
 
           {isAdmin && (
             <>

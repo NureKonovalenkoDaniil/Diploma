@@ -169,17 +169,17 @@ public class MultiTenancyAndRbacTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task RBAC_GetUsers_Returns200ForManager()
+    public async Task RBAC_AdminOnly_GetUsers_Returns403ForManager()
     {
-        // Arrange: менеджер отримує список користувачів (тепер дозволено)
+        // Arrange: менеджер намагається отримати список користувачів (тільки для Admin)
         var clientManager = CreateClientWithToken("org-rbac-2", "Manager");
 
         // Act
         var response = await clientManager.GetAsync("/api/auth/users");
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK,
-            "ендпоінт GET /api/auth/users тепер доступний для Manager та User");
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden,
+            "ендпоінт GET /api/auth/users доступний лише для Administrator");
     }
 
     [Fact]
@@ -228,9 +228,9 @@ public class MultiTenancyAndRbacTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task RBAC_CreateStorageLocation_AllowedForUserRole()
+    public async Task RBAC_CreateStorageLocation_ForbiddenForUserRole()
     {
-        // Arrange: звичайний User створює локацію (тепер дозволено)
+        // Arrange: звичайний User намагається створити локацію (тільки Admin/Manager)
         var clientUser = CreateClientWithToken("org-rbac-4", "User");
 
         var payload = new
@@ -244,7 +244,7 @@ public class MultiTenancyAndRbacTests : IClassFixture<TestWebApplicationFactory>
         var response = await clientUser.PostAsJsonAsync("/api/storagelocation", payload);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Created,
-            "тепер Administrator, Manager та User можуть створювати локації зберігання");
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden,
+            "тільки Administrator та Manager можуть створювати локації зберігання");
     }
 }

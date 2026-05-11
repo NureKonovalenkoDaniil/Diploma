@@ -1,10 +1,10 @@
 using MedicationManagement.Models;
-using MedicationManagement.Models.DTOs;
 using MedicationManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using MedicationManagement.Models.DTOs;
 
 namespace MedicationManagement.Controllers
 {
@@ -40,7 +40,7 @@ namespace MedicationManagement.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Device,Administrator,Manager,User")]
+        [Authorize(Roles = "Device,Administrator,Manager")]
         public async Task<IActionResult> Create([FromBody] CreateStorageConditionDto dto)
         {
             if (!ModelState.IsValid)
@@ -51,9 +51,9 @@ namespace MedicationManagement.Controllers
                 var storageCondition = new StorageCondition
                 {
                     Temperature = dto.Temperature,
-                    Humidity = dto.Humidity,
-                    DeviceID = dto.DeviceID,
-                    Timestamp = DateTime.UtcNow,
+                    Humidity    = dto.Humidity,
+                    DeviceID    = dto.DeviceID,
+                    Timestamp   = DateTime.UtcNow,
                     // OrganizationId підставляється автоматично у сервісі через IHttpContextAccessor
                 };
 

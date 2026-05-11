@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Loader2, Users, ShieldCheck, User as UserIcon } from 'lucide-react';
 import { api } from '@/api/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -217,8 +216,6 @@ function CreateManagerDialog({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function UsersPage() {
   const qc = useQueryClient();
-  const { role } = useAuth();
-
   const [showCreate, setShowCreate] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -255,11 +252,9 @@ export default function UsersPage() {
             Перегляд та управління акаунтами вашої організації
           </p>
         </div>
-        {role === 'Administrator' && (
-          <Button onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4 mr-1" /> Додати менеджера
-          </Button>
-        )}
+        <Button onClick={() => setShowCreate(true)}>
+          <Plus className="h-4 w-4 mr-1" /> Додати менеджера
+        </Button>
       </div>
 
       {successMessage && (

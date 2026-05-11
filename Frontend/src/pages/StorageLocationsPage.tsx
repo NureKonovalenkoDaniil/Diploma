@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { locationApi, iotApi } from '@/api';
 import type { StorageLocationDto, IoTDeviceDto } from '@/types/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -108,6 +109,8 @@ function LocationForm({
 }
 
 export default function StorageLocationsPage() {
+  const { isAdmin, isManager } = useAuth();
+  const canManage = isAdmin || isManager;
   const qc = useQueryClient();
   const [dialogMode, setDialogMode] = useState<'create' | 'edit' | null>(null);
   const [selected, setSelected] = useState<StorageLocationDto | null>(null);
@@ -158,13 +161,15 @@ export default function StorageLocationsPage() {
           <h1 className="text-2xl font-bold">Локації зберігання</h1>
           <p className="text-muted-foreground">Управління місцями зберігання препаратів</p>
         </div>
-        <Button
-          onClick={() => {
-            setSelected(null);
-            setDialogMode('create');
-          }}>
-          <Plus className="h-4 w-4" /> Додати
-        </Button>
+        {canManage && (
+          <Button
+            onClick={() => {
+              setSelected(null);
+              setDialogMode('create');
+            }}>
+            <Plus className="h-4 w-4" /> Додати
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -193,31 +198,33 @@ export default function StorageLocationsPage() {
                 <CardContent className="space-y-1 text-sm text-muted-foreground">
                   {l.address && <p>📍 {l.address}</p>}
                   {l.ioTDeviceLocation && <p>🔌 IoT: {l.ioTDeviceLocation}</p>}
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelected(l);
-                        setDialogMode('edit');
-                      }}>
-                      <Pencil className="h-3 w-3" /> Редагувати
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => deleteMutation.mutate(l.locationId)}>
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
+                  {canManage && (
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelected(l);
+                          setDialogMode('edit');
+                        }}>
+                        <Pencil className="h-3 w-3" /> Редагувати
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => deleteMutation.mutate(l.locationId)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
         {!isLoading && locations.length === 0 && (
           <Card className="col-span-3">
             <CardContent className="py-10 text-center text-muted-foreground">
-              Локацій ще немає. Додайте першу.
+              Локацій ще немає. {canManage && 'Додайте першу.'}
             </CardContent>
           </Card>
         )}
