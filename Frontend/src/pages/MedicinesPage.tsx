@@ -263,8 +263,8 @@ function MedicineForm({
 }
 
 export default function MedicinesPage() {
-  const { isAdmin, isManager } = useAuth();
-  const canManage = isAdmin || isManager;
+  const { isAdmin, isManager, isUser } = useAuth();
+  const canManage = isAdmin || isManager || isUser;
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [search, setSearch] = useState('');

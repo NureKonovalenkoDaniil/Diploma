@@ -40,7 +40,7 @@ namespace MedicationManagement.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Device,Administrator,Manager")]
+        [Authorize(Roles = "Device,Administrator,Manager,User")]
         public async Task<IActionResult> Create([FromBody] CreateStorageConditionDto dto)
         {
             if (!ModelState.IsValid)

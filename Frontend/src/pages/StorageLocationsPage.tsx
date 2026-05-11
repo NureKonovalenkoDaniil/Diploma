@@ -109,8 +109,8 @@ function LocationForm({
 }
 
 export default function StorageLocationsPage() {
-  const { isAdmin, isManager } = useAuth();
-  const canManage = isAdmin || isManager;
+  const { isAdmin, isManager, isUser } = useAuth();
+  const canManage = isAdmin || isManager || isUser;
   const qc = useQueryClient();
   const [dialogMode, setDialogMode] = useState<'create' | 'edit' | null>(null);
   const [selected, setSelected] = useState<StorageLocationDto | null>(null);

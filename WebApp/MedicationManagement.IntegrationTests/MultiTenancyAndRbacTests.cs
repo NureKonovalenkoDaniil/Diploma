@@ -228,23 +228,16 @@ public class MultiTenancyAndRbacTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task RBAC_CreateStorageLocation_ForbiddenForUserRole()
+    public async Task RBAC_AuditLog_ForbiddenForUserRole()
     {
-        // Arrange: звичайний User намагається створити локацію (тільки Admin/Manager)
+        // Arrange: звичайний User намагається отримати доступ до Audit Log (тільки Admin)
         var clientUser = CreateClientWithToken("org-rbac-4", "User");
 
-        var payload = new
-        {
-            name = "Нова локація від User",
-            address = "вул. Тестова, 1",
-            locationType = "Pharmacy"
-        };
-
         // Act
-        var response = await clientUser.PostAsJsonAsync("/api/storagelocation", payload);
+        var response = await clientUser.GetAsync("/api/auditlog");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden,
-            "тільки Administrator та Manager можуть створювати локації зберігання");
+            "тільки Administrator може переглядати журнали аудиту");
     }
 }

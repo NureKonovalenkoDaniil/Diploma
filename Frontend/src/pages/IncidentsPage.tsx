@@ -20,8 +20,8 @@ import { format } from 'date-fns';
 type TabType = 'active' | 'all';
 
 export default function IncidentsPage() {
-  const { isAdmin, isManager } = useAuth();
-  const canManage = isAdmin || isManager;
+  const { isAdmin, isManager, isUser } = useAuth();
+  const canManage = isAdmin || isManager || isUser;
   const qc = useQueryClient();
   const [tab, setTab] = useState<TabType>('active');
 

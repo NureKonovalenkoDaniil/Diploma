@@ -22,6 +22,10 @@ object RoleHelper {
     fun isAdmin(role: String?): Boolean = role == "Administrator"
 
     fun isManager(role: String?): Boolean = role == "Administrator" || role == "Manager"
+    
+    fun isUser(role: String?): Boolean = role == "Administrator" || role == "Manager" || role == "User"
 
-    fun canManageMedicines(role: String?): Boolean = isManager(role)
+    fun hasFullAccess(role: String?): Boolean = role == "Administrator" || role == "Manager" || role == "User"
+
+    fun canManageMedicines(role: String?): Boolean = hasFullAccess(role)
 }

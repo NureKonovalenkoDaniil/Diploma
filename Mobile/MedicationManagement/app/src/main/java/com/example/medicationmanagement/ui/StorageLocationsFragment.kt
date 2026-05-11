@@ -62,9 +62,9 @@ class StorageLocationsFragment : Fragment() {
             startActivity(Intent(requireContext(), AddDeviceActivity::class.java))
         }
 
-        // RBAC: show add button only for Manager/Admin
+        // RBAC: show add button only for FullAccess users (Admin, Manager, User)
         val role = RoleHelper.getCurrentRole(requireContext())
-        if (!RoleHelper.isManager(role)) {
+        if (!RoleHelper.hasFullAccess(role)) {
             fabAddLocation.hide()
         }
     }

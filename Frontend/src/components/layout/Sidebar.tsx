@@ -31,8 +31,8 @@ const adminItems = [
 ];
 
 export function Sidebar() {
-  const { isAdmin, isManager } = useAuth();
-  const canManageDevices = isAdmin || isManager;
+  const { isAdmin, isManager, isUser } = useAuth();
+  const canManageDevices = isAdmin || isManager || isUser;
 
   // Polling for active incidents count
   const { data: activeIncidents = [] } = useQuery({

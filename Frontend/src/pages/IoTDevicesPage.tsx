@@ -42,7 +42,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function IoTDevicesPage() {
-  const { isAdmin, isManager } = useAuth();
+  const { isAdmin, isManager, isUser } = useAuth();
+  const canManage = isAdmin || isManager || isUser;
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -124,7 +125,7 @@ export default function IoTDevicesPage() {
             {activeCount} з {devices.length} активних датчиків
           </p>
         </div>
-        {(isAdmin || isManager) && (
+        {canManage && (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>Зареєструвати пристрій</Button>
@@ -300,7 +301,7 @@ export default function IoTDevicesPage() {
                   <TableHead>Статус</TableHead>
                   <TableHead>Діапазон темп.</TableHead>
                   <TableHead>Діапазон вол.</TableHead>
-                  {(isAdmin || isManager) && <TableHead>Дії</TableHead>}
+                  {canManage && <TableHead>Дії</TableHead>}
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -326,7 +327,7 @@ export default function IoTDevicesPage() {
                       <TableCell className="text-sm">
                         {d.minHumidity}% – {d.maxHumidity}%
                       </TableCell>
-                      {(isAdmin || isManager) && (
+                      {canManage && (
                         <TableCell
                           onClick={(e) => e.stopPropagation()}
                           className="flex items-center gap-1">
@@ -379,7 +380,7 @@ export default function IoTDevicesPage() {
                     {expanded === d.deviceID && (
                       <TableRow key={`${d.deviceID}-exp`}>
                         <TableCell
-                          colSpan={isAdmin || isManager ? 8 : 7}
+                          colSpan={canManage ? 8 : 7}
                           className="bg-muted/30 p-4">
                           <p className="mb-2 text-sm font-medium">
                             Останні показники умов зберігання
@@ -416,7 +417,7 @@ export default function IoTDevicesPage() {
         </CardContent>
       </Card>
       {/* Edit Device Dialog */}
-      {(isAdmin || isManager) && editingDevice && (
+      {canManage && editingDevice && (
         <Dialog open={!!editingDevice} onOpenChange={(open) => !open && setEditingDevice(null)}>
           <DialogContent>
             <DialogHeader>

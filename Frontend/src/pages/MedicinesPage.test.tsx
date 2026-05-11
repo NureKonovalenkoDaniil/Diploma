@@ -81,6 +81,7 @@ describe('MedicinesPage', () => {
       logout: vi.fn(),
       isAdmin: true,
       isManager: false,
+      isUser: false,
       role: 'Administrator',
       isLoading: false,
     })
@@ -101,6 +102,7 @@ describe('MedicinesPage', () => {
       logout: vi.fn(),
       isAdmin: false,
       isManager: true,
+      isUser: false,
       role: 'Manager',
       isLoading: false,
     })
@@ -112,7 +114,7 @@ describe('MedicinesPage', () => {
     })
   })
 
-  it('should NOT show "Додати" button for User', async () => {
+  it('should show "Додати" button for User', async () => {
     const { useAuth } = await import('@/contexts/AuthContext')
     vi.mocked(useAuth).mockReturnValue({
       user: { id: '3', email: 'user@test.com', userName: 'user', roles: ['User'], organizationId: 'org-1' },
@@ -121,6 +123,7 @@ describe('MedicinesPage', () => {
       logout: vi.fn(),
       isAdmin: false,
       isManager: false,
+      isUser: true,
       role: 'User',
       isLoading: false,
     })
@@ -131,7 +134,7 @@ describe('MedicinesPage', () => {
       expect(screen.getByText('Amoxicillin')).toBeInTheDocument()
     })
 
-    expect(screen.queryByText('Додати')).not.toBeInTheDocument()
+    expect(screen.getByText('Додати')).toBeInTheDocument()
   })
 
   it('should show edit and delete buttons for Administrator', async () => {
@@ -143,6 +146,7 @@ describe('MedicinesPage', () => {
       logout: vi.fn(),
       isAdmin: true,
       isManager: false,
+      isUser: false,
       role: 'Administrator',
       isLoading: false,
     })
@@ -156,7 +160,7 @@ describe('MedicinesPage', () => {
     expect(screen.getByText('Дії')).toBeInTheDocument()
   })
 
-  it('should NOT show edit and delete buttons for User', async () => {
+  it('should show edit and delete buttons for User', async () => {
     const { useAuth } = await import('@/contexts/AuthContext')
     vi.mocked(useAuth).mockReturnValue({
       user: { id: '3', email: 'user@test.com', userName: 'user', roles: ['User'], organizationId: 'org-1' },
@@ -165,6 +169,7 @@ describe('MedicinesPage', () => {
       logout: vi.fn(),
       isAdmin: false,
       isManager: false,
+      isUser: true,
       role: 'User',
       isLoading: false,
     })
@@ -175,7 +180,7 @@ describe('MedicinesPage', () => {
       expect(screen.getByText('Amoxicillin')).toBeInTheDocument()
     })
 
-    expect(screen.queryByText('Дії')).not.toBeInTheDocument()
+    expect(screen.getByText('Дії')).toBeInTheDocument()
   })
 
   it('should display medicines list correctly', async () => {
@@ -187,6 +192,7 @@ describe('MedicinesPage', () => {
       logout: vi.fn(),
       isAdmin: true,
       isManager: false,
+      isUser: false,
       role: 'Administrator',
       isLoading: false,
     })
@@ -211,6 +217,7 @@ describe('MedicinesPage', () => {
       logout: vi.fn(),
       isAdmin: true,
       isManager: false,
+      isUser: false,
       role: 'Administrator',
       isLoading: false,
     })
@@ -232,6 +239,7 @@ describe('MedicinesPage', () => {
       logout: vi.fn(),
       isAdmin: true,
       isManager: false,
+      isUser: false,
       role: 'Administrator',
       isLoading: false,
     })
@@ -254,6 +262,7 @@ describe('MedicinesPage', () => {
       logout: vi.fn(),
       isAdmin: true,
       isManager: false,
+      isUser: false,
       role: 'Administrator',
       isLoading: false,
     })

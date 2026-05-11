@@ -153,8 +153,8 @@ function StorageChart({ devices }: { devices: { deviceID: string; location: stri
 }
 
 export default function DashboardPage() {
-  const { isAdmin, isManager } = useAuth()
-  const canManage = isAdmin || isManager
+  const { isAdmin, isManager, isUser } = useAuth()
+  const canManage = isAdmin || isManager || isUser
 
   const { data: medicines = [], isLoading: mLoading } = useQuery({
     queryKey: ['medicines'],

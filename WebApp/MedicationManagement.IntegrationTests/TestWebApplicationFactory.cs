@@ -14,8 +14,9 @@ namespace MedicationManagement.IntegrationTests;
 /// </summary>
 public class TestWebApplicationFactory : WebApplicationFactory<Program>
 {
-    // Унікальне ім'я БД для кожного екземпляру фабрики
-    private readonly string _dbName = Guid.NewGuid().ToString();
+    // Окремі підключення для кожного контексту
+    private Microsoft.Data.Sqlite.SqliteConnection? _mainConnection;
+    private Microsoft.Data.Sqlite.SqliteConnection? _usersConnection;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -25,22 +26,34 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<DbContextOptions<MedicineStorageContext>>();
             services.RemoveAll<DbContextOptions<UserContext>>();
 
-            // Реєструємо InMemory бази даних з конфігурацією для ігнорування TransactionIgnoredWarning
+            // Створюємо окремі SQLite InMemory підключення
+            _mainConnection = new Microsoft.Data.Sqlite.SqliteConnection("DataSource=:memory:");
+            _mainConnection.Open();
+
+            _usersConnection = new Microsoft.Data.Sqlite.SqliteConnection("DataSource=:memory:");
+            _usersConnection.Open();
+
             services.AddDbContext<MedicineStorageContext>(options =>
             {
-                options.UseInMemoryDatabase(_dbName + "_main");
-                // InMemory Database не підтримує транзакції, але наш код їх використовує.
-                // Замість того, щоб вигідати, ігноруємо попередження (оскільки це тестова БД).
-                options.ConfigureWarnings(w =>
-                    w.Ignore(InMemoryEventId.TransactionIgnoredWarning));
+                options.UseSqlite(_mainConnection);
             });
 
             services.AddDbContext<UserContext>(options =>
             {
-                options.UseInMemoryDatabase(_dbName + "_users");
-                options.ConfigureWarnings(w =>
-                    w.Ignore(InMemoryEventId.TransactionIgnoredWarning));
+                options.UseSqlite(_usersConnection);
             });
+
+            // Запускаємо міграції (створення таблиць) для SQLite БД
+            var sp = services.BuildServiceProvider();
+            using (var scope = sp.CreateScope())
+            {
+                var scopedServices = scope.ServiceProvider;
+                var dbMain = scopedServices.GetRequiredService<MedicineStorageContext>();
+                var dbUsers = scopedServices.GetRequiredService<UserContext>();
+                
+                dbMain.Database.EnsureCreated();
+                dbUsers.Database.EnsureCreated();
+            }
         });
 
         // Перевизначаємо конфігурацію для тестів

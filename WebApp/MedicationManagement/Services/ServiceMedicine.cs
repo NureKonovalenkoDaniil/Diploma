@@ -329,6 +329,13 @@ namespace MedicationManagement.Services
                     medicine.StorageLocationId = targetLocation.LocationId;
                 }
 
+                if (medicine.Status == MedicineStatus.Disposed && medicine.Quantity > 0)
+                {
+                    medicine.Status = medicine.ExpiryDate <= DateTime.UtcNow 
+                        ? MedicineStatus.Expired 
+                        : MedicineStatus.Active;
+                }
+
                 await _context.SaveChangesAsync();
 
                 var orgId = CurrentOrgId;

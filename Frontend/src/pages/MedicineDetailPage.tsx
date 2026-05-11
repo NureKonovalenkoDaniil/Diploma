@@ -33,7 +33,7 @@ export default function MedicineDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { isAdmin, isManager } = useAuth();
+  const { isAdmin, isManager, isUser } = useAuth();
   const [open, setOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const [stockOpen, setStockOpen] = useState<null | 'receive' | 'issue' | 'dispose'>(null);
@@ -71,7 +71,7 @@ export default function MedicineDetailPage() {
     queryFn: locationApi.getAll,
   });
 
-  const canManage = isAdmin || isManager;
+  const canManage = isAdmin || isManager || isUser;
 
   const invalidateMedicineViews = () => {
     qc.invalidateQueries({ queryKey: ['medicines', medId] });

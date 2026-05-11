@@ -12,6 +12,7 @@ interface AuthContextType {
   logout: () => void
   isAdmin: boolean
   isManager: boolean
+  isUser: boolean
   role: 'Administrator' | 'Manager' | 'User' | 'Device' | null
   isLoading: boolean
 }
@@ -79,9 +80,10 @@ export function AuthProvider({ children, queryClient }: AuthProviderProps) {
 
   const isAdmin = role === 'Administrator'
   const isManager = role === 'Manager'
+  const isUser = role === 'User'
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAdmin, isManager, role, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isAdmin, isManager, isUser, role, isLoading }}>
       {children}
     </AuthContext.Provider>
   )
