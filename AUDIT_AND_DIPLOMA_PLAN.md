@@ -75,7 +75,7 @@
 
 1. Потрібні unit / integration тести для нових командних endpoint-ів (особливо: валідація залишку, multi-tenancy фільтри, транзакційність).
 2. `LoadTest.GET`/`LoadTest.POST` все ще мають hardcoded URL і JWT-токен — ризик витоку і неактуальність після змін (`DeviceID` string, multi-tenancy, статуси).
-3. Mobile застосунок потребує кардинальної модернізації (MVVM+Compose+Material3, план в [MOBILE_IMPROVEMENT_PLAN.md](MOBILE_IMPROVEMENT_PLAN.md)).
+3. Мобільний застосунок тепер є повнофункціональним клієнтом (копією веб-додатка) для всіх груп користувачів.
 4. Відсутній `docker-compose.yml` і документований “single command run” для демонстрації диплому (backend + db + frontend).
 5. Відсутні ER/C4 діаграми та узгоджений “happy path” сценарій демонстрації (life cycle + storage safety + incidents + audit).
 6. Підтвердження пошти залежить від SMTP-конфігурації; без валідних налаштувань листи не надсилаються.
