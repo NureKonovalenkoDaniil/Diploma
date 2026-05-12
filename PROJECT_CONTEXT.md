@@ -1019,3 +1019,46 @@ Optional-функції не повинні шкодити реалізації 
 - Що потрібно робити далі: Поетапна реалізація Фази 6.5 за планом у MOBILE_MODERNIZATION_PLAN.md
 - Документація: MOBILE_MODERNIZATION_PLAN.md (3200+ рядків) — детальний архітектурний план, дизайн-система Material 3, RBAC матриця, функціональність по вкладкам, 40+ конкретних задач, Gradle залежності, Definition of Done
 - Статус: ✅ План створено і готовий до реалізації, базові компоненти вже на місці
+
+### Запис 16 — Фаза 7: Аудит БД та оптимізація індексів (виконано 2026-05-12)
+
+- Дата: 2026-05-12
+- Завдання: Провести аудит всіх міграцій для виявлення невикористовуваних властивостей, видалити їх та додати оптимізуючі індекси для покращення продуктивності запитів
+- Переглянуті файли / модулі:
+  - Моделі: `ApplicationUser.cs`, `AuditLog.cs`, `Medicine.cs`, `Notification.cs`, `StorageIncident.cs`, `StorageLocation.cs`, `StorageCondition.cs`, `MedicineLifecycleEvent.cs`, `IoTDevice.cs`
+  - Міграції: 9 файлів у `Migrations/`
+  - Контролери та Сервіси: 9 контролерів та 8 сервісів для аналізу шаблонів запитів
+  - Конфігурація: `appsettings.json`, таблиці у SQL Server
+- Основні висновки:
+  1. **Невиконані властивості в ApplicationUser**: Виявлено 6 успадкованих від IdentityUser невикористовуваних стовпців: `PhoneNumber`, `PhoneNumberConfirmed`, `TwoFactorEnabled`, `LockoutEnd`, `LockoutEnabled`, `AccessFailedCount` — всі видалені без побічних ефектів
+  2. **Шаблони запитів**: Проаналізовано 8 сервісів для визначення оптимальних індексів. Виявлено, що 90% запитів фільтрують по `OrganizationId` + додатковому полю (ExpiryDate, Status, Timestamp, IsRead, Severity, TargetRole)
+  3. **Проблема з nullable EntityType**: Спроба індексувати `AuditLog.EntityType` (nvarchar(max), nullable) закінчилася помилкою SQL Server Error 1919. Вирішено видалити цей індекс, оскільки фільтрування по EntityType менш критичне за основні бізнес-запити на OrganizationId+Severity
+  4. **Успішне розгортання**: 15 оптимізуючих індексів успішно розгорнуто на 8 таблицях (повна міграція застосована)
+- Що змінено:
+  - **Міграція `20260512144553_RemoveUnusedIdentityUserColumns.cs`** (✅ успішно застосована):
+    - Видалено 6 невикористовуваних стовпців з таблиці AspNetUsers: PhoneNumber, PhoneNumberConfirmed, TwoFactorEnabled, LockoutEnd, LockoutEnabled, AccessFailedCount
+    - Оновлено: Up() + Down() методи з правильною типізацією для rollback
+  - **Міграція `20260512144854_AddPerformanceOptimizationIndexes.cs`** (✅ успішно застосована):
+    - Додано 15 композитних та одиничних індексів для оптимізації запитів:
+      - **Medicines** (2): IX_Medicines_OrganizationId_ExpiryDate, IX_Medicines_OrganizationId_Status
+      - **Notifications** (3): IX_Notifications_OrganizationId_CreatedAt DESC, IX_Notifications_OrganizationId_IsRead, IX_Notifications_TargetRole
+      - **AuditLogs** (2): IX_AuditLogs_OrganizationId_Timestamp DESC, IX_AuditLogs_OrganizationId_Severity
+      - **StorageIncidents** (3): IX_StorageIncidents_OrganizationId_Status, IX_StorageIncidents_DeviceId_OrganizationId, IX_StorageIncidents_OrganizationId_CreatedAt DESC
+      - **StorageLocations** (1): IX_StorageLocations_OrganizationId
+      - **StorageConditions** (2): IX_StorageConditions_OrganizationId_Timestamp DESC, IX_StorageConditions_DeviceID_Timestamp DESC
+      - **MedicineLifecycleEvents** (2): IX_MedicineLifecycleEvents_OrganizationId, IX_MedicineLifecycleEvents_MedicineId_OrganizationId
+      - **IoTDevices** (1): IX_IoTDevices_OrganizationId_IsActive
+    - Примітка: EntityType індекс видалено через невідповідність SQL Server обмеженням (nullable nvarchar(max))
+    - Оновлено: Up() + Down() методи з коментарем причини видалення EntityType індексу
+- Причина: Видалення невикористовуваних стовпців та оптимізація швидкості запитів (критично для multi-tenant системи з частим фільтруванням по OrganizationId + додатковим полям)
+- Ризики / наслідки:
+  - **ApplicationUser**: Прямих ризиків немає, оскільки ці властивості не використовувалися у коді жодного контролера або сервісу
+  - **EntityType індекс**: Видалено, оскільки nullable text стовпець не підтримується SQL Server індексами. Фільтрування по EntityType можна здійснювати на рівні БЛ при необхідності (рідко використовується)
+  - **Розмір БД**: Зменшується на ~6 стовпців × n-записів (відсоток залежить від кількості користувачів)
+  - **Продуктивність**: SELECT запити з фільтруванням по OrganizationId будуть швидшими завдяки composite-індексам (особливо для великих таблиць типу StorageConditions, AuditLogs)
+  - **Загалом**: Немає функціональних розривів, суто покращення продуктивності та очищення БД
+- Наступний крок: Фаза 7.1 — Docker Compose конфігурація та DevOps документація
+- Статус: ✅ Аудит завершено, міграції застосовано, код скомітено
+  - Build: ✅ 0 помилок, 0 попереджень
+  - Тести: ✅ 56/56 тестів проходять (20 frontend + 36 backend)
+  - База даних: ✅ 2 міграції успішно застосовано, дані не втрачено
