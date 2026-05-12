@@ -63,7 +63,7 @@ namespace MedicationManagement.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("MedicationManagement.Models.IoTDevice", b =>
@@ -114,7 +114,7 @@ namespace MedicationManagement.Migrations
 
                     b.HasKey("DeviceID");
 
-                    b.ToTable("IoTDevices");
+                    b.ToTable("IoTDevices", (string)null);
                 });
 
             modelBuilder.Entity("MedicationManagement.Models.Medicine", b =>
@@ -185,7 +185,7 @@ namespace MedicationManagement.Migrations
 
                     b.HasIndex("StorageLocationId");
 
-                    b.ToTable("Medicines");
+                    b.ToTable("Medicines", (string)null);
                 });
 
             modelBuilder.Entity("MedicationManagement.Models.MedicineLifecycleEvent", b =>
@@ -233,7 +233,7 @@ namespace MedicationManagement.Migrations
 
                     b.HasIndex("RelatedLocationId");
 
-                    b.ToTable("MedicineLifecycleEvents");
+                    b.ToTable("MedicineLifecycleEvents", (string)null);
                 });
 
             modelBuilder.Entity("MedicationManagement.Models.Notification", b =>
@@ -283,7 +283,7 @@ namespace MedicationManagement.Migrations
 
                     b.HasKey("NotificationId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("MedicationManagement.Models.StorageCondition", b =>
@@ -316,7 +316,7 @@ namespace MedicationManagement.Migrations
 
                     b.HasIndex("DeviceID");
 
-                    b.ToTable("StorageConditions");
+                    b.ToTable("StorageConditions", (string)null);
                 });
 
             modelBuilder.Entity("MedicationManagement.Models.StorageIncident", b =>
@@ -373,7 +373,7 @@ namespace MedicationManagement.Migrations
 
                     b.HasIndex("LocationId");
 
-                    b.ToTable("StorageIncidents");
+                    b.ToTable("StorageIncidents", (string)null);
                 });
 
             modelBuilder.Entity("MedicationManagement.Models.StorageLocation", b =>
@@ -410,7 +410,7 @@ namespace MedicationManagement.Migrations
 
                     b.HasIndex("IoTDeviceId");
 
-                    b.ToTable("StorageLocations");
+                    b.ToTable("StorageLocations", (string)null);
                 });
 
             modelBuilder.Entity("MedicationManagement.Models.Medicine", b =>
