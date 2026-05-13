@@ -21,6 +21,8 @@ class MedicineAdapter(
         val type: TextView = itemView.findViewById(R.id.medType)
         val expiry: TextView = itemView.findViewById(R.id.medExpiry)
         val quantity: TextView = itemView.findViewById(R.id.medQuantity)
+        val status: TextView = itemView.findViewById(R.id.medStatus)
+        val location: TextView = itemView.findViewById(R.id.medLocation)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MedViewHolder {
@@ -34,6 +36,8 @@ class MedicineAdapter(
         holder.name.text = item.name
         holder.type.text = "${item.type} | ${item.category}"
         holder.quantity.text = item.quantity.toString()
+        holder.status.text = item.status.ifBlank { "Active" }
+        holder.location.text = item.storageLocationName ?: "—"
 
         // Форматування дати
         try {
@@ -74,4 +78,5 @@ class MedicineAdapter(
         items = newItems
         notifyDataSetChanged()
     }
+
 }

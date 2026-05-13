@@ -28,6 +28,14 @@ class AddMedicineActivity : AppCompatActivity() {
         val type = findViewById<EditText>(R.id.inputType)
         val category = findViewById<EditText>(R.id.inputCategory)
         val quantity = findViewById<EditText>(R.id.inputQuantity)
+        val manufacturer = findViewById<EditText>(R.id.inputManufacturer)
+        val batchNumber = findViewById<EditText>(R.id.inputBatchNumber)
+        val description = findViewById<EditText>(R.id.inputDescription)
+        val minTemp = findViewById<EditText>(R.id.inputMinTemp)
+        val maxTemp = findViewById<EditText>(R.id.inputMaxTemp)
+        val minHumidity = findViewById<EditText>(R.id.inputMinHumidity)
+        val maxHumidity = findViewById<EditText>(R.id.inputMaxHumidity)
+        val storageLocationId = findViewById<EditText>(R.id.inputStorageLocationId)
         expiryInput = findViewById(R.id.inputExpiry)
         val btnCreate = findViewById<Button>(R.id.btnCreate)
 
@@ -66,7 +74,21 @@ class AddMedicineActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            createMedicine(n, t, c, q, e)
+            createMedicine(
+                name = n,
+                type = t,
+                category = c,
+                quantity = q,
+                expiryDate = e,
+                manufacturer = manufacturer.text.toString().trim().ifBlank { null },
+                batchNumber = batchNumber.text.toString().trim().ifBlank { null },
+                description = description.text.toString().trim().ifBlank { null },
+                minTemp = minTemp.text.toString().trim().toDoubleOrNull(),
+                maxTemp = maxTemp.text.toString().trim().toDoubleOrNull(),
+                minHumidity = minHumidity.text.toString().trim().toDoubleOrNull(),
+                maxHumidity = maxHumidity.text.toString().trim().toDoubleOrNull(),
+                storageLocationId = storageLocationId.text.toString().trim().toIntOrNull()
+            )
         }
     }
 
@@ -76,7 +98,21 @@ class AddMedicineActivity : AppCompatActivity() {
         expiryInput.setText(sdf.format(calendar.time))
     }
 
-    private fun createMedicine(name: String, type: String, category: String, quantity: Int, expiryDate: String) {
+    private fun createMedicine(
+        name: String,
+        type: String,
+        category: String,
+        quantity: Int,
+        expiryDate: String,
+        manufacturer: String?,
+        batchNumber: String?,
+        description: String?,
+        minTemp: Double?,
+        maxTemp: Double?,
+        minHumidity: Double?,
+        maxHumidity: Double?,
+        storageLocationId: Int?
+    ) {
         val btnCreate = findViewById<Button>(R.id.btnCreate)
         btnCreate.isEnabled = false
         btnCreate.text = "Створення..."
@@ -90,7 +126,15 @@ class AddMedicineActivity : AppCompatActivity() {
                     type = type,
                     category = category,
                     quantity = quantity,
-                    expiryDate = "${expiryDate}T00:00:00" // Append time for ISO 8601
+                    expiryDate = "${expiryDate}T00:00:00",
+                    manufacturer = manufacturer,
+                    batchNumber = batchNumber,
+                    description = description,
+                    minStorageTemp = minTemp,
+                    maxStorageTemp = maxTemp,
+                    minStorageHumidity = minHumidity,
+                    maxStorageHumidity = maxHumidity,
+                    storageLocationId = storageLocationId
                 )
                 
                 val response = api.createMedicine(newMedicine)

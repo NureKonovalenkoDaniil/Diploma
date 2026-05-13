@@ -19,6 +19,16 @@ object RoleHelper {
         }
     }
 
+    fun getOrganizationId(context: Context): String? {
+        val token = TokenManager.getInstance(context).getToken() ?: return null
+        return try {
+            val decodedToken = JWT.decode(token)
+            decodedToken.getClaim("OrganizationId").asString()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     fun isAdmin(role: String?): Boolean = role == "Administrator"
 
     fun isManager(role: String?): Boolean = role == "Administrator" || role == "Manager"

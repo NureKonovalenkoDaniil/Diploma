@@ -1,9 +1,12 @@
 package com.example.medicationmanagement.model
 
 data class AuditLog(
-    val Id: Int,
-    val Action: String,
-    val User: String,
-    val Timestamp: String,
-    val Details: String? = null
+    val id: Int = 0,
+    val user: String = "",
+    val action: String = "",
+    val entityType: String? = null,
+    val entityId: Int? = null,
+    val timestamp: String = "",
+    val details: String = "",
+    val severity: String = "Info"
 )

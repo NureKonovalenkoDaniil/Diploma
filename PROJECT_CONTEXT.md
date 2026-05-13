@@ -26,6 +26,44 @@
 
 ## 2.1. Останні зміни (після 2026-04-29)
 
+### [ВИКОНАНО 2026-05-13] Вирівнювання mobile app під backend DTO та routes
+
+- Переведено mobile API на реальні backend routes:
+  - `api/auth/users` для списку та видалення користувачів;
+  - `api/auth/assign-role` для зміни ролі;
+  - `api/iotdevice/conditions/{deviceId}` для історії умов на деталях пристрою.
+- Узгоджено mobile DTO з backend:
+  - `Medicine` тепер містить status, manufacturer, batchNumber, description, storage thresholds і storage location;
+  - `IoTDevice` та `StorageCondition` приведені до серверних полів;
+  - `UserDto` і `AuditLogDto` синхронізовані з відповідями backend.
+- Окрему вкладку `StorageLocationsFragment` переведено з повторного використання `DeviceAdapter` на власний adapter/viewmodel для локацій зберігання.
+- `AuditLogFragment` більше не покладається на неіснуючу серверну фільтрацію по entityType: фільтр працює локально по вже завантажених записах, а timestamp читається коректно.
+- `DeviceDetailsActivity` почав будувати графік за реальними storage conditions, а не на згенерованих точках.
+- Розширено medicine screens: список, details, create/edit форми тепер приймають і відображають повніші backend-поля.
+- Android збірка перевірена: `assembleDebug` успішно проходить.
+
+### [ВИКОНАНО 2026-05-13] Фікс вкладки Storage Locations у mobile
+
+- Виправлено мепінг DTO для `StorageLocationDto`, щоб коректно читати `IoTDeviceId` з backend (`iotDeviceId` / `ioTDeviceId` / `IoTDeviceId`).
+- На вкладці локацій повернуто керування:
+  - FAB `+` знову доступний для ролей з повним доступом;
+  - додано створення нової локації;
+  - додано редагування локації по натисканню на елемент;
+  - додано видалення локації.
+- Додано форму `dialog_storage_location_form.xml` і CRUD-операції у `StorageLocationsViewModel`.
+- Android збірка після правок: `assembleDebug` — успішно.
+
+### [ВИКОНАНО 2026-05-13] Оновлення Users екрана у mobile
+
+- Прибрано зайву дію зміни ролі на екрані користувачів (кнопка Role і відповідний діалог).
+- Додано адмінський сценарій створення менеджера на Users екрані:
+  - нова кнопка (FAB) тільки для `Administrator`;
+  - форма введення email і пароля;
+  - інтеграція з backend endpoint `POST /api/auth/create-manager`.
+- Додано читання `OrganizationId` з JWT claim для коректного виклику `create-manager`.
+- Додано відсутні українські локалізації для Users-розділу (щоб не було fallback на англійське `Users`).
+- Android збірка після правок: `assembleDebug` — успішно.
+
 ### [ВИКОНАНО 2026-05-11] Оновлення рольової моделі (RBAC) та стабілізація тестів
 
 - Змінено логіку доступу: звичайні юзери (User) та менеджери (Manager) тепер мають повний доступ до всього функціоналу системи (включно зі створенням локацій, інцидентів, налаштуванням датчиків тощо).

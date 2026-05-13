@@ -27,6 +27,18 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:paddingBottom="16dp" />
+        android:paddingBottom="88dp" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_create_manager"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="20dp"
+        android:contentDescription="@string/create_manager"
+        app:backgroundTint="@color/brand_primary"
+        app:srcCompat="@android:drawable/ic_input_add"
+        app:tint="@android:color/white"
+        android:visibility="gone" />
 
 </FrameLayout>

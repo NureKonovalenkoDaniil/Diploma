@@ -60,30 +60,31 @@ class DeviceDetailsActivity : AppCompatActivity() {
 
     private fun loadDeviceDetails() {
         val iotApi = RetrofitClient.getIoTDeviceApi(this)
-        val storageApi = RetrofitClient.getStorageLocationApi(this)
+        val conditionApi = RetrofitClient.getStorageConditionApi(this)
 
         lifecycleScope.launch {
             try {
                 val resp = iotApi.getDevice(deviceId!!)
                 if (resp.isSuccessful) {
                     val device = resp.body()!!
-                    binding.deviceTypeText.text = device.type ?: "-"
-                    binding.deviceLocationText.text = device.location ?: "-"
+                    binding.deviceTypeText.text = device.type.ifBlank { "-" }
+                    binding.deviceLocationText.text = device.location.ifBlank { "-" }
                     currentStatus = device.isActive
                     binding.deviceStatusText.text = if (currentStatus) getString(R.string.device_status_active) else getString(R.string.device_status_inactive)
                     binding.toggleDeviceBtn.text = if (currentStatus) getString(R.string.device_action_deactivate) else getString(R.string.device_action_activate)
                     
-                    binding.deviceTempText.text = getString(R.string.device_temp_range) + ": ${device.minTemperature ?: "-"} - ${device.maxTemperature ?: "-"} °C"
-                    binding.deviceHumidityText.text = getString(R.string.device_humidity_range) + ": ${device.minHumidity ?: "-"} - ${device.maxHumidity ?: "-"} %"
+                    binding.deviceTempText.text = getString(R.string.device_temp_range) + ": ${device.minTemperature} - ${device.maxTemperature} °C"
+                    binding.deviceHumidityText.text = getString(R.string.device_humidity_range) + ": ${device.minHumidity} - ${device.maxHumidity} %"
                 }
 
-                val slResp = storageApi.getAll()
-                if (slResp.isSuccessful) {
-                    val list = slResp.body() ?: emptyList()
-                    val linked = list.find { it.deviceId == deviceId }
-                    linked?.currentCondition?.let { cond ->
-                        showChartWithCondition(cond)
-                    }
+                val conditionResp = conditionApi.getByDeviceId(deviceId!!)
+                if (conditionResp.isSuccessful) {
+                    val conditions = conditionResp.body() ?: emptyList()
+                    showChartWithConditions(conditions)
+                } else {
+                    binding.chartCondition.clear()
+                    binding.chartCondition.setNoDataText(getString(R.string.no_chart_data))
+                    binding.chartCondition.invalidate()
                 }
             } catch (e: Exception) {
                 Toast.makeText(this@DeviceDetailsActivity, "${getString(R.string.network_error)}: ${e.message}", Toast.LENGTH_LONG).show()
@@ -91,19 +92,20 @@ class DeviceDetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun showChartWithCondition(cond: com.example.medicationmanagement.api.StorageConditionDto) {
+    private fun showChartWithConditions(conditions: List<com.example.medicationmanagement.api.StorageConditionDto>) {
+        if (conditions.isEmpty()) {
+            binding.chartCondition.clear()
+            binding.chartCondition.setNoDataText(getString(R.string.no_chart_data))
+            binding.chartCondition.invalidate()
+            return
+        }
+
         val tempEntries = ArrayList<Entry>()
         val humEntries = ArrayList<Entry>()
 
-        val baseTemp = cond.temperature ?: 0.0
-        val baseHum = cond.humidity ?: 0.0
-
-        for (i in 5 downTo 0) {
-            val t = (baseTemp + (Math.random() - 0.5) * 1.5).toFloat()
-            val h = (baseHum + (Math.random() - 0.5) * 3.0).toFloat()
-            val x = (5 - i).toFloat()
-            tempEntries.add(Entry(x, t))
-            humEntries.add(Entry(x, h))
+        conditions.takeLast(20).forEachIndexed { index, cond ->
+            tempEntries.add(Entry(index.toFloat(), cond.temperature.toFloat()))
+            humEntries.add(Entry(index.toFloat(), cond.humidity.toFloat()))
         }
 
         val primaryColor = ContextCompat.getColor(this, R.color.brand_primary)
@@ -128,6 +130,7 @@ class DeviceDetailsActivity : AppCompatActivity() {
         val desc = Description()
         desc.text = getString(R.string.chart_description_latest)
         binding.chartCondition.description = desc
+        binding.chartCondition.setNoDataText(getString(R.string.no_chart_data))
         binding.chartCondition.invalidate()
     }
 

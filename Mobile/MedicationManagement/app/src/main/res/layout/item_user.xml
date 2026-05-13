@@ -36,6 +36,14 @@
                     android:textStyle="bold" />
 
                 <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/user_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/user_role"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -51,17 +59,15 @@
                     android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="12sp" />
 
-            </LinearLayout>
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/user_organization"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="12sp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_change_role"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="4dp"
-                android:padding="8dp"
-                android:text="@string/role"
-                android:textSize="12sp" />
+            </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_delete"

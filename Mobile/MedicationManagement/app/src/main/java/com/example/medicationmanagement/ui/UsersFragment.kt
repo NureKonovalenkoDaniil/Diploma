@@ -4,10 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.medicationmanagement.R
 import com.example.medicationmanagement.api.UserDto
 import com.example.medicationmanagement.ui.adapter.UserAdapter
+import com.example.medicationmanagement.utils.RoleHelper
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 
@@ -27,6 +29,7 @@ class UsersFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var progressBar: ProgressBar
     private lateinit var emptyState: TextView
+    private lateinit var fabCreateManager: FloatingActionButton
     private lateinit var adapter: UserAdapter
 
     override fun onCreateView(
@@ -43,13 +46,19 @@ class UsersFragment : Fragment() {
         recyclerView = view.findViewById(R.id.users_list)
         progressBar = view.findViewById(R.id.users_loading)
         emptyState = view.findViewById(R.id.users_empty)
+        fabCreateManager = view.findViewById(R.id.fab_create_manager)
 
-        adapter = UserAdapter(
-            onDeleteClick = { user -> confirmDelete(user) },
-            onRoleClick = { user -> showRoleDialog(user) }
-        )
+        adapter = UserAdapter(onDeleteClick = { user -> confirmDelete(user) })
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
+
+        val role = RoleHelper.getCurrentRole(requireContext())
+        if (RoleHelper.isAdmin(role)) {
+            fabCreateManager.visibility = View.VISIBLE
+            fabCreateManager.setOnClickListener { showCreateManagerDialog() }
+        } else {
+            fabCreateManager.visibility = View.GONE
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.isLoading.collect { isLoading ->
@@ -86,19 +95,26 @@ class UsersFragment : Fragment() {
             .show()
     }
 
-    private fun showRoleDialog(user: UserDto) {
-        val roles = arrayOf("User", "Manager", "Administrator")
-        var selectedRole = user.role
+    private fun showCreateManagerDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_create_manager, null)
+        val emailInput = dialogView.findViewById<EditText>(R.id.inputManagerEmail)
+        val passwordInput = dialogView.findViewById<EditText>(R.id.inputManagerPassword)
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle(getString(R.string.change_user_role))
-            .setSingleChoiceItems(roles, roles.indexOf(user.role)) { _, which ->
-                selectedRole = roles[which]
-            }
-            .setPositiveButton(getString(R.string.save_changes)) { _, _ ->
-                viewModel.changeUserRole(user.id, selectedRole)
-            }
+            .setTitle(getString(R.string.create_manager))
+            .setView(dialogView)
             .setNegativeButton(getString(R.string.cancel), null)
+            .setPositiveButton(getString(R.string.create)) { _, _ ->
+                val email = emailInput.text.toString().trim()
+                val password = passwordInput.text.toString().trim()
+
+                if (email.isBlank() || password.length < 4) {
+                    Toast.makeText(requireContext(), R.string.create_manager_validation_error, Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+
+                viewModel.createManager(email, password)
+            }
             .show()
     }
 }

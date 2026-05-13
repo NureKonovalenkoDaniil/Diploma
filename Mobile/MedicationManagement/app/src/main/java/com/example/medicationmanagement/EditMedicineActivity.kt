@@ -27,6 +27,14 @@ class EditMedicineActivity : AppCompatActivity() {
         val type = findViewById<EditText>(R.id.editType)
         val category = findViewById<EditText>(R.id.editCategory)
         val quantity = findViewById<EditText>(R.id.editQuantity)
+        val manufacturer = findViewById<EditText>(R.id.editManufacturer)
+        val batchNumber = findViewById<EditText>(R.id.editBatchNumber)
+        val description = findViewById<EditText>(R.id.editDescription)
+        val minTemp = findViewById<EditText>(R.id.editMinTemp)
+        val maxTemp = findViewById<EditText>(R.id.editMaxTemp)
+        val minHumidity = findViewById<EditText>(R.id.editMinHumidity)
+        val maxHumidity = findViewById<EditText>(R.id.editMaxHumidity)
+        val storageLocationId = findViewById<EditText>(R.id.editStorageLocationId)
         expiryInput = findViewById(R.id.editExpiry)
         val saveBtn = findViewById<Button>(R.id.saveBtn)
 
@@ -55,7 +63,7 @@ class EditMedicineActivity : AppCompatActivity() {
         }
 
         // Завантаження даних
-        loadData(name, type, category, quantity, expiryInput)
+        loadData(name, type, category, quantity, manufacturer, batchNumber, description, minTemp, maxTemp, minHumidity, maxHumidity, storageLocationId, expiryInput)
 
         saveBtn.setOnClickListener {
             val n = name.text.toString().trim()
@@ -75,7 +83,22 @@ class EditMedicineActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            saveChanges(n, t, c, q, e, saveBtn)
+            saveChanges(
+                name = n,
+                type = t,
+                category = c,
+                quantity = q,
+                expiryDate = e,
+                manufacturer = manufacturer.text.toString().trim().ifBlank { null },
+                batchNumber = batchNumber.text.toString().trim().ifBlank { null },
+                description = description.text.toString().trim().ifBlank { null },
+                minTemp = minTemp.text.toString().trim().toDoubleOrNull(),
+                maxTemp = maxTemp.text.toString().trim().toDoubleOrNull(),
+                minHumidity = minHumidity.text.toString().trim().toDoubleOrNull(),
+                maxHumidity = maxHumidity.text.toString().trim().toDoubleOrNull(),
+                storageLocationId = storageLocationId.text.toString().trim().toIntOrNull(),
+                btn = saveBtn
+            )
         }
     }
 
@@ -85,7 +108,21 @@ class EditMedicineActivity : AppCompatActivity() {
         expiryInput.setText(sdf.format(calendar.time))
     }
 
-    private fun loadData(name: EditText, type: EditText, category: EditText, quantity: EditText, expiry: EditText) {
+    private fun loadData(
+        name: EditText,
+        type: EditText,
+        category: EditText,
+        quantity: EditText,
+        manufacturer: EditText,
+        batchNumber: EditText,
+        description: EditText,
+        minTemp: EditText,
+        maxTemp: EditText,
+        minHumidity: EditText,
+        maxHumidity: EditText,
+        storageLocationId: EditText,
+        expiry: EditText
+    ) {
         lifecycleScope.launch {
             try {
                 val api = ApiClient.createService<MedicineApi>(this@EditMedicineActivity)
@@ -98,6 +135,14 @@ class EditMedicineActivity : AppCompatActivity() {
                         type.setText(data.type)
                         category.setText(data.category)
                         quantity.setText(data.quantity.toString())
+                        manufacturer.setText(data.manufacturer.orEmpty())
+                        batchNumber.setText(data.batchNumber.orEmpty())
+                        description.setText(data.description.orEmpty())
+                        minTemp.setText(data.minStorageTemp?.toString().orEmpty())
+                        maxTemp.setText(data.maxStorageTemp?.toString().orEmpty())
+                        minHumidity.setText(data.minStorageHumidity?.toString().orEmpty())
+                        maxHumidity.setText(data.maxStorageHumidity?.toString().orEmpty())
+                        storageLocationId.setText(data.storageLocationId?.toString().orEmpty())
                         
                         // Парсимо дату з ISO в yyyy-MM-dd
                         try {
@@ -122,7 +167,22 @@ class EditMedicineActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveChanges(name: String, type: String, category: String, quantity: Int, expiryDate: String, btn: Button) {
+    private fun saveChanges(
+        name: String,
+        type: String,
+        category: String,
+        quantity: Int,
+        expiryDate: String,
+        manufacturer: String?,
+        batchNumber: String?,
+        description: String?,
+        minTemp: Double?,
+        maxTemp: Double?,
+        minHumidity: Double?,
+        maxHumidity: Double?,
+        storageLocationId: Int?,
+        btn: Button
+    ) {
         btn.isEnabled = false
         btn.text = "Збереження..."
 
@@ -131,7 +191,15 @@ class EditMedicineActivity : AppCompatActivity() {
             mapOf("op" to "replace", "path" to "/type", "value" to type),
             mapOf("op" to "replace", "path" to "/category", "value" to category),
             mapOf("op" to "replace", "path" to "/quantity", "value" to quantity),
-            mapOf("op" to "replace", "path" to "/expiryDate", "value" to "${expiryDate}T00:00:00")
+            mapOf("op" to "replace", "path" to "/expiryDate", "value" to "${expiryDate}T00:00:00"),
+            mapOf("op" to "replace", "path" to "/manufacturer", "value" to (manufacturer ?: "")),
+            mapOf("op" to "replace", "path" to "/batchNumber", "value" to (batchNumber ?: "")),
+            mapOf("op" to "replace", "path" to "/description", "value" to (description ?: "")),
+            mapOf("op" to "replace", "path" to "/minStorageTemp", "value" to minTemp),
+            mapOf("op" to "replace", "path" to "/maxStorageTemp", "value" to maxTemp),
+            mapOf("op" to "replace", "path" to "/minStorageHumidity", "value" to minHumidity),
+            mapOf("op" to "replace", "path" to "/maxStorageHumidity", "value" to maxHumidity),
+            mapOf("op" to "replace", "path" to "/storageLocationId", "value" to storageLocationId)
         )
 
         lifecycleScope.launch {

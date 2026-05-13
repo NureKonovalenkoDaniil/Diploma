@@ -80,6 +80,10 @@ object RetrofitClient {
         return getRetrofit(context).create(StorageLocationApi::class.java)
     }
 
+    fun getStorageConditionApi(context: Context): StorageConditionApi {
+        return getRetrofit(context).create(StorageConditionApi::class.java)
+    }
+
     fun getStorageIncidentApi(context: Context): StorageIncidentApi {
         return getRetrofit(context).create(StorageIncidentApi::class.java)
     }

@@ -9,6 +9,7 @@ import com.example.medicationmanagement.R
 import com.example.medicationmanagement.api.AuditLogDto
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.TimeZone
 
 class AuditLogAdapter : RecyclerView.Adapter<AuditLogAdapter.AuditLogViewHolder>() {
 
@@ -38,16 +39,19 @@ class AuditLogAdapter : RecyclerView.Adapter<AuditLogAdapter.AuditLogViewHolder>
         private val logDetails: TextView = itemView.findViewById(R.id.log_details)
 
         fun bind(log: AuditLogDto) {
-            logAction.text = log.action
-            logEntity.text = "${log.entityType} (ID: ${log.entityId ?: "—"})"
-            logUser.text = log.userEmail ?: "System"
+            logAction.text = log.action ?: "—"
+            val entityType = if (log.entityType.isNullOrBlank()) "—" else log.entityType
+            logEntity.text = "$entityType (ID: ${log.entityId?.toString() ?: "—"})"
+            logUser.text = if (log.user.isNullOrBlank()) "System" else log.user
             logTimestamp.text = formatDate(log.timestamp)
-            logDetails.text = log.details ?: "—"
+            logDetails.text = if (log.details.isNullOrBlank()) "—" else log.details
         }
 
-        private fun formatDate(dateStr: String): String {
+        private fun formatDate(dateStr: String?): String {
+            if (dateStr.isNullOrBlank()) return "—"
             return try {
                 val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+                parser.timeZone = TimeZone.getTimeZone("UTC")
                 val formatter = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
                 parser.parse(dateStr)?.let { formatter.format(it) } ?: dateStr
             } catch (e: Exception) {

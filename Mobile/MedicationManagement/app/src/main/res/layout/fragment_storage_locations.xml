@@ -25,7 +25,7 @@
                 android:clipToPadding="false"
                 android:padding="8dp"
                 android:paddingBottom="96dp"
-                tools:listitem="@layout/item_device" />
+                tools:listitem="@layout/item_storage_location" />
 
             <ProgressBar
                 android:id="@+id/progressBar"

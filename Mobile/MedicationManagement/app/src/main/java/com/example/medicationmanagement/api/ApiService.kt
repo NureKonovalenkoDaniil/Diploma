@@ -4,6 +4,7 @@ import com.example.medicationmanagement.model.IoTDevice
 import com.example.medicationmanagement.model.LifecycleEvent
 import com.example.medicationmanagement.model.Medicine
 import com.example.medicationmanagement.model.Notification
+import com.google.gson.annotations.SerializedName
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -15,6 +16,7 @@ data class LoginResponse(val token: String)
 data class RegisterRequest(val email: String, val password: String)
 data class ConfirmEmailRequest(val email: String, val code: String)
 data class ResendConfirmationRequest(val email: String)
+data class CreateManagerRequest(val email: String, val password: String, val organizationId: String)
 
 // ──────────────────────────────────────────
 // Auth API
@@ -31,6 +33,18 @@ interface AuthApi {
 
     @POST("api/auth/resend-confirmation")
     suspend fun resendConfirmation(@Body request: ResendConfirmationRequest): Response<Any>
+
+    @GET("api/auth/users")
+    suspend fun getUsers(): Response<List<UserDto>>
+
+    @DELETE("api/auth/users/{id}")
+    suspend fun deleteUser(@Path("id") id: String): Response<Unit>
+
+    @POST("api/auth/assign-role")
+    suspend fun assignRole(@Body request: AssignRoleRequest): Response<Any>
+
+    @POST("api/auth/create-manager")
+    suspend fun createManager(@Body request: CreateManagerRequest): Response<Any>
 }
 
 // ──────────────────────────────────────────
@@ -47,7 +61,7 @@ interface MedicineApi {
     suspend fun createMedicine(@Body medicine: Medicine): Response<Medicine>
 
     @PATCH("api/medicine/{id}")
-    suspend fun updateMedicine(@Path("id") id: Int, @Body patchOperations: List<Map<String, Any>>): Response<Medicine>
+    suspend fun updateMedicine(@Path("id") id: Int, @Body patchOperations: List<Map<String, Any?>>): Response<Medicine>
 
     @DELETE("api/medicine/{id}")
     suspend fun deleteMedicine(@Path("id") id: Int): Response<Unit>
@@ -105,20 +119,36 @@ interface NotificationApi {
     suspend fun markAllAsRead(): Response<Any>
 }
 
+interface StorageConditionApi {
+    @GET("api/iotdevice/conditions/{deviceId}")
+    suspend fun getByDeviceId(@Path("deviceId") deviceId: String): Response<List<StorageConditionDto>>
+}
+
 // ──────────────────────────────────────────
 // Storage Location API
 // ──────────────────────────────────────────
 data class StorageLocationDto(
-    val id: Int,
+    @SerializedName(value = "locationId", alternate = ["LocationId"])
+    val locationId: Int,
+    @SerializedName(value = "name", alternate = ["Name"])
     val name: String,
-    val deviceId: String?,
-    val currentCondition: StorageConditionDto?
+    @SerializedName(value = "address", alternate = ["Address"])
+    val address: String?,
+    @SerializedName(value = "locationType", alternate = ["LocationType"])
+    val locationType: String,
+    @SerializedName(value = "iotDeviceId", alternate = ["ioTDeviceId", "IoTDeviceId"])
+    val iotDeviceId: String?,
+    @SerializedName(value = "iotDeviceLocation", alternate = ["ioTDeviceLocation", "IoTDeviceLocation"])
+    val iotDeviceLocation: String?
 )
 
 data class StorageConditionDto(
-    val temperature: Double?,
-    val humidity: Double?,
-    val timestamp: String
+    val conditionID: Int,
+    val temperature: Double,
+    val humidity: Double,
+    val timestamp: String,
+    val deviceID: String,
+    val deviceLocation: String?
 )
 
 interface StorageLocationApi {
@@ -129,10 +159,10 @@ interface StorageLocationApi {
     suspend fun getById(@Path("id") id: Int): Response<StorageLocationDto>
 
     @POST("api/storagelocation")
-    suspend fun create(@Body location: Map<String, Any>): Response<StorageLocationDto>
+    suspend fun create(@Body location: Map<String, Any?>): Response<StorageLocationDto>
 
     @PUT("api/storagelocation/{id}")
-    suspend fun update(@Path("id") id: Int, @Body location: Map<String, Any>): Response<StorageLocationDto>
+    suspend fun update(@Path("id") id: Int, @Body location: Map<String, Any?>): Response<StorageLocationDto>
 
     @DELETE("api/storagelocation/{id}")
     suspend fun delete(@Path("id") id: Int): Response<Unit>
@@ -170,28 +200,31 @@ interface StorageIncidentApi {
 // User API
 // ──────────────────────────────────────────
 data class UserDto(
-    val id: Int,
+    val id: String,
     val email: String,
-    val role: String,
-    val isEmailConfirmed: Boolean
+    val userName: String?,
+    val roles: List<String>,
+    val organizationId: String
 )
 
 data class UpdateUserRoleRequest(
     val role: String
 )
 
+data class AssignRoleRequest(
+    val email: String,
+    val roleName: String
+)
+
 interface UserApi {
-    @GET("api/user")
+    @GET("api/auth/users")
     suspend fun getAll(): Response<List<UserDto>>
 
-    @GET("api/user/{id}")
-    suspend fun getById(@Path("id") id: Int): Response<UserDto>
+    @DELETE("api/auth/users/{id}")
+    suspend fun delete(@Path("id") id: String): Response<Unit>
 
-    @DELETE("api/user/{id}")
-    suspend fun delete(@Path("id") id: Int): Response<Unit>
-
-    @PUT("api/user/{id}/role")
-    suspend fun updateRole(@Path("id") id: Int, @Body request: UpdateUserRoleRequest): Response<UserDto>
+    @POST("api/auth/assign-role")
+    suspend fun updateRole(@Body request: AssignRoleRequest): Response<Any>
 }
 
 // ──────────────────────────────────────────
@@ -199,20 +232,22 @@ interface UserApi {
 // ──────────────────────────────────────────
 data class AuditLogDto(
     val id: Int,
-    val userId: Int?,
-    val userEmail: String?,
-    val action: String,
-    val entityType: String,
+    val user: String?,
+    val action: String?,
+    val entityType: String?,
     val entityId: Int?,
-    val timestamp: String,
-    val details: String?
+    val timestamp: String?,
+    val details: String?,
+    val severity: String?
 )
 
 interface AuditLogApi {
     @GET("api/auditlog")
     suspend fun getAll(
-        @Query("entityType") entityType: String? = null,
-        @Query("userId") userId: Int? = null
+        @Query("from") from: String? = null,
+        @Query("to") to: String? = null,
+        @Query("user") user: String? = null,
+        @Query("action") action: String? = null
     ): Response<List<AuditLogDto>>
 
     @GET("api/auditlog/{id}")

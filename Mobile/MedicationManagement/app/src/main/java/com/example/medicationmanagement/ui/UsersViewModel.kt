@@ -4,9 +4,10 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.medicationmanagement.api.CreateManagerRequest
 import com.example.medicationmanagement.api.RetrofitClient
-import com.example.medicationmanagement.api.UpdateUserRoleRequest
 import com.example.medicationmanagement.api.UserDto
+import com.example.medicationmanagement.utils.RoleHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +19,7 @@ import kotlinx.coroutines.launch
 class UsersViewModel(private val context: Context) : ViewModel() {
 
     private val userApi = RetrofitClient.getUserApi(context)
+    private val authApi = RetrofitClient.getAuthApi(context)
 
     private val _users = MutableStateFlow<List<UserDto>>(emptyList())
     val users: StateFlow<List<UserDto>> = _users.asStateFlow()
@@ -47,14 +49,20 @@ class UsersViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-    fun changeUserRole(userId: Int, newRole: String) {
+    fun createManager(email: String, password: String) {
+        val organizationId = RoleHelper.getOrganizationId(context)
+        if (organizationId.isNullOrBlank()) {
+            _error.value = "Не вдалося визначити OrganizationId з токена"
+            return
+        }
+
         viewModelScope.launch {
             try {
-                val response = userApi.updateRole(userId, UpdateUserRoleRequest(newRole))
+                val response = authApi.createManager(CreateManagerRequest(email, password, organizationId))
                 if (response.isSuccessful) {
                     fetchUsers()
                 } else {
-                    _error.value = "Не вдалося змінити роль: ${response.code()}"
+                    _error.value = "Не вдалося створити менеджера: ${response.code()}"
                 }
             } catch (e: Exception) {
                 _error.value = "Помилка: ${e.message}"
@@ -62,7 +70,7 @@ class UsersViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-    fun deactivateUser(userId: Int) {
+    fun deactivateUser(userId: String) {
         viewModelScope.launch {
             try {
                 val response = userApi.delete(userId)

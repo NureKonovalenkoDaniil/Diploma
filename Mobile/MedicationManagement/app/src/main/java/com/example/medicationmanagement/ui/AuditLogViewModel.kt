@@ -32,16 +32,17 @@ class AuditLogViewModel(private val context: Context) : ViewModel() {
     private val _selectedFilter = MutableStateFlow<String?>(null)
     val selectedFilter: StateFlow<String?> = _selectedFilter.asStateFlow()
 
-    fun fetchLogs(userId: Int? = null, entityType: String? = null) {
+    private var allLogs: List<AuditLogDto> = emptyList()
+
+    fun fetchLogs() {
         _isLoading.value = true
         _error.value = null
         viewModelScope.launch {
             try {
-                val response = auditLogApi.getAll(entityType, userId)
+                val response = auditLogApi.getAll()
                 if (response.isSuccessful) {
-                    val list = response.body() ?: emptyList()
-                    // Сортуємо за датою спадання (новіші першими)
-                    _logs.value = list.sortedByDescending { parseDate(it.timestamp) }
+                    allLogs = response.body()?.sortedByDescending { parseDate(it.timestamp) } ?: emptyList()
+                    applyFilter()
                 } else {
                     _error.value = "Помилка завантаження: ${response.code()}"
                 }
@@ -55,17 +56,28 @@ class AuditLogViewModel(private val context: Context) : ViewModel() {
 
     fun filterByAction(entityType: String) {
         _selectedFilter.value = entityType
-        fetchLogs(entityType = entityType)
+        applyFilter()
     }
 
     fun clearFilter() {
         _selectedFilter.value = null
-        fetchLogs()
+        applyFilter()
     }
 
-    private fun parseDate(dateStr: String): Long {
+    private fun applyFilter() {
+        val filter = _selectedFilter.value
+        _logs.value = if (filter.isNullOrBlank()) {
+            allLogs
+        } else {
+            allLogs.filter { it.entityType?.equals(filter, ignoreCase = true) == true }
+        }
+    }
+
+    private fun parseDate(dateStr: String?): Long {
+        if (dateStr.isNullOrBlank()) return 0L
         try {
             val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+            parser.timeZone = java.util.TimeZone.getTimeZone("UTC")
             return parser.parse(dateStr)?.time ?: 0L
         } catch (e: Exception) {
             return 0L

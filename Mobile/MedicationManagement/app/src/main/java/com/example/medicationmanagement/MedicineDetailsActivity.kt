@@ -35,6 +35,13 @@ class MedicineDetailsActivity : AppCompatActivity() {
     private lateinit var detailType: TextView
     private lateinit var detailQuantity: TextView
     private lateinit var detailExpiryDate: TextView
+    private lateinit var detailStatus: TextView
+    private lateinit var detailManufacturer: TextView
+    private lateinit var detailBatchNumber: TextView
+    private lateinit var detailStorageLocation: TextView
+    private lateinit var detailStorageTemperature: TextView
+    private lateinit var detailStorageHumidity: TextView
+    private lateinit var detailDescription: TextView
     private lateinit var diaryProgressBar: ProgressBar
     private lateinit var diaryEmptyState: TextView
     private lateinit var btnEdit: MaterialButton
@@ -61,6 +68,13 @@ class MedicineDetailsActivity : AppCompatActivity() {
         detailType = findViewById(R.id.detailType)
         detailQuantity = findViewById(R.id.detailQuantity)
         detailExpiryDate = findViewById(R.id.detailExpiryDate)
+        detailStatus = findViewById(R.id.detailStatus)
+        detailManufacturer = findViewById(R.id.detailManufacturer)
+        detailBatchNumber = findViewById(R.id.detailBatchNumber)
+        detailStorageLocation = findViewById(R.id.detailStorageLocation)
+        detailStorageTemperature = findViewById(R.id.detailStorageTemperature)
+        detailStorageHumidity = findViewById(R.id.detailStorageHumidity)
+        detailDescription = findViewById(R.id.detailDescription)
         diaryProgressBar = findViewById(R.id.diaryProgressBar)
         diaryEmptyState = findViewById(R.id.diaryEmptyState)
         btnEdit = findViewById(R.id.btnEdit)
@@ -71,6 +85,7 @@ class MedicineDetailsActivity : AppCompatActivity() {
         btnDispose = findViewById(R.id.btnDispose)
 
         bindMedicineHeader(name, type, category, quantity, expiry)
+        loadMedicineDetails()
         applyRoleBasedVisibility()
 
         btnEdit.setOnClickListener {
@@ -138,7 +153,7 @@ class MedicineDetailsActivity : AppCompatActivity() {
                         .setSingleChoiceItems(names, 0) { _, which -> selectedIndex = which }
                         .setPositiveButton(R.string.move) { _, _ ->
                             val target = locations[selectedIndex]
-                            performMoveToLocation(target.id)
+                            performMoveToLocation(target.locationId)
                         }
                         .setNegativeButton(R.string.cancel, null)
                         .show()
@@ -170,6 +185,31 @@ class MedicineDetailsActivity : AppCompatActivity() {
         detailType.text = getString(R.string.medicine_details_type_category, type.orEmpty(), category.orEmpty())
         detailQuantity.text = getString(R.string.medicine_details_quantity, quantity)
         detailExpiryDate.text = getString(R.string.medicine_details_expiry, expiry.orEmpty())
+    }
+
+    private fun loadMedicineDetails() {
+        if (medicineID == -1) return
+
+        lifecycleScope.launch {
+            try {
+                val api = ApiClient.createService<MedicineApi>(this@MedicineDetailsActivity)
+                val response = api.getMedicine(medicineID)
+                if (response.isSuccessful) {
+                    response.body()?.let { medicine ->
+                        currentMedicine = medicine
+                        detailStatus.text = getString(R.string.medicine_status_label) + ": ${medicine.status.ifBlank { "-" }}"
+                        detailManufacturer.text = getString(R.string.medicine_manufacturer) + ": ${medicine.manufacturer ?: "-"}"
+                        detailBatchNumber.text = getString(R.string.medicine_batch_number) + ": ${medicine.batchNumber ?: "-"}"
+                        detailStorageLocation.text = getString(R.string.medicine_storage_location) + ": ${medicine.storageLocationName ?: "-"}"
+                        detailStorageTemperature.text = getString(R.string.medicine_storage_temp_range) + ": ${medicine.minStorageTemp ?: "-"} - ${medicine.maxStorageTemp ?: "-"} °C"
+                        detailStorageHumidity.text = getString(R.string.medicine_storage_humidity_range) + ": ${medicine.minStorageHumidity ?: "-"} - ${medicine.maxStorageHumidity ?: "-"} %"
+                        detailDescription.text = getString(R.string.medicine_description) + ": ${medicine.description ?: "-"}"
+                    }
+                }
+            } catch (_: Exception) {
+                // Keep header-only fallback if the details request fails.
+            }
+        }
     }
 
     private fun applyRoleBasedVisibility() {
