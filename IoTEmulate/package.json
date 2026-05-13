@@ -1,0 +1,12 @@
+{
+  "name": "iot-emulator",
+  "version": "1.0.0",
+  "description": "Lightweight HTTP-based IoT device emulator for local testing",
+  "main": "emulator.js",
+  "scripts": {
+    "start": "node emulator.js --config configs/dev1.json"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
