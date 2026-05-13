@@ -1,11 +1,11 @@
 {
-	"deviceId": "emulator-04",
-	"deviceSecret": "",
-	"serverBaseUrl": "http://localhost:5000",
-	"samplingMs": 5000,
-	"initialTemp": 2.0,
-	"variationTemp": 1.0,
-	"initialHumidity": 70.0,
-	"variationHumidity": 6.0,
-	"autoClaim": true
+  "deviceId": "emulator-04",
+  "deviceSecret": "",
+  "serverBaseUrl": "http://localhost:5000",
+  "samplingMs": 5000,
+  "initialTemp": 2.0,
+  "variationTemp": 1.0,
+  "initialHumidity": 70.0,
+  "variationHumidity": 6.0,
+  "autoClaim": true
 }
