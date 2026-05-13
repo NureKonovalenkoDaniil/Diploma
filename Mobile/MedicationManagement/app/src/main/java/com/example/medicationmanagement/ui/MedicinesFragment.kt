@@ -84,11 +84,7 @@ class MedicinesFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = MedicineAdapter(emptyList()) { medicine ->
-            // Quick Action: Issue (Вжити) — зменшити залишок на 1
-            viewModel.issueMedicine(medicine.medicineID, 1)
-            Toast.makeText(requireContext(), "Вжито 1 шт. ${medicine.name}", Toast.LENGTH_SHORT).show()
-        }
+        adapter = MedicineAdapter(emptyList())
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
     }

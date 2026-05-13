@@ -207,10 +207,10 @@ class MedicineDetailsActivity : AppCompatActivity() {
                     adapter.updateEvents(sortedEvents)
                     diaryEmptyState.isVisible = sortedEvents.isEmpty()
                 } else {
-                    Toast.makeText(this@MedicineDetailsActivity, "Не вдалося завантажити щоденник", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MedicineDetailsActivity, R.string.medicine_diary_load_failed, Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@MedicineDetailsActivity, "Помилка мережі", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MedicineDetailsActivity, R.string.network_error, Toast.LENGTH_SHORT).show()
             } finally {
                 diaryProgressBar.visibility = View.GONE
             }

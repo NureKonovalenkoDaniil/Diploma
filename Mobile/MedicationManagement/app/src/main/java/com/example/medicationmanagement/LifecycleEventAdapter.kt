@@ -26,9 +26,19 @@ class LifecycleEventAdapter(private var items: List<LifecycleEvent>) :
 
     override fun onBindViewHolder(holder: EventViewHolder, position: Int) {
         val item = items[position]
+        val context = holder.itemView.context
         
-        holder.action.text = item.eventType
-        holder.description.text = item.description ?: "Без опису"
+        holder.action.text = when(item.eventType.uppercase()) {
+            "CREATED" -> context.getString(R.string.lifecycle_event_created)
+            "RECEIVED" -> context.getString(R.string.lifecycle_event_received)
+            "ISSUED" -> context.getString(R.string.lifecycle_event_issued)
+            "MOVED" -> context.getString(R.string.lifecycle_event_moved)
+            "DISPOSED" -> context.getString(R.string.lifecycle_event_disposed)
+            "EDITED" -> context.getString(R.string.lifecycle_event_edited)
+            else -> item.eventType
+        }
+        
+        holder.description.text = item.description ?: context.getString(R.string.lifecycle_no_description)
         
         try {
             val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())

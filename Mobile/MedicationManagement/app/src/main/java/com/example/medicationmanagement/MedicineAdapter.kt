@@ -13,8 +13,7 @@ import java.util.Locale
 import java.util.Date
 
 class MedicineAdapter(
-    private var items: List<Medicine>,
-    private val onConsumeClick: (Medicine) -> Unit
+    private var items: List<Medicine>
 ) : RecyclerView.Adapter<MedicineAdapter.MedViewHolder>() {
 
     class MedViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -22,7 +21,6 @@ class MedicineAdapter(
         val type: TextView = itemView.findViewById(R.id.medType)
         val expiry: TextView = itemView.findViewById(R.id.medExpiry)
         val quantity: TextView = itemView.findViewById(R.id.medQuantity)
-        val btnConsume: MaterialButton = itemView.findViewById(R.id.btnConsume)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MedViewHolder {
@@ -54,12 +52,6 @@ class MedicineAdapter(
             }
         } catch (e: Exception) {
             holder.expiry.text = item.expiryDate
-        }
-
-        // Обробка "Вжити"
-        holder.btnConsume.isEnabled = item.quantity > 0
-        holder.btnConsume.setOnClickListener {
-            onConsumeClick(item)
         }
 
         holder.itemView.setOnClickListener {
