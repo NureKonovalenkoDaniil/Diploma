@@ -1,7 +1,7 @@
 {
   "deviceId": "emulator-03",
   "deviceSecret": "",
-  "serverBaseUrl": "http://localhost:5000",
+  "serverBaseUrl": "http://localhost:5001",
   "samplingMs": 7000,
   "initialTemp": 18.5,
   "variationTemp": 2.5,
