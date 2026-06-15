@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { LocaleProvider } from '@/contexts/LocaleContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import LoginPage from '@/pages/LoginPage';
@@ -31,32 +32,34 @@ export const queryClient = new QueryClient({
 export default function App() {
   return (
     <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider queryClient={queryClient}>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/confirm-email" element={<ConfirmEmailPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route element={<AppLayout />}>
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/medicines" element={<MedicinesPage />} />
-                <Route path="/medicines/:id" element={<MedicineDetailPage />} />
-                <Route path="/iot-devices" element={<IoTDevicesPage />} />
-                <Route path="/storage-locations" element={<StorageLocationsPage />} />
-                <Route path="/incidents" element={<IncidentsPage />} />
-                <Route path="/notifications" element={<NotificationsPage />} />
-                <Route path="/audit-log" element={<AuditLogPage />} />
-                <Route path="/users" element={<UsersPage />} />
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              </Route>
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </AuthProvider>
-      </QueryClientProvider>
+      <LocaleProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider queryClient={queryClient}>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route element={<AppLayout />}>
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/medicines" element={<MedicinesPage />} />
+                  <Route path="/medicines/:id" element={<MedicineDetailPage />} />
+                  <Route path="/iot-devices" element={<IoTDevicesPage />} />
+                  <Route path="/storage-locations" element={<StorageLocationsPage />} />
+                  <Route path="/incidents" element={<IncidentsPage />} />
+                  <Route path="/notifications" element={<NotificationsPage />} />
+                  <Route path="/audit-log" element={<AuditLogPage />} />
+                  <Route path="/users" element={<UsersPage />} />
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                </Route>
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </BrowserRouter>
+          </AuthProvider>
+        </QueryClientProvider>
+      </LocaleProvider>
     </ThemeProvider>
   );
 }

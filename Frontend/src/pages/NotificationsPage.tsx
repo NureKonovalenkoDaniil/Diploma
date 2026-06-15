@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton'
 import { Bell, Check, CheckCheck } from 'lucide-react'
 import { format } from 'date-fns'
+import { useLocale } from '@/contexts/LocaleContext'
 
 const TYPE_CONFIG: Record<string, { label: string; variant: 'destructive' | 'warning' | 'info' | 'secondary' | 'success' }> = {
   StorageViolation: { label: 'Порушення', variant: 'destructive' },
@@ -17,6 +18,7 @@ const TYPE_CONFIG: Record<string, { label: string; variant: 'destructive' | 'war
 
 export default function NotificationsPage() {
   const qc = useQueryClient()
+  const { t } = useLocale()
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications', 'all'],
@@ -39,13 +41,13 @@ export default function NotificationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Сповіщення</h1>
-          <p className="text-muted-foreground">{unreadCount} непрочитаних</p>
+          <h1 className="text-2xl font-bold">{t('notificationsTitle')}</h1>
+          <p className="text-muted-foreground">{t('unreadCount', { count: unreadCount })}</p>
         </div>
         {unreadCount > 0 && (
           <Button variant="outline" onClick={() => markAllMutation.mutate()} disabled={markAllMutation.isPending}>
             <CheckCheck className="h-4 w-4" />
-            Прочитати всі
+            {t('readAll')}
           </Button>
         )}
       </div>
@@ -58,7 +60,7 @@ export default function NotificationsPage() {
               <Card>
                 <CardContent className="flex flex-col items-center gap-3 py-16">
                   <Bell className="h-10 w-10 text-muted-foreground/40" />
-                  <p className="text-muted-foreground">Сповіщень немає</p>
+                  <p className="text-muted-foreground">{t('noNotificationsCard')}</p>
                 </CardContent>
               </Card>
             )

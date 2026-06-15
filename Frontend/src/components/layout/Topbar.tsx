@@ -3,6 +3,7 @@ import { Bell, Sun, Moon, Monitor, LogOut, User } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { notificationApi } from '@/api'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLocale } from '@/contexts/LocaleContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -18,6 +19,7 @@ import { format } from 'date-fns'
 
 export function Topbar() {
   const { user, logout } = useAuth()
+  const { locale, setLocale, t } = useLocale()
   const { theme, setTheme } = useTheme()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -53,21 +55,36 @@ export function Topbar() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
               <ThemeIcon className="h-4 w-4" />
-              <span className="sr-only">Тема</span>
+              <span className="sr-only">{t('theme')}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Тема оформлення</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('themeLabel')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setTheme('light')}>
-              <Sun className="mr-2 h-4 w-4" /> Світла
+              <Sun className="mr-2 h-4 w-4" /> {t('light')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setTheme('dark')}>
-              <Moon className="mr-2 h-4 w-4" /> Темна
+              <Moon className="mr-2 h-4 w-4" /> {t('dark')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setTheme('system')}>
-              <Monitor className="mr-2 h-4 w-4" /> Системна
+              <Monitor className="mr-2 h-4 w-4" /> {t('system')}
             </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wider">
+                {locale === 'uk' ? 'UA' : 'EN'}
+              </span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>{t('theme')}</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => setLocale('uk')}>Українська</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLocale('en')}>English</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -81,12 +98,12 @@ export function Topbar() {
                   {unread.length > 9 ? '9+' : unread.length}
                 </span>
               )}
-              <span className="sr-only">Сповіщення</span>
+              <span className="sr-only">{t('notifications')}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
             <div className="flex items-center justify-between px-2 py-1.5">
-              <DropdownMenuLabel className="p-0">Сповіщення</DropdownMenuLabel>
+              <DropdownMenuLabel className="p-0">{t('notifications')}</DropdownMenuLabel>
               {unread.length > 0 && (
                 <Button
                   variant="ghost"
@@ -94,14 +111,14 @@ export function Topbar() {
                   className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
                   onClick={() => markAllMutation.mutate()}
                 >
-                  Прочитати всі
+                  {t('markAllRead')}
                 </Button>
               )}
             </div>
             <DropdownMenuSeparator />
             {unread.length === 0 ? (
               <div className="py-6 text-center text-sm text-muted-foreground">
-                Нових сповіщень немає
+                {t('noNotifications')}
               </div>
             ) : (
               <>
@@ -158,7 +175,7 @@ export function Topbar() {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
-              Вийти
+              {t('signOut')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

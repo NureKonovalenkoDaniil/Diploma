@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Pencil, Trash2, Loader2, MapPin } from 'lucide-react';
+import { useLocale } from '@/contexts/LocaleContext';
 
 const LOCATION_TYPES = ['Refrigerator', 'Shelf', 'Warehouse', 'Cabinet', 'Other'];
 
@@ -110,6 +111,7 @@ function LocationForm({
 
 export default function StorageLocationsPage() {
   const { isAdmin, isManager, isUser } = useAuth();
+  const { t } = useLocale();
   const canManage = isAdmin || isManager || isUser;
   const qc = useQueryClient();
   const [dialogMode, setDialogMode] = useState<'create' | 'edit' | null>(null);
@@ -158,8 +160,8 @@ export default function StorageLocationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Локації зберігання</h1>
-          <p className="text-muted-foreground">Управління місцями зберігання препаратів</p>
+          <h1 className="text-2xl font-bold">{t('storageLocationsTitle')}</h1>
+          <p className="text-muted-foreground">{t('storageLocationsSubtitle')}</p>
         </div>
         {canManage && (
           <Button
@@ -167,7 +169,7 @@ export default function StorageLocationsPage() {
               setSelected(null);
               setDialogMode('create');
             }}>
-            <Plus className="h-4 w-4" /> Додати
+            <Plus className="h-4 w-4" /> {t('addLocation')}
           </Button>
         )}
       </div>
@@ -224,7 +226,7 @@ export default function StorageLocationsPage() {
         {!isLoading && locations.length === 0 && (
           <Card className="col-span-3">
             <CardContent className="py-10 text-center text-muted-foreground">
-              Локацій ще немає. {canManage && 'Додайте першу.'}
+              {t('noLocations')} {canManage && t('addFirst')}
             </CardContent>
           </Card>
         )}
@@ -234,11 +236,10 @@ export default function StorageLocationsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {dialogMode === 'create' ? 'Нова локація' : 'Редагувати локацію'}
+              {dialogMode === 'create' ? t('createLocation') : t('editLocation')}
             </DialogTitle>
             <DialogDescription className="sr-only">
-              Форма для {dialogMode === 'create' ? 'створення нової' : 'редагування існуючої'}{' '}
-              локації зберігання
+              {dialogMode === 'create' ? t('createLocation') : t('editLocation')}
             </DialogDescription>
           </DialogHeader>
           <LocationForm

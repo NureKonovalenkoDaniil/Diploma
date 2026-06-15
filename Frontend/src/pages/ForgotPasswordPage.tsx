@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'sent' | 'error'>('idle');
   const [message, setMessage] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { t } = useLocale();
 
   const submit = async () => {
     setMessage(null);
@@ -20,7 +22,7 @@ export default function ForgotPasswordPage() {
       navigate(`/reset-password?email=${encodeURIComponent(email)}`);
     } catch {
       setStatus('error');
-      setMessage('Не вдалося надіслати лист. Спробуйте ще раз.');
+      setMessage(t('confirmationFailed'));
     }
   };
 
@@ -29,19 +31,19 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md space-y-6">
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Відновлення пароля</CardTitle>
-            <CardDescription>Вкажіть email, щоб отримати 6-значний код для скидання</CardDescription>
+            <CardTitle>{t('forgotPasswordTitle')}</CardTitle>
+            <CardDescription>{t('forgotPasswordSubtitle')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {status === 'sent' ? (
               <div className="space-y-2 text-sm">
-                <p className="text-emerald-600 font-medium">Код для відновлення надіслано.</p>
-                <p className="text-muted-foreground">Перехід на сторінку скидання...</p>
+                <p className="text-emerald-600 font-medium">{t('confirmationSent')}</p>
+                <p className="text-muted-foreground">...</p>
               </div>
             ) : (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="fp-email">Email</Label>
+                  <Label htmlFor="fp-email">{t('email')}</Label>
                   <Input
                     id="fp-email"
                     type="email"
@@ -57,10 +59,10 @@ export default function ForgotPasswordPage() {
                   </div>
                 )}
                 <Button className="w-full" onClick={submit} disabled={!email}>
-                  Надіслати лист
+                  {t('sendEmail')}
                 </Button>
                 <Button asChild variant="outline" className="w-full">
-                  <Link to="/login">Повернутися до входу</Link>
+                  <Link to="/login">{t('backToLogin')}</Link>
                 </Button>
               </>
             )}

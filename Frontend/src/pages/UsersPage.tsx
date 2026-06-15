@@ -24,6 +24,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useLocale } from '@/contexts/LocaleContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface UserDto {
@@ -218,6 +219,7 @@ export default function UsersPage() {
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const { t } = useLocale();
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['users'],
@@ -247,13 +249,11 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Управління користувачами</h1>
-          <p className="text-muted-foreground">
-            Перегляд та управління акаунтами вашої організації
-          </p>
+          <h1 className="text-2xl font-bold">{t('usersTitle')}</h1>
+          <p className="text-muted-foreground">{t('usersSubtitle')}</p>
         </div>
         <Button onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 mr-1" /> Додати менеджера
+          <Plus className="h-4 w-4 mr-1" /> {t('addManager')}
         </Button>
       </div>
 

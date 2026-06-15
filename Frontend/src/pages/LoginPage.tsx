@@ -10,10 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLocale } from '@/contexts/LocaleContext';
 
 const schema = z.object({
-  email: z.string().email('Введіть коректний email'),
-  password: z.string().min(1, 'Введіть пароль'),
+  email: z.string().email('Invalid email'),
+  password: z.string().min(1, 'Enter password'),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -21,6 +22,7 @@ type FormData = z.infer<typeof schema>;
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { t } = useLocale();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<'unconfirmed' | 'invalid' | null>(null);
@@ -44,11 +46,11 @@ export default function LoginPage() {
     } catch (err: any) {
       const status = err?.response?.status;
       if (status === 403) {
-        setError('Потрібно підтвердити пошту перед входом');
+        setError(t('loginNeedConfirm'));
         setErrorType('unconfirmed');
         return;
       }
-      setError('Невірний email або пароль');
+      setError(t('loginInvalid'));
       setErrorType('invalid');
     }
   };
@@ -57,14 +59,14 @@ export default function LoginPage() {
     setResendStatus(null);
     const email = getValues('email');
     if (!email) {
-      setResendStatus('Вкажіть email у полі вище');
+      setResendStatus(t('enterEmailAbove'));
       return;
     }
     try {
       await authApi.resendConfirmation(email);
-      setResendStatus('Лист підтвердження надіслано');
+      setResendStatus(t('confirmationSent'));
     } catch {
-      setResendStatus('Не вдалося надіслати лист. Спробуйте пізніше.');
+      setResendStatus(t('confirmationFailed'));
     }
   };
 
@@ -78,22 +80,20 @@ export default function LoginPage() {
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold">MedStorage</h1>
-            <p className="text-sm text-muted-foreground">
-              Система управління медичними препаратами
-            </p>
+            <p className="text-sm text-muted-foreground">{t('appSubtitle')}</p>
           </div>
         </div>
 
         {/* Form */}
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Вхід у систему</CardTitle>
-            <CardDescription>Введіть ваші облікові дані для доступу</CardDescription>
+            <CardTitle>{t('loginTitle')}</CardTitle>
+            <CardDescription>{t('loginSubtitle')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('email')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -105,7 +105,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Пароль</Label>
+                <Label htmlFor="password">{t('password')}</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -135,10 +135,10 @@ export default function LoginPage() {
               {errorType === 'unconfirmed' && (
                 <div className="space-y-2">
                   <Button type="button" variant="outline" className="w-full" onClick={() => navigate('/confirm-email')}>
-                    Ввести код з листа
+                    {t('confirmCodeButton')}
                   </Button>
                   <Button type="button" variant="ghost" className="w-full text-xs" onClick={resendConfirmation}>
-                    Надіслати код ще раз
+                    {t('resendCode')}
                   </Button>
                   {resendStatus && <p className="text-xs text-muted-foreground text-center">{resendStatus}</p>}
                 </div>
@@ -146,22 +146,22 @@ export default function LoginPage() {
 
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                Увійти
+                {t('signIn')}
               </Button>
             </form>
           </CardContent>
         </Card>
 
         <p className="text-center text-sm text-muted-foreground">
-          Немає акаунту?{' '}
+          {t('noAccount')}{' '}
           <Link to="/register" className="text-primary hover:underline font-medium">
-            Зареєструватися
+            {t('register')}
           </Link>
         </p>
         <p className="text-center text-sm text-muted-foreground">
-          Забули пароль?{' '}
+          {t('forgotPassword')}{' '}
           <Link to="/forgot-password" className="text-primary hover:underline font-medium">
-            Відновити
+            {t('resetPassword')}
           </Link>
         </p>
       </div>

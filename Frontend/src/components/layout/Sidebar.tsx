@@ -12,27 +12,28 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { useQuery } from '@tanstack/react-query';
 import { incidentApi, notificationApi } from '@/api';
 
-const navItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Дашборд' },
-  { to: '/medicines', icon: Pill, label: 'Препарати' },
-  { to: '/storage-locations', icon: MapPin, label: 'Локації' },
-  { to: '/incidents', icon: AlertTriangle, label: 'Інциденти', badge: 'incidents' },
-  { to: '/notifications', icon: Bell, label: 'Сповіщення', badge: 'notifications' },
-];
-
-const managerItems = [{ to: '/iot-devices', icon: Cpu, label: 'Інвентар пристроїв' }];
-
-const adminItems = [
-  { to: '/users', icon: Users, label: 'Користувачі' },
-  { to: '/audit-log', icon: ClipboardList, label: 'Журнал аудиту' },
-];
-
 export function Sidebar() {
   const { isAdmin, isManager, isUser } = useAuth();
+  const { t } = useLocale();
   const canManageDevices = isAdmin || isManager || isUser;
+  const navItems = [
+    { to: '/dashboard', icon: LayoutDashboard, label: t('dashboard') },
+    { to: '/medicines', icon: Pill, label: t('medicines') },
+    { to: '/storage-locations', icon: MapPin, label: t('storageLocations') },
+    { to: '/incidents', icon: AlertTriangle, label: t('incidents'), badge: 'incidents' },
+    { to: '/notifications', icon: Bell, label: t('notifications'), badge: 'notifications' },
+  ];
+
+  const managerItems = [{ to: '/iot-devices', icon: Cpu, label: t('devices') }];
+
+  const adminItems = [
+    { to: '/users', icon: Users, label: t('users') },
+    { to: '/audit-log', icon: ClipboardList, label: t('auditLog') },
+  ];
 
   // Polling for active incidents count
   const { data: activeIncidents = [] } = useQuery({
@@ -75,7 +76,7 @@ export function Sidebar() {
         </div>
         <div className="leading-tight">
           <p className="text-sm font-semibold">MedStorage</p>
-          <p className="text-[10px] text-sidebar-foreground/60">Система управління</p>
+          <p className="text-[10px] text-sidebar-foreground/60">{t('systemManagement')}</p>
         </div>
       </div>
 
@@ -123,7 +124,7 @@ export function Sidebar() {
           {isAdmin && (
             <>
               <li className="mt-4 mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/40">
-                Адміністрування
+                {t('adminSection')}
               </li>
               {adminItems.map((item) => (
                 <li key={item.to}>
@@ -149,7 +150,7 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="border-t border-sidebar-border px-4 py-3 text-[10px] text-sidebar-foreground/40 text-center">
-        © 2026 MedStorage System
+        {t('appFooter')}
       </div>
     </aside>
   );

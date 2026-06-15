@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export default function ResetPasswordPage() {
   const [params] = useSearchParams();
@@ -12,6 +13,7 @@ export default function ResetPasswordPage() {
   const [confirm, setConfirm] = useState('');
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState<string | null>(null);
+  const { t } = useLocale();
 
   const email = params.get('email') || '';
   const [code, setCode] = useState('');
@@ -20,17 +22,17 @@ export default function ResetPasswordPage() {
     setMessage(null);
     if (!email || !code) {
       setStatus('error');
-      setMessage('Введіть код підтвердження.');
+      setMessage(t('confirmationCode'));
       return;
     }
     if (!password || password.length < 4) {
       setStatus('error');
-      setMessage('Пароль має містити щонайменше 4 символи.');
+      setMessage('Password must contain at least 4 characters.');
       return;
     }
     if (password !== confirm) {
       setStatus('error');
-      setMessage('Паролі не збігаються.');
+      setMessage('Passwords do not match.');
       return;
     }
 
@@ -39,7 +41,7 @@ export default function ResetPasswordPage() {
       setStatus('success');
     } catch {
       setStatus('error');
-      setMessage('Не вдалося змінити пароль. Спробуйте знову.');
+      setMessage(t('confirmationFailed'));
     }
   };
 
@@ -48,21 +50,21 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-md space-y-6">
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Скидання пароля</CardTitle>
-            <CardDescription>Введіть новий пароль</CardDescription>
+            <CardTitle>{t('resetPasswordTitle')}</CardTitle>
+            <CardDescription>{t('resetPasswordSubtitle')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {status === 'success' ? (
               <div className="space-y-2 text-sm">
-                <p className="text-emerald-600 font-medium">Пароль оновлено успішно.</p>
+                <p className="text-emerald-600 font-medium">{t('passwordUpdated')}</p>
                 <Button asChild variant="outline">
-                  <Link to="/login">Перейти до входу</Link>
+                  <Link to="/login">{t('goToLogin')}</Link>
                 </Button>
               </div>
             ) : (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="rp-code">Код з листа</Label>
+                  <Label htmlFor="rp-code">{t('recoveryCode')}</Label>
                   <Input
                     id="rp-code"
                     type="text"
@@ -74,7 +76,7 @@ export default function ResetPasswordPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="rp-password">Новий пароль</Label>
+                  <Label htmlFor="rp-password">{t('newPassword')}</Label>
                   <Input
                     id="rp-password"
                     type="password"
@@ -84,7 +86,7 @@ export default function ResetPasswordPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="rp-confirm">Підтвердження пароля</Label>
+                  <Label htmlFor="rp-confirm">{t('confirmPassword')}</Label>
                   <Input
                     id="rp-confirm"
                     type="password"
@@ -99,10 +101,10 @@ export default function ResetPasswordPage() {
                   </div>
                 )}
                 <Button className="w-full" onClick={submit}>
-                  Змінити пароль
+                  {t('changePassword')}
                 </Button>
                 <Button asChild variant="outline" className="w-full">
-                  <Link to="/login">Повернутися до входу</Link>
+                  <Link to="/login">{t('backToLogin')}</Link>
                 </Button>
               </>
             )}

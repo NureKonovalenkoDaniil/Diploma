@@ -16,11 +16,13 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
+import { useLocale } from '@/contexts/LocaleContext';
 
 type TabType = 'active' | 'all';
 
 export default function IncidentsPage() {
   const { isAdmin, isManager, isUser } = useAuth();
+  const { t } = useLocale();
   const canManage = isAdmin || isManager || isUser;
   const qc = useQueryClient();
   const [tab, setTab] = useState<TabType>('active');
@@ -66,8 +68,8 @@ export default function IncidentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Інциденти зберігання</h1>
-        <p className="text-muted-foreground">Моніторинг порушень умов зберігання</p>
+        <h1 className="text-2xl font-bold">{t('incidentsTitle')}</h1>
+        <p className="text-muted-foreground">{t('incidentsSubtitle')}</p>
       </div>
 
       {/* Stats */}
@@ -79,7 +81,7 @@ export default function IncidentsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{active.length}</p>
-              <p className="text-xs text-muted-foreground">Активних інцидентів</p>
+              <p className="text-xs text-muted-foreground">{t('activeIncidentsCount')}</p>
             </div>
           </CardContent>
         </Card>
@@ -92,7 +94,7 @@ export default function IncidentsPage() {
               <p className="text-2xl font-bold">
                 {all.filter((i) => i.status === 'Acknowledged').length}
               </p>
-              <p className="text-xs text-muted-foreground">Підтверджено</p>
+              <p className="text-xs text-muted-foreground">{t('confirmed')}</p>
             </div>
           </CardContent>
         </Card>
@@ -105,7 +107,7 @@ export default function IncidentsPage() {
               <p className="text-2xl font-bold">
                 {all.filter((i) => i.status === 'Resolved' || i.status === 'AutoResolved').length}
               </p>
-              <p className="text-xs text-muted-foreground">Вирішено</p>
+              <p className="text-xs text-muted-foreground">{t('resolved')}</p>
             </div>
           </CardContent>
         </Card>
@@ -117,20 +119,20 @@ export default function IncidentsPage() {
           variant={tab === 'active' ? 'default' : 'outline'}
           size="sm"
           onClick={() => setTab('active')}>
-          Активні ({active.length})
+          {t('activeTab')} ({active.length})
         </Button>
         <Button
           variant={tab === 'all' ? 'default' : 'outline'}
           size="sm"
           onClick={() => setTab('all')}>
-          Всі інциденти
+          {t('allIncidents')}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            {tab === 'active' ? 'Активні порушення' : 'Всі інциденти'}
+            {tab === 'active' ? t('activeViolationsTitle') : t('allIncidentsTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -144,14 +146,14 @@ export default function IncidentsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Пристрій</TableHead>
-                  <TableHead>Тип</TableHead>
-                  <TableHead>Виявлене значення</TableHead>
-                  <TableHead>Норма</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead>Початок</TableHead>
-                  <TableHead>Кінець</TableHead>
-                  {canManage && <TableHead>Дії</TableHead>}
+                  <TableHead>{t('incidentDevice')}</TableHead>
+                  <TableHead>{t('incidentType')}</TableHead>
+                  <TableHead>{t('incidentDetectedValue')}</TableHead>
+                  <TableHead>{t('incidentNorm')}</TableHead>
+                  <TableHead>{t('incidentStatus')}</TableHead>
+                  <TableHead>{t('incidentStart')}</TableHead>
+                  <TableHead>{t('incidentEnd')}</TableHead>
+                  {canManage && <TableHead>{t('incidentActions')}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -160,7 +162,7 @@ export default function IncidentsPage() {
                     <TableCell
                       colSpan={canManage ? 8 : 7}
                       className="py-10 text-center text-muted-foreground">
-                      {tab === 'active' ? '✅ Жодних активних порушень' : 'Інцидентів немає'}
+                      {tab === 'active' ? t('noActiveIncidents') : t('noIncidents')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -208,7 +210,7 @@ export default function IncidentsPage() {
                               variant="outline"
                               onClick={() => resolveMutation.mutate(inc.incidentId)}
                               disabled={resolveMutation.isPending}>
-                              Закрити
+                              {t('close')}
                             </Button>
                           )}
                         </TableCell>

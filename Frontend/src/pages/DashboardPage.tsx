@@ -19,6 +19,7 @@ import {
 } from 'recharts'
 import { format } from 'date-fns'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLocale } from '@/contexts/LocaleContext'
 
 function StatCard({
   title,
@@ -154,6 +155,7 @@ function StorageChart({ devices }: { devices: { deviceID: string; location: stri
 
 export default function DashboardPage() {
   const { isAdmin, isManager, isUser } = useAuth()
+  const { t } = useLocale()
   const canManage = isAdmin || isManager || isUser
 
   const { data: medicines = [], isLoading: mLoading } = useQuery({
@@ -190,8 +192,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Дашборд</h1>
-        <p className="text-muted-foreground">Огляд системи моніторингу медичних препаратів</p>
+        <h1 className="text-2xl font-bold">{t('dashboardTitle')}</h1>
+        <p className="text-muted-foreground">{t('dashboardSubtitle')}</p>
       </div>
 
       {/* Stat Cards */}
@@ -200,26 +202,26 @@ export default function DashboardPage() {
           Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28" />)
         ) : (
           <>
-            <StatCard title="Препарати" value={medicines.length} icon={Pill} description="Всього у системі" />
+            <StatCard title={t('medicinesCount')} value={medicines.length} icon={Pill} description={t('totalSystem')} />
             <StatCard
-              title="Активні пристрої"
+              title={t('activeDevices')}
               value={`${activeDevices} / ${devices.length}`}
               icon={Cpu}
-              description="IoT датчиків онлайн"
+              description={t('iotOnline')}
             />
             <StatCard
-              title="Активні інциденти"
+              title={t('activeIncidents')}
               value={activeIncidents.length}
               icon={AlertTriangle}
               variant={activeIncidents.length > 0 ? 'danger' : 'default'}
-              description="Порушення умов зберігання"
+              description={t('storageViolations')}
             />
             <StatCard
-              title="Непрочитані"
+              title={t('unreadNotifications')}
               value={unread.length}
               icon={Bell}
               variant={unread.length > 0 ? 'warning' : 'default'}
-              description="Нові сповіщення"
+              description={t('newNotifications')}
             />
           </>
         )}
@@ -232,13 +234,13 @@ export default function DashboardPage() {
         {/* Active Incidents */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Активні інциденти</CardTitle>
-            <CardDescription>{activeIncidents.length} активних порушень</CardDescription>
+            <CardTitle className="text-base">{t('activeIncidentsCard')}</CardTitle>
+            <CardDescription>{activeIncidents.length} {t('activeViolations')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {activeIncidents.length === 0 ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">
-                ✅ Жодних порушень
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                {t('noViolations')}
               </div>
             ) : (
               activeIncidents.slice(0, 5).map((inc) => (

@@ -4,6 +4,7 @@ import { authApi } from '@/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useLocale } from '@/contexts/LocaleContext';
 // Fallback toast for environments where '@/components/ui/use-toast' is unavailable
 
 export default function ConfirmEmailPage() {
@@ -11,6 +12,7 @@ export default function ConfirmEmailPage() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLocale();
   const toast = ({ title, description }: { title?: string; description?: string }) => {
     // simple fallback using alert so the page still provides feedback
     alert(`${title ? title + '\n' : ''}${description ?? ''}`);
@@ -19,19 +21,19 @@ export default function ConfirmEmailPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !code) {
-      toast({ title: 'Помилка', description: 'Заповніть всі поля' });
+      toast({ title: 'Error', description: t('confirmEmailFillAll') });
       return;
     }
 
     try {
       setLoading(true);
       await authApi.confirmEmail({ email, code });
-      toast({ title: 'Успіх', description: 'Email підтверджено успішно. Тепер ви можете увійти.' });
+      toast({ title: 'Success', description: t('confirmEmailSuccess') });
       navigate('/login');
     } catch (error: any) {
       toast({
-        title: 'Помилка',
-        description: error.response?.data || 'Невірний код або помилка сервера',
+        title: 'Error',
+        description: error.response?.data || t('confirmEmailError'),
       });
     } finally {
       setLoading(false);
@@ -43,13 +45,13 @@ export default function ConfirmEmailPage() {
       <div className="w-full max-w-md">
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Підтвердження email</CardTitle>
-            <CardDescription>Введіть 6-значний код, надісланий на вашу пошту</CardDescription>
+            <CardTitle>{t('confirmEmailTitle')}</CardTitle>
+            <CardDescription>{t('confirmEmailSubtitle')}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Ваш Email</label>
+                <label className="text-sm font-medium">{t('yourEmail')}</label>
                 <Input
                   type="email"
                   value={email}
@@ -59,7 +61,7 @@ export default function ConfirmEmailPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Код підтвердження</label>
+                <label className="text-sm font-medium">{t('confirmationCode')}</label>
                 <Input
                   type="text"
                   value={code}
@@ -71,11 +73,11 @@ export default function ConfirmEmailPage() {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Перевірка...' : 'Підтвердити'}
+                {loading ? t('verifyLoading') : t('verify')}
               </Button>
               <div className="text-center mt-4 text-sm">
                 <Link to="/login" className="text-primary hover:underline">
-                  Повернутися до входу
+                  {t('backToLogin')}
                 </Link>
               </div>
             </form>
