@@ -33,10 +33,18 @@ export function AuthProvider({ children, queryClient }: AuthProviderProps) {
   const parseAndSetRole = (jwtToken: string) => {
     try {
       const decoded = jwtDecode<any>(jwtToken)
-      const parsedRole =
+      let parsedRole =
         decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ||
         decoded['role'] ||
         'User'
+      
+      if (Array.isArray(parsedRole)) {
+        if (parsedRole.includes('Administrator')) parsedRole = 'Administrator';
+        else if (parsedRole.includes('Manager')) parsedRole = 'Manager';
+        else if (parsedRole.includes('User')) parsedRole = 'User';
+        else parsedRole = parsedRole[0];
+      }
+      
       setRole(parsedRole as 'Administrator' | 'Manager' | 'User' | 'Device')
     } catch {
       setRole(null)

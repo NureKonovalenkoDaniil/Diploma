@@ -11,18 +11,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-const schema = z
-  .object({
-    email: z.string().email('Введіть коректний email'),
-    password: z.string().min(4, 'Пароль мінімум 4 символи'),
-    confirmPassword: z.string(),
-  })
-  .refine((d) => d.password === d.confirmPassword, {
-    message: 'Паролі не збігаються',
-    path: ['confirmPassword'],
-  });
+import { useLocale } from '@/contexts/LocaleContext';
 
-type FormData = z.infer<typeof schema>;
+type FormData = {
+  email: string;
+  password: string;
+  confirmPassword?: string;
+};
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -31,14 +26,26 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false);
   const [successEmail, setSuccessEmail] = useState<string | null>(null);
   const [resendStatus, setResendStatus] = useState<string | null>(null);
+  const { t } = useLocale();
+
+  const schema = z
+    .object({
+      email: z.string().email(t('registerEmailInvalid')),
+      password: z.string().min(4, t('registerPasswordMin')),
+      confirmPassword: z.string(),
+    })
+    .refine((d) => d.password === d.confirmPassword, {
+      message: t('registerPasswordsMismatch'),
+      path: ['confirmPassword'],
+    });
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({ resolver: zodResolver(schema) });
+  } = useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema) });
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: z.infer<typeof schema>) => {
     setError(null);
     try {
       await api.post('/api/auth/register', {
@@ -50,9 +57,9 @@ export default function RegisterPage() {
     } catch (err: unknown) {
       const e = err as { response?: { data?: string | object; status?: number } };
       if (e.response?.status === 409) {
-        setError('Користувач з таким email вже існує');
+        setError(t('registerEmailExists'));
       } else {
-        setError('Помилка реєстрації. Спробуйте ще раз.');
+        setError(t('registerErrorDefault'));
       }
     }
   };
@@ -68,7 +75,7 @@ export default function RegisterPage() {
           <div className="text-center">
             <h1 className="text-2xl font-bold">MedStorage</h1>
             <p className="text-sm text-muted-foreground">
-              Система управління медичними препаратами
+              {t('registerAppDesc')}
             </p>
           </div>
         </div>
@@ -76,22 +83,22 @@ export default function RegisterPage() {
         {/* Form */}
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Реєстрація</CardTitle>
+            <CardTitle>{t('register')}</CardTitle>
             <CardDescription>
-              Перший зареєстрований користувач отримає роль{' '}
-              <span className="font-semibold text-foreground">Адміністратора</span>
+              {t('registerRoleAdminHint')}{' '}
+              <span className="font-semibold text-foreground">{t('registerAdminSpan')}</span>
             </CardDescription>
           </CardHeader>
           <CardContent>
             {success ? (
               <div className="flex flex-col items-center gap-3 py-4 text-center">
                 <div className="text-4xl">✅</div>
-                <p className="font-semibold">Реєстрація успішна!</p>
+                <p className="font-semibold">{t('registerSuccessTitle')}</p>
                 <p className="text-sm text-muted-foreground">
-                  На вашу пошту надіслано 6-значний код. Введіть його на наступній сторінці.
+                  {t('registerSuccessDesc')}
                 </p>
                 <Button className="w-full" onClick={() => navigate('/confirm-email')}>
-                  Ввести код
+                  {t('enterCodeBtn')}
                 </Button>
                 <Button
                   variant="outline"
@@ -100,12 +107,12 @@ export default function RegisterPage() {
                     setResendStatus(null);
                     try {
                       await authApi.resendConfirmation(successEmail);
-                      setResendStatus('Лист підтвердження надіслано');
+                      setResendStatus(t('resendSuccess'));
                     } catch {
-                      setResendStatus('Не вдалося надіслати лист. Спробуйте пізніше.');
+                      setResendStatus(t('resendFailed'));
                     }
                   }}>
-                  Надіслати лист ще раз
+                  {t('resendCodeBtn')}
                 </Button>
                 {resendStatus && <p className="text-xs text-muted-foreground">{resendStatus}</p>}
               </div>
@@ -126,12 +133,12 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="reg-password">Пароль</Label>
+                  <Label htmlFor="reg-password">{t('passwordLabel')}</Label>
                   <div className="relative">
                     <Input
                       id="reg-password"
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="мін. 4 символи"
+                      placeholder={t('passwordMinHint')}
                       autoComplete="new-password"
                       {...register('password')}
                     />
@@ -148,7 +155,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="reg-confirm">Підтвердження пароля</Label>
+                  <Label htmlFor="reg-confirm">{t('confirmPasswordLabel')}</Label>
                   <Input
                     id="reg-confirm"
                     type={showPassword ? 'text' : 'password'}
@@ -169,7 +176,7 @@ export default function RegisterPage() {
 
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Зареєструватися
+                  {t('registerBtn')}
                 </Button>
               </form>
             )}
@@ -177,9 +184,9 @@ export default function RegisterPage() {
         </Card>
 
         <p className="text-center text-sm text-muted-foreground">
-          Вже маєте акаунт?{' '}
+          {t('alreadyHaveAccount')}{' '}
           <Link to="/login" className="text-primary hover:underline font-medium">
-            Увійти
+            {t('loginLink')}
           </Link>
         </p>
       </div>

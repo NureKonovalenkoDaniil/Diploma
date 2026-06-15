@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useLocale } from '@/contexts/LocaleContext';
 import {
   Table,
   TableBody,
@@ -26,7 +27,132 @@ const severityVariant = (s: string): 'destructive' | 'warning' | 'info' => {
   return 'info';
 };
 
+function translateAuditAction(action: string, t: (key: string) => string): string {
+  const normalized = action.replace(/\s+/g, '').replace(/_/g, '').replace(/-/g, '');
+  const key = `auditAction${normalized}`;
+  const translated = t(key);
+  return translated !== key ? translated : action;
+}
+
+function translateAuditEntity(entityType: string | null | undefined, t: (key: string) => string): string {
+  if (!entityType) return '—';
+  const key = `auditEntity${entityType}`;
+  const translated = t(key);
+  return translated !== key ? translated : entityType;
+}
+
+function translateAuditSeverity(severity: string, t: (key: string) => string): string {
+  const key = `auditLevel${severity}`;
+  const translated = t(key);
+  return translated !== key ? translated : severity;
+}
+
+function translateAuditDetails(details: string | null | undefined, t: (key: string, params?: any) => string): string {
+  if (!details) return '—';
+
+  if (details === 'Successful login.') return t('auditDetailsSuccessfulLogin');
+  if (details === 'Email confirmed.') return t('auditDetailsEmailConfirmed');
+  if (details === 'Password reset completed.') return t('auditDetailsPasswordResetCompleted');
+  if (details === 'Successful device login.') return t('auditDetailsSuccessfulDeviceLogin');
+  if (details === 'Device claimed and secret issued.') return t('auditDetailsDeviceClaimed');
+  if (details === 'Registered new user with role User.') return t('auditDetailsRegisteredUser');
+
+  let match = details.match(/^Created manager (.*?) for org (.*?)\.?$/i);
+  if (match) return t('auditDetailsCreatedManager', { email: match[1], orgId: match[2] });
+
+  match = details.match(/^Assigned role (.*?) to user (.*?)\.?$/i);
+  if (match) return t('auditDetailsAssignedRole', { role: match[1], email: match[2] });
+
+  match = details.match(/^Created role:\s*(.*?)\.?$/i);
+  if (match) return t('auditDetailsCreatedRole', { role: match[1] });
+
+  match = details.match(/^Deleted user:\s*(.*?)\.?$/i);
+  if (match) return t('auditDetailsDeletedUser', { email: match[1] });
+
+  match = details.match(/^Created medicine:\s*(.*?)\.?$/i);
+  if (match) return t('auditDetailsCreatedMedicine', { name: match[1] });
+
+  match = details.match(/^Updated medicine:\s*(.*?)\.?$/i);
+  if (match) return t('auditDetailsUpdatedMedicine', { name: match[1] });
+
+  match = details.match(/^Deleted medicine with ID:\s*(.*?)\.?$/i);
+  if (match) return t('auditDetailsDeletedMedicine', { id: match[1] });
+
+  match = details.match(/^Created sensor:\s*(.*?)\.?$/i);
+  if (match) return t('auditDetailsCreatedSensor', { id: match[1] });
+
+  match = details.match(/^Deleted sensor:\s*(.*?)\.?$/i);
+  if (match) return t('auditDetailsDeletedSensor', { id: match[1] });
+
+  match = details.match(/^Sensor (.*?) status set to (.*?)\.?$/i);
+  if (match) return t('auditDetailsSensorStatusSet', { id: match[1], status: match[2] });
+
+  match = details.match(/^Created StorageLocation:\s*(.*?)\.?$/i);
+  if (match) return t('auditDetailsCreatedStorageLocation', { name: match[1] });
+
+  match = details.match(/^Updated StorageLocation:\s*(.*?)\.?$/i);
+  if (match) return t('auditDetailsUpdatedStorageLocation', { name: match[1] });
+
+  match = details.match(/^Deleted storage location with ID:\s*(.*?)\.?$/i);
+  if (match) return t('auditDetailsDeletedStorageLocation', { id: match[1] });
+
+  match = details.match(/^Created StorageIncident:\s*(.*?)\.?$/i);
+  if (match) return t('auditDetailsCreatedStorageIncident', { id: match[1] });
+
+  match = details.match(/^Resolved storage incident:\s*(.*?)\.?$/i);
+  if (match) return t('auditDetailsResolvedStorageIncident', { id: match[1] });
+
+  match = details.match(/^Created Condition:\s*(.*?)\.?$/i);
+  if (match) return t('auditDetailsCreatedCondition', { id: match[1] });
+
+  match = details.match(/^Deleted Condition:\s*(.*?)\.?$/i);
+  if (match) return t('auditDetailsDeletedCondition', { id: match[1] });
+
+  // ─── NEW DETAILED TRANSLATIONS ───
+  match = details.match(/^Received\s*\+(\d+)\s*for\s*medicine\s*ID\s*(\d+)\.?$/i);
+  if (match) return t('auditDetailsReceivedQty', { qty: match[1], id: match[2] });
+
+  match = details.match(/^Issued\s*-(\d+)\s*for\s*medicine\s*ID\s*(\d+)\.?$/i);
+  if (match) return t('auditDetailsIssuedQty', { qty: match[1], id: match[2] });
+
+  match = details.match(/^Disposed\s*(.*?)\s*for\s*medicine\s*ID\s*(\d+)\.?$/i);
+  if (match) {
+    const qty = match[1];
+    const id = match[2];
+    if (qty.toLowerCase() === 'all') {
+      return t('auditDetailsDisposedAll', { id });
+    } else {
+      return t('auditDetailsDisposedQty', { qty, id });
+    }
+  }
+
+  match = details.match(/^Moved\s*medicine\s*ID\s*(\d+)\s*to\s*StorageLocationId\s*(.*?)\.?$/i);
+  if (match) return t('auditDetailsMovedMedicine', { id: match[1], locId: match[2] });
+
+  match = details.match(/^Lifecycle\s*event\s*'(.*?)'\s*added\s*for\s*Medicine\s*ID:\s*(\d+)\.?$/i);
+  if (match) return t('auditDetailsLifecycleEventAdded', { type: t('eventType' + match[1]), id: match[2] });
+
+  // Reusing notification message translation regexes for sensor violations in logs:
+  match = details.match(/Температурне порушення на пристрої (.*?):\s*([\d.-]+)°C\s*\(норма:\s*([\d.-]+)–([\d.-]+)°C\)/i);
+  if (match) return t('notificationMessageTempViolation', { deviceId: match[1], temp: match[2], min: match[3], max: match[4] });
+
+  match = details.match(/Порушення вологості на пристрої (.*?):\s*([\d.-]+)%\s*\(норма:\s*([\d.-]+)–([\d.-]+)%\)/i);
+  if (match) return t('notificationMessageHumidityViolation', { deviceId: match[1], humidity: match[2], min: match[3], max: match[4] });
+
+  match = details.match(/Температура нормалізована на пристрої (.*?):\s*([\d.-]+)°C\.\s*Інцидент\s*#(\d+)\s*закрито\s*автоматично/i);
+  if (match) return t('notificationMessageTempRestored', { deviceId: match[1], temp: match[2], incidentId: match[3] });
+
+  match = details.match(/Вологість нормалізована на пристрої (.*?):\s*([\d.-]+)%\.\s*Інцидент\s*#(\d+)\s*закрито\s*автоматично/i);
+  if (match) return t('notificationMessageHumidityRestored', { deviceId: match[1], humidity: match[2], incidentId: match[3] });
+
+  match = details.match(/Препарат «(.*?)» \(ID:\s*(\d+)\)\s*закінчується\s*([\d-]+)\s*\(через\s*(\d+)\s*д\.\)/i);
+  if (match) return t('notificationMessageExpiry', { name: match[1], id: match[2], date: match[3], days: match[4] });
+
+  return details;
+}
+
 export default function AuditLogPage() {
+  const { t, locale } = useLocale();
   const [filters, setFilters] = useState<Filters>({ from: '', to: '', user: '', action: '' });
   const [applied, setApplied] = useState<Partial<Filters>>({});
 
@@ -67,27 +193,49 @@ export default function AuditLogPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Журнал аудиту</h1>
-        <p className="text-muted-foreground">Повний журнал дій у системі</p>
+        <h1 className="text-2xl font-bold">{t('auditLogTitle')}</h1>
+        <p className="text-muted-foreground">{t('auditLogSubtitle')}</p>
       </div>
 
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">Фільтри</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('filters')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5">
-              <Label className="text-xs">З дати</Label>
-              <Input type="date" value={filters.from} onChange={(e) => f('from', e.target.value)} />
+              <Label className="text-xs">{t('fromDate')}</Label>
+              <Input
+                type={filters.from ? 'date' : 'text'}
+                placeholder={locale === 'uk' ? 'дд.мм.рррр' : 'dd.mm.yyyy'}
+                onFocus={(e) => {
+                  e.target.type = 'date';
+                }}
+                onBlur={(e) => {
+                  if (!e.target.value) e.target.type = 'text';
+                }}
+                value={filters.from}
+                onChange={(e) => f('from', e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">По дату</Label>
-              <Input type="date" value={filters.to} onChange={(e) => f('to', e.target.value)} />
+              <Label className="text-xs">{t('toDate')}</Label>
+              <Input
+                type={filters.to ? 'date' : 'text'}
+                placeholder={locale === 'uk' ? 'дд.мм.рррр' : 'dd.mm.yyyy'}
+                onFocus={(e) => {
+                  e.target.type = 'date';
+                }}
+                onBlur={(e) => {
+                  if (!e.target.value) e.target.type = 'text';
+                }}
+                value={filters.to}
+                onChange={(e) => f('to', e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Користувач</Label>
+              <Label className="text-xs">{t('userSearch')}</Label>
               <Input
                 placeholder="email@example.com"
                 value={filters.user}
@@ -95,7 +243,7 @@ export default function AuditLogPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Дія</Label>
+              <Label className="text-xs">{t('actionSearch')}</Label>
               <Input
                 placeholder="Create Medicine"
                 value={filters.action}
@@ -105,10 +253,10 @@ export default function AuditLogPage() {
           </div>
           <div className="mt-3 flex gap-2">
             <Button size="sm" onClick={applyFilters}>
-              <Search className="h-3.5 w-3.5" /> Застосувати
+              <Search className="h-3.5 w-3.5" /> {t('apply')}
             </Button>
             <Button size="sm" variant="outline" onClick={resetFilters}>
-              <RotateCcw className="h-3.5 w-3.5" /> Скинути
+              <RotateCcw className="h-3.5 w-3.5" /> {t('reset')}
             </Button>
           </div>
         </CardContent>
@@ -117,7 +265,7 @@ export default function AuditLogPage() {
       {/* Log Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{logs.length} записів</CardTitle>
+          <CardTitle className="text-base">{t('recordsCount', { count: logs.length })}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
@@ -130,19 +278,19 @@ export default function AuditLogPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Дата/час</TableHead>
-                  <TableHead>Дія</TableHead>
-                  <TableHead>Користувач</TableHead>
-                  <TableHead>Деталі</TableHead>
-                  <TableHead>Сутність</TableHead>
-                  <TableHead>Рівень</TableHead>
+                  <TableHead>{t('colDateTime')}</TableHead>
+                  <TableHead>{t('colAction')}</TableHead>
+                  <TableHead>{t('colUser')}</TableHead>
+                  <TableHead>{t('colDetails')}</TableHead>
+                  <TableHead>{t('colEntity')}</TableHead>
+                  <TableHead>{t('colLevel')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {logs.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                      Записів не знайдено
+                      {t('noRecordsFound')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -151,16 +299,20 @@ export default function AuditLogPage() {
                       <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                         {format(new Date(log.timestamp), 'dd.MM.yyyy HH:mm:ss')}
                       </TableCell>
-                      <TableCell className="font-medium text-sm">{log.action}</TableCell>
+                      <TableCell className="font-medium text-sm">
+                        {translateAuditAction(log.action, t)}
+                      </TableCell>
                       <TableCell className="text-sm">{log.user}</TableCell>
                       <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
-                        {log.details}
+                        {translateAuditDetails(log.details, t)}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
-                        {log.entityType ? `${log.entityType} #${log.entityId}` : '—'}
+                        {log.entityType ? `${translateAuditEntity(log.entityType, t)} #${log.entityId}` : '—'}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={severityVariant(log.severity)}>{log.severity}</Badge>
+                        <Badge variant={severityVariant(log.severity)}>
+                          {translateAuditSeverity(log.severity, t)}
+                        </Badge>
                       </TableCell>
                     </TableRow>
                   ))

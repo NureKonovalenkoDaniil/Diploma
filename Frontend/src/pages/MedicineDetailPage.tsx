@@ -26,6 +26,32 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
+
+function translateEventDescription(desc: string | null | undefined, t: (key: string) => string) {
+  if (!desc) return '—';
+  let match = desc.match(/^(?:Авто-надходження при створенні|Auto-received on creation):\s*\+(\d+)/i);
+  if (match) {
+    return `${t('eventAutoReceivedAtCreation')}: +${match[1]}`;
+  }
+  match = desc.match(/^(?:Надходження|Received):\s*\+(\d+)/i);
+  if (match) {
+    return `${t('eventTypeReceived')}: +${match[1]}`;
+  }
+  match = desc.match(/^(?:Видача|Issued):\s*-(\d+)/i);
+  if (match) {
+    return `${t('eventTypeIssued')}: -${match[1]}`;
+  }
+  match = desc.match(/^(?:Утилізація|Disposed):\s*-(\d+)/i);
+  if (match) {
+    return `${t('eventTypeDisposed')}: -${match[1]}`;
+  }
+  match = desc.match(/^(?:Переміщення|Moved):\s*(.*)/i);
+  if (match) {
+    return `${t('eventTypeMoved')}: ${match[1]}`;
+  }
+  return desc;
+}
 
 const EVENT_TYPES = ['Received', 'Issued', 'Moved', 'Expired', 'Disposed', 'Recalled'];
 
@@ -34,6 +60,7 @@ export default function MedicineDetailPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { isAdmin, isManager, isUser } = useAuth();
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const [stockOpen, setStockOpen] = useState<null | 'receive' | 'issue' | 'dispose'>(null);
@@ -137,7 +164,7 @@ export default function MedicineDetailPage() {
           : undefined,
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['lifecycle', medId] });
+      invalidateMedicineViews();
       setOpen(false);
       setEventForm({ eventType: 'Received', description: '', quantity: '', relatedLocationId: '' });
     },
@@ -150,7 +177,7 @@ export default function MedicineDetailPage() {
         <Skeleton className="h-48" />
       </div>
     );
-  if (!medicine) return <p className="text-muted-foreground">Препарат не знайдено</p>;
+  if (!medicine) return <p className="text-muted-foreground">{t('medicineNotFound')}</p>;
 
   return (
     <div className="space-y-6">
@@ -169,13 +196,13 @@ export default function MedicineDetailPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Кількість</p>
+            <p className="text-xs text-muted-foreground">{t('quantity')}</p>
             <p className="text-2xl font-bold">{medicine.quantity}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Термін придатності</p>
+            <p className="text-xs text-muted-foreground">{t('expiryDate')}</p>
             <p className="text-lg font-semibold">
               {format(new Date(medicine.expiryDate), 'dd.MM.yyyy')}
             </p>
@@ -183,13 +210,13 @@ export default function MedicineDetailPage() {
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Виробник</p>
+            <p className="text-xs text-muted-foreground">{t('manufacturer')}</p>
             <p className="text-lg font-semibold">{medicine.manufacturer ?? '—'}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-xs text-muted-foreground">Локація</p>
+            <p className="text-xs text-muted-foreground">{t('location')}</p>
             <p className="text-lg font-semibold">{medicine.storageLocationName ?? '—'}</p>
           </CardContent>
         </Card>
@@ -198,30 +225,30 @@ export default function MedicineDetailPage() {
       {/* Details */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Деталі</CardTitle>
+          <CardTitle className="text-base">{t('details')}</CardTitle>
         </CardHeader>
         <CardContent className="grid sm:grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="text-muted-foreground">Номер партії:</span>{' '}
+            <span className="text-muted-foreground">{t('batchNumber')}:</span>{' '}
             {medicine.batchNumber ?? '—'}
           </div>
           <div>
-            <span className="text-muted-foreground">Опис:</span> {medicine.description ?? '—'}
+            <span className="text-muted-foreground">{t('description')}:</span> {medicine.description ?? '—'}
           </div>
           <div>
-            <span className="text-muted-foreground">Мін. темп. зберіг.:</span>{' '}
+            <span className="text-muted-foreground">{t('minStorageTemp')}:</span>{' '}
             {medicine.minStorageTemp != null ? `${medicine.minStorageTemp}°C` : '—'}
           </div>
           <div>
-            <span className="text-muted-foreground">Макс. темп. зберіг.:</span>{' '}
+            <span className="text-muted-foreground">{t('maxStorageTemp')}:</span>{' '}
             {medicine.maxStorageTemp != null ? `${medicine.maxStorageTemp}°C` : '—'}
           </div>
           <div>
-            <span className="text-muted-foreground">Мін. вологість зберіг.:</span>{' '}
+            <span className="text-muted-foreground">{t('minStorageHumidity')}:</span>{' '}
             {medicine.minStorageHumidity != null ? `${medicine.minStorageHumidity}%` : '—'}
           </div>
           <div>
-            <span className="text-muted-foreground">Макс. вологість зберіг.:</span>{' '}
+            <span className="text-muted-foreground">{t('maxStorageHumidity')}:</span>{' '}
             {medicine.maxStorageHumidity != null ? `${medicine.maxStorageHumidity}%` : '—'}
           </div>
         </CardContent>
@@ -230,26 +257,26 @@ export default function MedicineDetailPage() {
       {/* Lifecycle Events */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Lifecycle-події</CardTitle>
+          <CardTitle className="text-base">{t('lifecycleEventsTitle')}</CardTitle>
           <div className="flex items-center gap-2">
             {canManage && (
               <>
                 <Button size="sm" variant="outline" onClick={() => setStockOpen('receive')}>
-                  <ArrowDownCircle className="h-3.5 w-3.5" /> Надходження
+                  <ArrowDownCircle className="h-3.5 w-3.5" /> {t('eventReceived')}
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setStockOpen('issue')}>
-                  <ArrowUpCircle className="h-3.5 w-3.5" /> Видача
+                  <ArrowUpCircle className="h-3.5 w-3.5" /> {t('eventIssued')}
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setStockOpen('dispose')}>
-                  <Trash2 className="h-3.5 w-3.5" /> Утилізація
+                  <Trash2 className="h-3.5 w-3.5" /> {t('eventDisposed')}
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setMoveOpen(true)}>
-                  <Truck className="h-3.5 w-3.5" /> Перемістити
+                  <Truck className="h-3.5 w-3.5" /> {t('eventMoved')}
                 </Button>
               </>
             )}
             <Button size="sm" onClick={() => setOpen(true)}>
-              <Plus className="h-3.5 w-3.5" /> Додати подію
+              <Plus className="h-3.5 w-3.5" /> {t('addEvent')}
             </Button>
           </div>
         </CardHeader>
@@ -264,30 +291,30 @@ export default function MedicineDetailPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Подія</TableHead>
-                  <TableHead>К-сть</TableHead>
-                  <TableHead>Опис</TableHead>
-                  <TableHead>Локація</TableHead>
-                  <TableHead>Виконав</TableHead>
-                  <TableHead>Дата</TableHead>
+                  <TableHead>{t('colEvent')}</TableHead>
+                  <TableHead>{t('colEventQuantity')}</TableHead>
+                  <TableHead>{t('colEventDescription')}</TableHead>
+                  <TableHead>{t('colEventLocation')}</TableHead>
+                  <TableHead>{t('colEventPerformedBy')}</TableHead>
+                  <TableHead>{t('colEventDate')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {events.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                      Подій ще немає
+                      {t('noEventsYet')}
                     </TableCell>
                   </TableRow>
                 ) : (
                   events.map((e) => (
                     <TableRow key={e.eventId}>
                       <TableCell>
-                        <Badge variant="secondary">{e.eventType}</Badge>
+                        <Badge variant="secondary">{t('eventType' + e.eventType)}</Badge>
                       </TableCell>
                       <TableCell>{e.quantity ?? '—'}</TableCell>
                       <TableCell className="text-muted-foreground">
-                        {e.description ?? '—'}
+                        {translateEventDescription(e.description, t)}
                       </TableCell>
                       <TableCell>{e.relatedLocationName ?? '—'}</TableCell>
                       <TableCell>{e.performedBy}</TableCell>
@@ -304,17 +331,17 @@ export default function MedicineDetailPage() {
       <Dialog open={moveOpen} onOpenChange={setMoveOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Перемістити препарат</DialogTitle>
+            <DialogTitle>{t('moveMedicineTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label>Нова локація</Label>
+              <Label>{t('newLocationLabel')}</Label>
               <select
-                title="Нова локація"
+                title={t('newLocationLabel')}
                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground"
                 value={moveForm.storageLocationId}
                 onChange={(e) => setMoveForm((p) => ({ ...p, storageLocationId: e.target.value }))}>
-                <option value="">Оберіть локацію</option>
+                <option value="">{t('chooseLocationOption')}</option>
                 {locations.map((loc) => (
                   <option key={loc.locationId} value={loc.locationId}>
                     {loc.name}
@@ -322,11 +349,11 @@ export default function MedicineDetailPage() {
                 ))}
               </select>
               {!moveForm.storageLocationId && (
-                <p className="text-xs text-muted-foreground">Обов&apos;язково для переміщення</p>
+                <p className="text-xs text-muted-foreground">{t('requiredForMove')}</p>
               )}
             </div>
             <div className="space-y-1.5">
-              <Label>Кількість (опціонально)</Label>
+              <Label>{t('quantityOptional')}</Label>
               <Input
                 type="number"
                 min={0}
@@ -335,23 +362,23 @@ export default function MedicineDetailPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Коментар (опціонально)</Label>
+              <Label>{t('commentOptional')}</Label>
               <Input
                 value={moveForm.description}
                 onChange={(e) => setMoveForm((p) => ({ ...p, description: e.target.value }))}
-                placeholder="Напр. переміщення для інвентаризації"
+                placeholder={t('commentMovePlaceholder')}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setMoveOpen(false)}>
-              Скасувати
+              {t('cancel')}
             </Button>
             <Button
               onClick={() => moveMutation.mutate()}
               disabled={moveMutation.isPending || !moveForm.storageLocationId}>
               {moveMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              Перемістити
+              {t('eventMoved')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -362,36 +389,36 @@ export default function MedicineDetailPage() {
           <DialogHeader>
             <DialogTitle>
               {stockOpen === 'receive'
-                ? 'Надходження'
+                ? t('eventReceived')
                 : stockOpen === 'issue'
-                  ? 'Видача'
-                  : 'Утилізація'}
+                  ? t('eventIssued')
+                  : t('eventDisposed')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label>Кількість</Label>
+              <Label>{t('quantity')}</Label>
               <Input
                 type="number"
                 min={stockOpen === 'dispose' ? 0 : 1}
                 value={stockForm.quantity}
                 onChange={(e) => setStockForm((p) => ({ ...p, quantity: e.target.value }))}
-                placeholder={stockOpen === 'dispose' ? '0 = утилізувати все' : 'Вкажіть кількість'}
+                placeholder={stockOpen === 'dispose' ? t('disposePlaceholder') : t('quantityPlaceholder')}
               />
               {stockOpen === 'dispose' && (
-                <p className="text-xs text-muted-foreground">Якщо вкажеш 0, утилізується весь залишок</p>
+                <p className="text-xs text-muted-foreground">{t('disposeHint')}</p>
               )}
             </div>
 
             {stockOpen === 'receive' && (
               <div className="space-y-1.5">
-                <Label>Локація (опціонально)</Label>
+                <Label>{t('locationReceiveOptional')}</Label>
                 <select
-                  title="Локація для надходження"
+                  title={t('locationReceiveOptional')}
                   className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground"
                   value={stockForm.storageLocationId}
                   onChange={(e) => setStockForm((p) => ({ ...p, storageLocationId: e.target.value }))}>
-                  <option value="">Не змінювати</option>
+                  <option value="">{t('noLocationChange')}</option>
                   {locations.map((loc) => (
                     <option key={loc.locationId} value={loc.locationId}>
                       {loc.name}
@@ -402,23 +429,23 @@ export default function MedicineDetailPage() {
             )}
 
             <div className="space-y-1.5">
-              <Label>Коментар (опціонально)</Label>
+              <Label>{t('commentOptional')}</Label>
               <Input
                 value={stockForm.description}
                 onChange={(e) => setStockForm((p) => ({ ...p, description: e.target.value }))}
-                placeholder="Напр. накладна / пацієнт / причина утилізації"
+                placeholder={t('commentReceivePlaceholder')}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setStockOpen(null)}>
-              Скасувати
+              {t('cancel')}
             </Button>
             <Button
               onClick={() => stockMutation.mutate()}
               disabled={stockMutation.isPending || !stockForm.quantity}>
               {stockMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              Підтвердити
+              {t('confirmBtn')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -427,25 +454,25 @@ export default function MedicineDetailPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Нова lifecycle-подія</DialogTitle>
+            <DialogTitle>{t('newEventTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label>Тип події</Label>
+              <Label>{t('eventTypeLabel')}</Label>
               <select
-                title="Тип події"
+                title={t('eventTypeLabel')}
                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground"
                 value={eventForm.eventType}
                 onChange={(e) => setEventForm((p) => ({ ...p, eventType: e.target.value }))}>
-                {EVENT_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
+                {EVENT_TYPES.map((tVal) => (
+                  <option key={tVal} value={tVal}>
+                    {t('eventType' + tVal)}
                   </option>
                 ))}
               </select>
             </div>
             <div className="space-y-1.5">
-              <Label>Кількість</Label>
+              <Label>{t('quantity')}</Label>
               <Input
                 type="number"
                 value={eventForm.quantity}
@@ -453,22 +480,22 @@ export default function MedicineDetailPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Опис</Label>
+              <Label>{t('description')}</Label>
               <Input
                 value={eventForm.description}
                 onChange={(e) => setEventForm((p) => ({ ...p, description: e.target.value }))}
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Пов'язана локація (опціонально)</Label>
+              <Label>{t('relatedLocationOptional')}</Label>
               <select
-                title="Пов'язана локація"
+                title={t('relatedLocationOptional')}
                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground"
                 value={eventForm.relatedLocationId}
                 onChange={(e) =>
                   setEventForm((p) => ({ ...p, relatedLocationId: e.target.value }))
                 }>
-                <option value="">Не вибрано</option>
+                <option value="">{t('notSelected')}</option>
                 {locations.map((loc) => (
                   <option key={loc.locationId} value={loc.locationId}>
                     {loc.name}
@@ -479,11 +506,11 @@ export default function MedicineDetailPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Скасувати
+              {t('cancel')}
             </Button>
             <Button onClick={() => addEventMutation.mutate()} disabled={addEventMutation.isPending}>
               {addEventMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              Зберегти
+              {t('save')}
             </Button>
           </DialogFooter>
         </DialogContent>

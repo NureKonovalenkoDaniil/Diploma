@@ -69,18 +69,19 @@ function StorageChart({
 }: {
   devices: { deviceID: string; location: string; isActive: boolean }[];
 }) {
+  const { t } = useLocale();
   const activeDevices = devices.filter((d) => d.isActive);
   const [selectedId, setSelectedId] = useState<string | null>(activeDevices[0]?.deviceID ?? null);
 
   const { data: conditionsData = [], isLoading } = useQuery({
-    queryKey: ['conditions-chart', selectedId],
+    queryKey: ['conditions-chart', selectedId, t('tempKey'), t('humidityKey')],
     queryFn: async () => {
       if (!selectedId) return [];
       const conds = await iotApi.getConditions(selectedId);
       return conds.slice(-24).map((c) => ({
         time: format(new Date(c.timestamp), 'HH:mm'),
-        Температура: c.temperature,
-        Вологість: c.humidity,
+        [t('tempKey')]: c.temperature,
+        [t('humidityKey')]: c.humidity,
       }));
     },
     enabled: !!selectedId,
@@ -94,11 +95,11 @@ function StorageChart({
       <CardHeader>
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div>
-            <CardTitle className="text-base">Умови зберігання</CardTitle>
+            <CardTitle className="text-base">{t('storageConditions')}</CardTitle>
             <CardDescription>
               {selectedDevice
                 ? `📍 ${selectedDevice.location} (${selectedDevice.deviceID})`
-                : 'Оберіть пристрій'}
+                : t('chooseDevice')}
             </CardDescription>
           </div>
           {activeDevices.length > 1 && (
@@ -120,13 +121,13 @@ function StorageChart({
       <CardContent>
         {activeDevices.length === 0 ? (
           <div className="flex h-48 items-center justify-center text-muted-foreground text-sm">
-            Немає активних IoT-пристроїв
+            {t('activeIotDevices')}
           </div>
         ) : isLoading ? (
           <Skeleton className="h-[220px] w-full" />
         ) : conditionsData.length === 0 ? (
           <div className="flex h-48 items-center justify-center text-muted-foreground text-sm">
-            Немає даних для відображення
+            {t('noChartData')}
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={220}>
@@ -155,14 +156,14 @@ function StorageChart({
               <Legend wrapperStyle={{ fontSize: '12px' }} />
               <Area
                 type="monotone"
-                dataKey="Температура"
+                dataKey={t('tempKey')}
                 stroke="hsl(221.2 83.2% 53.3%)"
                 fill="url(#temp)"
                 strokeWidth={2}
               />
               <Area
                 type="monotone"
-                dataKey="Вологість"
+                dataKey={t('humidityKey')}
                 stroke="hsl(160 60% 45%)"
                 fill="url(#hum)"
                 strokeWidth={2}
@@ -277,11 +278,11 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium">{inc.deviceLocation}</span>
                     <Badge variant="destructive" className="text-[10px]">
-                      {inc.incidentType === 'TemperatureViolation' ? '🌡️ Темп.' : '💧 Вол.'}
+                      {inc.incidentType === 'TemperatureViolation' ? t('tempViolationShort') : t('humidityViolationShort')}
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {inc.detectedValue.toFixed(1)} (норма: {inc.expectedMin}–{inc.expectedMax})
+                    {t('incidentNormValue', { value: inc.detectedValue.toFixed(1), min: inc.expectedMin, max: inc.expectedMax })}
                   </p>
                   <p className="text-[10px] text-muted-foreground/60">
                     {format(new Date(inc.startTime), 'dd.MM HH:mm')}
@@ -299,18 +300,18 @@ export default function DashboardPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Package className="h-4 w-4 text-amber-500" />
-              <CardTitle className="text-base">Препарати з низьким запасом</CardTitle>
+              <CardTitle className="text-base">{t('lowStockTitle')}</CardTitle>
             </div>
-            <CardDescription>{lowStock.length} препаратів потребують поповнення</CardDescription>
+            <CardDescription>{t('lowStockSubtitle', { count: lowStock.length })}</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Назва</TableHead>
-                  <TableHead>Тип</TableHead>
-                  <TableHead>К-сть</TableHead>
-                  <TableHead>Локація</TableHead>
+                  <TableHead>{t('colMedicineName')}</TableHead>
+                  <TableHead>{t('colMedicineType')}</TableHead>
+                  <TableHead>{t('colMedicineQty')}</TableHead>
+                  <TableHead>{t('colMedicineLocation')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -339,7 +340,7 @@ export default function DashboardPage() {
         <Card>
           <CardContent className="flex items-center gap-3 py-4">
             <TrendingDown className="h-5 w-5 text-emerald-500" />
-            <p className="text-sm text-muted-foreground">Всі препарати мають достатній запас</p>
+            <p className="text-sm text-muted-foreground">{t('allStockOk')}</p>
           </CardContent>
         </Card>
       )}

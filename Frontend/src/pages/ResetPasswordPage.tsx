@@ -27,12 +27,12 @@ export default function ResetPasswordPage() {
     }
     if (!password || password.length < 4) {
       setStatus('error');
-      setMessage('Password must contain at least 4 characters.');
+      setMessage(t('registerPasswordMin'));
       return;
     }
     if (password !== confirm) {
       setStatus('error');
-      setMessage('Passwords do not match.');
+      setMessage(t('registerPasswordsMismatch'));
       return;
     }
 

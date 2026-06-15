@@ -52,14 +52,15 @@ const usersApi = {
 
 // ─── Role badge ───────────────────────────────────────────────────────────────
 function RoleBadge({ role }: { role: string }) {
+  const { t } = useLocale();
   const map: Record<
     string,
     { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }
   > = {
-    Administrator: { label: 'Адміністратор', variant: 'destructive' },
-    Manager: { label: 'Менеджер', variant: 'default' },
-    User: { label: 'Користувач', variant: 'secondary' },
-    Device: { label: 'Пристрій', variant: 'outline' },
+    Administrator: { label: t('roleAdministrator'), variant: 'destructive' },
+    Manager: { label: t('roleManager'), variant: 'default' },
+    User: { label: t('roleUser'), variant: 'secondary' },
+    Device: { label: t('roleDevice'), variant: 'outline' },
   };
   const cfg = map[role] ?? { label: role, variant: 'outline' };
   return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
@@ -83,6 +84,7 @@ function CreateManagerDialog({
     organizationId: user?.organizationId ?? '',
   });
   const [errors, setErrors] = useState<Partial<CreateManagerForm & { server: string }>>({});
+  const { t } = useLocale();
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -103,17 +105,17 @@ function CreateManagerDialog({
       setErrors({});
     },
     onError: (err: any) => {
-      const msg = err?.response?.data?.title || err?.response?.data || 'Помилка сервера.';
+      const msg = err?.response?.data?.title || err?.response?.data || t('serverErrorDefault');
       setErrors((p) => ({ ...p, server: typeof msg === 'string' ? msg : JSON.stringify(msg) }));
     },
   });
 
   const validate = () => {
     const e: typeof errors = {};
-    if (!form.email.includes('@')) e.email = 'Введіть коректний email';
-    if (form.password.length < 6) e.password = 'Мінімум 6 символів';
-    if (form.password !== form.confirmPassword) e.confirmPassword = 'Паролі не збігаються';
-    if (!form.organizationId.trim()) e.organizationId = "OrganizationId є обов'язковим";
+    if (!form.email.includes('@')) e.email = t('emailInvalid');
+    if (form.password.length < 6) e.password = t('passwordMin');
+    if (form.password !== form.confirmPassword) e.confirmPassword = t('passwordsMismatch');
+    if (!form.organizationId.trim()) e.organizationId = t('organizationIdRequired');
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -126,11 +128,9 @@ function CreateManagerDialog({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Додати менеджера</DialogTitle>
+          <DialogTitle>{t('addManagerTitle')}</DialogTitle>
           <DialogDescription>
-            Менеджер матиме доступ до управління препаратами, локаціями та пристроями у межах вашої
-            організації. Email підтверджується автоматично — менеджер отримає вітальний лист із
-            даними для входу.
+            {t('managerDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -155,7 +155,7 @@ function CreateManagerDialog({
 
           <div className="space-y-1.5">
             <Label className='after:content-["*"] after:ml-0.5 after:text-destructive'>
-              Пароль
+              {t('password')}
             </Label>
             <Input
               type="password"
@@ -168,7 +168,7 @@ function CreateManagerDialog({
 
           <div className="space-y-1.5">
             <Label className='after:content-["*"] after:ml-0.5 after:text-destructive'>
-              Підтвердження паролю
+              {t('confirmPassword')}
             </Label>
             <Input
               type="password"
@@ -188,25 +188,25 @@ function CreateManagerDialog({
             <Input
               value={form.organizationId}
               onChange={(e) => setForm((p) => ({ ...p, organizationId: e.target.value }))}
-              placeholder="UUID організації"
+              placeholder={t('managerEmailPlaceholder')}
               className={errors.organizationId ? 'border-destructive' : ''}
             />
             {errors.organizationId && (
               <p className="text-xs text-destructive">{errors.organizationId}</p>
             )}
             <p className="text-xs text-muted-foreground">
-              Підставляється з вашого профілю автоматично. Змінювати лише при потребі.
+              {t('managerEmailHint')}
             </p>
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Скасувати
+            {t('cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={mutation.isPending}>
             {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
-            Створити менеджера
+            {t('createManagerBtn')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -267,14 +267,14 @@ export default function UsersPage() {
       <div className="grid grid-cols-3 gap-4">
         {[
           {
-            label: 'Адміністратори',
+            label: t('usersSectionAdminsLabel'),
             count: admins.length,
             icon: ShieldCheck,
             color: 'text-destructive',
           },
-          { label: 'Менеджери', count: managers.length, icon: Users, color: 'text-primary' },
+          { label: t('usersSectionManagersLabel'), count: managers.length, icon: Users, color: 'text-primary' },
           {
-            label: 'Користувачі',
+            label: t('usersSectionOthersLabel'),
             count: others.length,
             icon: UserIcon,
             color: 'text-muted-foreground',
@@ -295,24 +295,24 @@ export default function UsersPage() {
       {/* Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Всі користувачі</CardTitle>
-          <CardDescription>Лише користувачі вашої організації</CardDescription>
+          <CardTitle>{t('allUsersTitle')}</CardTitle>
+          <CardDescription>{t('onlyOrgUsersDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-6 text-center text-muted-foreground text-sm">Завантаження...</div>
+            <div className="p-6 text-center text-muted-foreground text-sm">{t('loading')}</div>
           ) : sorted.length === 0 ? (
             <div className="p-6 text-center text-muted-foreground text-sm">
-              Користувачів не знайдено
+              {t('noUsersFound')}
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Email</TableHead>
-                  <TableHead>Ролі</TableHead>
+                  <TableHead>{t('colRoles')}</TableHead>
                   <TableHead>OrganizationId</TableHead>
-                  <TableHead className="text-right">Дії</TableHead>
+                  <TableHead className="text-right">{t('colActions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -337,7 +337,7 @@ export default function UsersPage() {
                           className="text-destructive hover:text-destructive"
                           disabled={deleteMutation.isPending}
                           onClick={() => {
-                            if (confirm(`Видалити користувача ${u.email}?`)) {
+                            if (confirm(t('deleteUserConfirm', { email: u.email }))) {
                               deleteMutation.mutate(u.id);
                             }
                           }}>
@@ -358,9 +358,7 @@ export default function UsersPage() {
         onClose={() => setShowCreate(false)}
         onCreated={(email) => {
           qc.invalidateQueries({ queryKey: ['users'] });
-          setSuccessMessage(
-            `Менеджера ${email} успішно створено. На його пошту надіслано вітальний лист із даними для входу.`,
-          );
+          setSuccessMessage(t('managerCreatedSuccess', { email }));
         }}
       />
     </div>

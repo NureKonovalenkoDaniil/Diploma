@@ -46,49 +46,50 @@ function LocationForm({
   devices: IoTDeviceDto[];
 }) {
   const [form, setForm] = useState<Partial<FormData>>(initial ?? {});
+  const { t } = useLocale();
   const set = (k: keyof FormData, v: string | number | undefined) =>
     setForm((p) => ({ ...p, [k]: v }));
 
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <Label>Назва *</Label>
+        <Label>{t('locationNameLabel')}</Label>
         <Input
           value={form.name ?? ''}
           onChange={(e) => set('name', e.target.value)}
-          placeholder="Холодильник A"
+          placeholder={t('locationNamePlaceholder')}
         />
       </div>
       <div className="space-y-1.5">
-        <Label>Адреса</Label>
+        <Label>{t('locationAddressLabel')}</Label>
         <Input
           value={form.address ?? ''}
           onChange={(e) => set('address', e.target.value)}
-          placeholder="Кімната 203, 2 поверх"
+          placeholder={t('locationAddressPlaceholder')}
         />
       </div>
       <div className="space-y-1.5">
-        <Label>Тип локації</Label>
+        <Label>{t('locationTypeLabel')}</Label>
         <select
-          aria-label="Тип локації"
+          aria-label={t('locationTypeLabel')}
           className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground"
           value={form.locationType ?? 'Other'}
           onChange={(e) => set('locationType', e.target.value)}>
-          {LOCATION_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
+          {LOCATION_TYPES.map((tVal) => (
+            <option key={tVal} value={tVal}>
+              {t('locationType' + tVal)}
             </option>
           ))}
         </select>
       </div>
       <div className="space-y-1.5">
-        <Label>IoT-пристрій</Label>
+        <Label>{t('iotDeviceLabel')}</Label>
         <select
-          aria-label="IoT-пристрій"
+          aria-label={t('iotDeviceLabel')}
           className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground"
           value={form.ioTDeviceId ?? ''}
           onChange={(e) => set('ioTDeviceId', e.target.value || undefined)}>
-          <option value="">Немає (Без пристрою)</option>
+          <option value="">{t('noDeviceOption')}</option>
           {devices.map((d) => (
             <option key={d.deviceID} value={d.deviceID}>
               {d.deviceID} ({d.location})
@@ -98,11 +99,11 @@ function LocationForm({
       </div>
       <DialogFooter>
         <Button variant="outline" onClick={onClose}>
-          Скасувати
+          {t('cancel')}
         </Button>
         <Button onClick={() => onSave(form as FormData)} disabled={isLoading || !form.name}>
           {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-          Зберегти
+          {t('save')}
         </Button>
       </DialogFooter>
     </div>
@@ -188,7 +189,7 @@ export default function StorageLocationsPage() {
                         | 'warning'
                         | 'outline'
                     }>
-                    {l.locationType}
+                    {t('locationType' + l.locationType)}
                   </Badge>
                 </div>
                 <CardHeader className="pb-2">
@@ -209,7 +210,7 @@ export default function StorageLocationsPage() {
                           setSelected(l);
                           setDialogMode('edit');
                         }}>
-                        <Pencil className="h-3 w-3" /> Редагувати
+                        <Pencil className="h-3 w-3" /> {t('edit')}
                       </Button>
                       <Button
                         variant="outline"

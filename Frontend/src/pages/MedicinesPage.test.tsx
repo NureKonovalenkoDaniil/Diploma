@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom'
 import MedicinesPage from './MedicinesPage'
 import { medicineApi, locationApi } from '@/api'
 import type { MedicineDto, StorageLocationDto } from '@/types/api'
+import { LocaleProvider } from '@/contexts/LocaleContext'
 
 vi.mock('@/api', () => ({
   medicineApi: {
@@ -60,7 +61,9 @@ function renderWithProviders(ui: React.ReactElement) {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>{ui}</BrowserRouter>
+      <LocaleProvider>
+        <BrowserRouter>{ui}</BrowserRouter>
+      </LocaleProvider>
     </QueryClientProvider>,
   )
 }

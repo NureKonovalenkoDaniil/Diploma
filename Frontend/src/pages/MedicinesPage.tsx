@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { medicineApi, locationApi } from '@/api';
 import type { MedicineDto } from '@/types/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -29,20 +30,23 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, isPast, isWithinInterval, addDays } from 'date-fns';
 
-function getMedicineStatus(m: MedicineDto): {
+function getMedicineStatus(
+  m: MedicineDto,
+  t: (key: string) => string,
+): {
   label: string;
   variant: 'destructive' | 'warning' | 'success' | 'secondary';
 } {
-  if (m.status === 'Recalled') return { label: 'Відкликано', variant: 'destructive' };
-  if (m.status === 'Disposed') return { label: 'Утилізовано', variant: 'secondary' };
-  if (m.status === 'Expired') return { label: 'Прострочено', variant: 'destructive' };
+  if (m.status === 'Recalled') return { label: t('statusRecalled'), variant: 'destructive' };
+  if (m.status === 'Disposed') return { label: t('statusDisposed'), variant: 'secondary' };
+  if (m.status === 'Expired') return { label: t('statusExpired'), variant: 'destructive' };
 
   const expiry = new Date(m.expiryDate);
-  if (isPast(expiry)) return { label: 'Прострочено', variant: 'destructive' };
+  if (isPast(expiry)) return { label: t('statusExpired'), variant: 'destructive' };
   if (isWithinInterval(expiry, { start: new Date(), end: addDays(new Date(), 7) }))
-    return { label: 'Скоро', variant: 'warning' };
-  if (m.quantity <= 10) return { label: 'Мало', variant: 'warning' };
-  return { label: 'Норма', variant: 'success' };
+    return { label: t('statusSoon'), variant: 'warning' };
+  if (m.quantity <= 10) return { label: t('statusLow'), variant: 'warning' };
+  return { label: t('statusNormal'), variant: 'success' };
 }
 
 function MedicineForm({
@@ -60,17 +64,18 @@ function MedicineForm({
 }) {
   const [form, setForm] = useState<Partial<MedicineDto>>(initial ?? {});
   const [touched, setTouched] = useState<Partial<Record<keyof MedicineDto, boolean>>>({});
+  const { t } = useLocale();
   const set = (k: keyof MedicineDto, v: string | number | undefined) => {
     setForm((p) => ({ ...p, [k]: v }));
     setTouched((p) => ({ ...p, [k]: true }));
   };
 
   const errors: Partial<Record<keyof MedicineDto, string>> = {};
-  if (!form.name?.trim()) errors.name = "Назва є обов'язковою";
-  if (!form.type?.trim()) errors.type = "Тип є обов'язковим";
-  if (!form.category?.trim()) errors.category = "Категорія є обов'язковою";
-  if (!form.quantity && form.quantity !== 0) errors.quantity = 'Вкажіть кількість';
-  if (!form.expiryDate) errors.expiryDate = 'Вкажіть термін придатності';
+  if (!form.name?.trim()) errors.name = t('nameRequired');
+  if (!form.type?.trim()) errors.type = t('typeRequired');
+  if (!form.category?.trim()) errors.category = t('categoryRequired');
+  if (!form.quantity && form.quantity !== 0) errors.quantity = t('quantityRequired');
+  if (!form.expiryDate) errors.expiryDate = t('expiryDateRequired');
 
   const isValid = Object.keys(errors).length === 0;
 
@@ -99,7 +104,7 @@ function MedicineForm({
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         {field(
-          'Назва',
+          t('name'),
           'name',
           true,
           <Input
@@ -110,7 +115,7 @@ function MedicineForm({
           />,
         )}
         {field(
-          'Тип',
+          t('type'),
           'type',
           true,
           <Input
@@ -121,7 +126,7 @@ function MedicineForm({
           />,
         )}
         {field(
-          'Категорія',
+          t('category'),
           'category',
           true,
           <Input
@@ -132,7 +137,7 @@ function MedicineForm({
           />,
         )}
         {field(
-          'Кількість',
+          t('quantity'),
           'quantity',
           true,
           <Input
@@ -144,7 +149,7 @@ function MedicineForm({
           />,
         )}
         {field(
-          'Термін придатності',
+          t('expiryDate'),
           'expiryDate',
           true,
           <Input
@@ -155,7 +160,7 @@ function MedicineForm({
           />,
         )}
         {field(
-          'Виробник',
+          t('manufacturer'),
           'manufacturer',
           false,
           <Input
@@ -164,7 +169,7 @@ function MedicineForm({
           />,
         )}
         {field(
-          'Номер партії',
+          t('batchNumber'),
           'batchNumber',
           false,
           <Input
@@ -173,7 +178,7 @@ function MedicineForm({
           />,
         )}
         {field(
-          'Мін. температура (°C)',
+          t('minTempLabel'),
           'minStorageTemp',
           false,
           <Input
@@ -186,7 +191,7 @@ function MedicineForm({
           />,
         )}
         {field(
-          'Макс. температура (°C)',
+          t('maxTempLabel'),
           'maxStorageTemp',
           false,
           <Input
@@ -199,7 +204,7 @@ function MedicineForm({
           />,
         )}
         {field(
-          'Мін. вологість (%)',
+          t('minHumidityLabel'),
           'minStorageHumidity',
           false,
           <Input
@@ -212,7 +217,7 @@ function MedicineForm({
           />,
         )}
         {field(
-          'Макс. вологість (%)',
+          t('maxHumidityLabel'),
           'maxStorageHumidity',
           false,
           <Input
@@ -225,15 +230,15 @@ function MedicineForm({
           />,
         )}
         <div className="space-y-1.5">
-          <Label>Локація (опціонально)</Label>
+          <Label>{t('locationReceiveOptional')}</Label>
           <select
-            title="Оберіть локацію"
+            title={t('chooseLocationOption')}
             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm"
             value={form.storageLocationId ?? ''}
             onChange={(e) =>
               set('storageLocationId', e.target.value ? Number(e.target.value) : undefined)
             }>
-            <option value="">Не вибрано</option>
+            <option value="">{t('notSelected')}</option>
             {locations.map((l) => (
               <option key={l.locationId} value={l.locationId}>
                 {l.name}
@@ -243,7 +248,7 @@ function MedicineForm({
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label>Опис</Label>
+        <Label>{t('description')}</Label>
         <Input
           value={form.description ?? ''}
           onChange={(e) => set('description', e.target.value)}
@@ -251,11 +256,11 @@ function MedicineForm({
       </div>
       <DialogFooter>
         <Button variant="outline" onClick={onClose}>
-          Скасувати
+          {t('cancel')}
         </Button>
         <Button onClick={handleSave} disabled={isLoading}>
           {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-          Зберегти
+          {t('save')}
         </Button>
       </DialogFooter>
     </div>
@@ -264,6 +269,7 @@ function MedicineForm({
 
 export default function MedicinesPage() {
   const { isAdmin, isManager, isUser } = useAuth();
+  const { t } = useLocale();
   const canManage = isAdmin || isManager || isUser;
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -306,7 +312,7 @@ export default function MedicinesPage() {
     },
     onError: (err: any) => {
       const msg =
-        err?.response?.data?.title || err?.response?.data || 'Помилка сервера. Спробуйте ще раз.';
+        err?.response?.data?.title || err?.response?.data || t('serverErrorMsg');
       setServerError(typeof msg === 'string' ? msg : JSON.stringify(msg));
     },
   });
@@ -345,8 +351,8 @@ export default function MedicinesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Препарати</h1>
-          <p className="text-muted-foreground">Управління медичними препаратами</p>
+          <h1 className="text-2xl font-bold">{t('medicinesTitle')}</h1>
+          <p className="text-muted-foreground">{t('medicinesSubtitle')}</p>
         </div>
         {canManage && (
           <Button
@@ -354,7 +360,7 @@ export default function MedicinesPage() {
               setSelected(null);
               setDialogMode('create');
             }}>
-            <Plus className="h-4 w-4" /> Додати
+            <Plus className="h-4 w-4" /> {t('addMedicineBtn')}
           </Button>
         )}
       </div>
@@ -365,14 +371,14 @@ export default function MedicinesPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Пошук за назвою або типом..."
+                placeholder={t('searchPlaceholder')}
                 className="pl-9"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             <CardDescription>
-              {filtered.length} із {medicines.length}
+              {t('filteredCount', { filtered: filtered.length, total: medicines.length })}
             </CardDescription>
           </div>
         </CardHeader>
@@ -387,25 +393,25 @@ export default function MedicinesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Назва</TableHead>
-                  <TableHead>Тип</TableHead>
-                  <TableHead>К-сть</TableHead>
-                  <TableHead>Термін</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead>Локація</TableHead>
-                  {canManage && <TableHead className="text-right">Дії</TableHead>}
+                  <TableHead>{t('colMedicineName')}</TableHead>
+                  <TableHead>{t('colMedicineType')}</TableHead>
+                  <TableHead>{t('colMedicineQty')}</TableHead>
+                  <TableHead>{t('colMedicineExpiry')}</TableHead>
+                  <TableHead>{t('colMedicineStatus')}</TableHead>
+                  <TableHead>{t('colMedicineLocation')}</TableHead>
+                  {canManage && <TableHead className="text-right">{t('colActions')}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                      Препарати не знайдені
+                      {t('medicinesNotFound')}
                     </TableCell>
                   </TableRow>
                 ) : (
                   filtered.map((m) => {
-                    const status = getMedicineStatus(m);
+                    const status = getMedicineStatus(m, t);
                     return (
                       <TableRow
                         key={m.medicineID}
@@ -472,11 +478,12 @@ export default function MedicinesPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {dialogMode === 'create' ? 'Додати препарат' : 'Редагувати препарат'}
+              {dialogMode === 'create' ? t('addMedicineTitle') : t('editMedicineTitle')}
             </DialogTitle>
             <DialogDescription className="sr-only">
-              Форма для {dialogMode === 'create' ? 'створення нового' : 'редагування існуючого'}{' '}
-              медичного препарату
+              {t('medicineFormDesc', {
+                mode: dialogMode === 'create' ? t('creatingNew') : t('editingExisting'),
+              })}
             </DialogDescription>
           </DialogHeader>
           {serverError && (

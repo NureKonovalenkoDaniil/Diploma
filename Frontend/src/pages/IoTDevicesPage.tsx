@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { iotApi } from '@/api';
 import type { IoTDeviceDto } from '@/types/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -43,6 +44,7 @@ import { Label } from '@/components/ui/label';
 
 export default function IoTDevicesPage() {
   const { isAdmin, isManager, isUser } = useAuth();
+  const { t } = useLocale();
   const canManage = isAdmin || isManager || isUser;
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -120,51 +122,51 @@ export default function IoTDevicesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">IoT Пристрої</h1>
+          <h1 className="text-2xl font-bold">{t('iotDevicesTitle')}</h1>
           <p className="text-muted-foreground">
-            {activeCount} з {devices.length} активних датчиків
+            {t('iotDevicesSubtitle', { active: activeCount, total: devices.length })}
           </p>
         </div>
         {canManage && (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button>Зареєструвати пристрій</Button>
+              <Button>{t('registerDevice')}</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Реєстрація нового IoT-пристрою</DialogTitle>
+                <DialogTitle>{t('registerDeviceTitle')}</DialogTitle>
                 <DialogDescription>
-                  Введіть серійний номер датчика (DeviceId) та параметри.
+                  {t('registerDeviceSubtitle')}
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="deviceId" className="text-right">
-                    DeviceId
+                    {t('deviceId')}
                   </Label>
                   <Input
                     id="deviceId"
                     value={newDevice.deviceID}
                     onChange={(e) => setNewDevice({ ...newDevice, deviceID: e.target.value })}
                     className="col-span-3"
-                    placeholder="Наприклад, ESP-8800"
+                    placeholder={t('deviceIdPlaceholder')}
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="location" className="text-right">
-                    Розташування
+                    {t('deviceLocation')}
                   </Label>
                   <Input
                     id="location"
                     value={newDevice.location}
                     onChange={(e) => setNewDevice({ ...newDevice, location: e.target.value })}
                     className="col-span-3"
-                    placeholder="Холодильник 1"
+                    placeholder={t('deviceLocationPlaceholder')}
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="type" className="text-right">
-                    Тип
+                    {t('deviceType')}
                   </Label>
                   <Input
                     id="type"
@@ -175,7 +177,7 @@ export default function IoTDevicesPage() {
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Темп. (°C)</Label>
+                  <Label className="text-right">{t('deviceTempLabel')}</Label>
                   <div className="col-span-3 flex gap-2">
                     <Input
                       type="number"
@@ -196,7 +198,7 @@ export default function IoTDevicesPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Вологість (%)</Label>
+                  <Label className="text-right">{t('deviceHumidityLabel')}</Label>
                   <div className="col-span-3 flex gap-2">
                     <Input
                       type="number"
@@ -219,7 +221,7 @@ export default function IoTDevicesPage() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Скасувати
+                  {t('cancel')}
                 </Button>
                 <Button
                   onClick={() =>
@@ -236,7 +238,7 @@ export default function IoTDevicesPage() {
                     })
                   }
                   disabled={!newDevice.deviceID || registerMutation.isPending}>
-                  Зареєструвати
+                  {t('registerDevice')}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -252,7 +254,7 @@ export default function IoTDevicesPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{devices.length}</p>
-              <p className="text-xs text-muted-foreground">Всього пристроїв</p>
+              <p className="text-xs text-muted-foreground">{t('totalDevicesCount')}</p>
             </div>
           </CardContent>
         </Card>
@@ -263,7 +265,7 @@ export default function IoTDevicesPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{activeCount}</p>
-              <p className="text-xs text-muted-foreground">Онлайн</p>
+              <p className="text-xs text-muted-foreground">{t('onlineCount')}</p>
             </div>
           </CardContent>
         </Card>
@@ -274,7 +276,7 @@ export default function IoTDevicesPage() {
             </div>
             <div>
               <p className="text-2xl font-bold">{devices.length - activeCount}</p>
-              <p className="text-xs text-muted-foreground">Офлайн</p>
+              <p className="text-xs text-muted-foreground">{t('offlineCount')}</p>
             </div>
           </CardContent>
         </Card>
@@ -282,7 +284,7 @@ export default function IoTDevicesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Список пристроїв</CardTitle>
+          <CardTitle className="text-base">{t('devicesListTitle')}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
@@ -296,12 +298,12 @@ export default function IoTDevicesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
-                  <TableHead>Розташування</TableHead>
-                  <TableHead>Тип</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead>Діапазон темп.</TableHead>
-                  <TableHead>Діапазон вол.</TableHead>
-                  {canManage && <TableHead>Дії</TableHead>}
+                  <TableHead>{t('colDeviceLocation')}</TableHead>
+                  <TableHead>{t('colDeviceType')}</TableHead>
+                  <TableHead>{t('colDeviceStatus')}</TableHead>
+                  <TableHead>{t('colDeviceTempRange')}</TableHead>
+                  <TableHead>{t('colDeviceHumidityRange')}</TableHead>
+                  {canManage && <TableHead>{t('colDeviceActions')}</TableHead>}
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -309,7 +311,7 @@ export default function IoTDevicesPage() {
                 {devices.map((d) => (
                   <Fragment key={d.deviceID}>
                     <TableRow
-                      className="cursor-pointer"
+                       className="cursor-pointer"
                       onClick={() => setExpanded(expanded === d.deviceID ? null : d.deviceID)}>
                       <TableCell className="font-mono text-xs">#{d.deviceID}</TableCell>
                       <TableCell className="font-medium">{d.location}</TableCell>
@@ -318,7 +320,7 @@ export default function IoTDevicesPage() {
                       </TableCell>
                       <TableCell>
                         <Badge variant={d.isActive ? 'success' : 'secondary'}>
-                          {d.isActive ? 'Активний' : 'Неактивний'}
+                          {d.isActive ? t('statusActiveDevice') : t('statusInactiveDevice')}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm">
@@ -337,7 +339,7 @@ export default function IoTDevicesPage() {
                             onClick={() =>
                               toggleMutation.mutate({ id: d.deviceID, active: !d.isActive })
                             }>
-                            {d.isActive ? 'Вимкнути' : 'Увімкнути'}
+                            {d.isActive ? t('actionDeactivate') : t('actionActivate')}
                           </Button>
                           <Button variant="ghost" size="icon" onClick={() => setEditingDevice(d)}>
                             <Pencil className="h-4 w-4" />
@@ -353,18 +355,17 @@ export default function IoTDevicesPage() {
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Видалити пристрій?</AlertDialogTitle>
+                                <AlertDialogTitle>{t('deleteDeviceConfirmTitle')}</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Пристрій <strong>{d.deviceID}</strong> ({d.location}) буде
-                                  назавжди видалено з системи. Цю дію неможливо скасувати.
+                                  {t('deleteDeviceConfirmText', { id: d.deviceID, location: d.location })}
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>Скасувати</AlertDialogCancel>
+                                <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                                 <AlertDialogAction
                                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                   onClick={() => deleteMutation.mutate(d.deviceID)}>
-                                  Видалити
+                                  {t('deleteDeviceConfirmBtn')}
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
@@ -383,12 +384,12 @@ export default function IoTDevicesPage() {
                           colSpan={canManage ? 8 : 7}
                           className="bg-muted/30 p-4">
                           <p className="mb-2 text-sm font-medium">
-                            Останні показники умов зберігання
+                            {t('latestMetricsTitle')}
                           </p>
                           {condFetching ? (
                             <Skeleton className="h-20" />
                           ) : conditions.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">Немає даних</p>
+                            <p className="text-sm text-muted-foreground">{t('noMetricsData')}</p>
                           ) : (
                             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                               {conditions.slice(-4).map((c) => (
@@ -421,13 +422,13 @@ export default function IoTDevicesPage() {
         <Dialog open={!!editingDevice} onOpenChange={(open) => !open && setEditingDevice(null)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Редагування пристрою {editingDevice.deviceID}</DialogTitle>
-              <DialogDescription>Змініть параметри пристрою.</DialogDescription>
+              <DialogTitle>{t('editDeviceTitle', { id: editingDevice.deviceID })}</DialogTitle>
+              <DialogDescription>{t('editDeviceSubtitle')}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-location" className="text-right">
-                  Розташування
+                  {t('deviceLocation')}
                 </Label>
                 <Input
                   id="edit-location"
@@ -438,7 +439,7 @@ export default function IoTDevicesPage() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-type" className="text-right">
-                  Тип
+                  {t('deviceType')}
                 </Label>
                 <Input
                   id="edit-type"
@@ -448,7 +449,7 @@ export default function IoTDevicesPage() {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">Темп. (°C)</Label>
+                <Label className="text-right">{t('deviceTempLabel')}</Label>
                 <div className="col-span-3 flex gap-2">
                   <Input
                     type="number"
@@ -471,7 +472,7 @@ export default function IoTDevicesPage() {
                 </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">Вологість (%)</Label>
+                <Label className="text-right">{t('deviceHumidityLabel')}</Label>
                 <div className="col-span-3 flex gap-2">
                   <Input
                     type="number"
@@ -496,7 +497,7 @@ export default function IoTDevicesPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditingDevice(null)}>
-                Скасувати
+                {t('cancel')}
               </Button>
               <Button
                 onClick={() =>
@@ -513,7 +514,7 @@ export default function IoTDevicesPage() {
                   })
                 }
                 disabled={updateMutation.isPending}>
-                Зберегти
+                {t('save')}
               </Button>
             </DialogFooter>
           </DialogContent>

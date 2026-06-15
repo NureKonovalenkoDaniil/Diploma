@@ -3,7 +3,7 @@ import { Bell, Sun, Moon, Monitor, LogOut, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { notificationApi } from '@/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLocale } from '@/contexts/LocaleContext';
+import { useLocale, translateNotification } from '@/contexts/LocaleContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -82,7 +82,7 @@ export function Topbar() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{t('theme')}</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('language')}</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => setLocale('uk')}>Українська</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setLocale('en')}>English</DropdownMenuItem>
           </DropdownMenuContent>
@@ -106,7 +106,7 @@ export function Topbar() {
               <DropdownMenuLabel className="p-0">{t('notifications')}</DropdownMenuLabel>
               {unread.length > 0 && (
                 <Button
-                  variant="ghost"
+                   variant="ghost"
                   size="sm"
                   className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
                   onClick={() => markAllMutation.mutate()}>
@@ -121,45 +121,48 @@ export function Topbar() {
               </div>
             ) : (
               <>
-                {unread.slice(0, 5).map((n) => (
-                  <DropdownMenuItem
-                    key={n.notificationId}
-                    className="flex-col items-start gap-0.5 py-2">
-                    <div className="flex w-full items-center justify-between">
-                      <span className="text-sm font-medium">{n.title}</span>
-                      <Badge
-                        variant={
-                          n.type === 'StorageViolation'
-                            ? 'destructive'
+                {unread.slice(0, 5).map((n) => {
+                  const { title: translatedTitle, message: translatedMessage } = translateNotification(n.title, n.message, t);
+                  return (
+                    <DropdownMenuItem
+                      key={n.notificationId}
+                      className="flex-col items-start gap-0.5 py-2">
+                      <div className="flex w-full items-center justify-between">
+                        <span className="text-sm font-medium">{translatedTitle}</span>
+                        <Badge
+                          variant={
+                            n.type === 'StorageViolation'
+                              ? 'destructive'
+                              : n.type === 'StorageRestored'
+                                ? 'success'
+                                : n.type === 'LowStock' || n.type === 'Expiry'
+                                  ? 'warning'
+                                  : 'info'
+                          }
+                          className="text-[10px]">
+                          {n.type === 'StorageViolation'
+                            ? t('typeStorageViolation')
                             : n.type === 'StorageRestored'
-                              ? 'success'
-                              : n.type === 'LowStock' || n.type === 'Expiry'
-                                ? 'warning'
-                                : 'info'
-                        }
-                        className="text-[10px]">
-                        {n.type === 'StorageViolation'
-                          ? 'Порушення'
-                          : n.type === 'StorageRestored'
-                            ? 'Норма'
-                            : n.type === 'LowStock'
-                              ? 'Запас'
-                              : n.type === 'Expiry'
-                                ? 'Термін'
-                                : n.type}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{n.message}</p>
-                    <p className="text-[10px] text-muted-foreground/60">
-                      {format(new Date(n.createdAt), 'dd.MM HH:mm')}
-                    </p>
-                  </DropdownMenuItem>
-                ))}
+                              ? t('typeStorageRestored')
+                              : n.type === 'LowStock'
+                                ? t('typeLowStock')
+                                : n.type === 'Expiry'
+                                  ? t('typeExpiry')
+                                  : n.type}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{translatedMessage}</p>
+                      <p className="text-[10px] text-muted-foreground/60">
+                        {format(new Date(n.createdAt), 'dd.MM HH:mm')}
+                      </p>
+                    </DropdownMenuItem>
+                  );
+                })}
                 {unread.length > 5 && (
                   <DropdownMenuItem
                     onClick={() => navigate('/notifications')}
                     className="justify-center text-xs text-primary">
-                    Переглянути всі ({unread.length})
+                    {t('viewAllNotificationsCount', { count: unread.length })}
                   </DropdownMenuItem>
                 )}
               </>
@@ -180,7 +183,9 @@ export function Topbar() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>
               <p>{user?.email}</p>
-              <p className="text-xs font-normal text-muted-foreground">{user?.roles?.join(', ')}</p>
+              <p className="text-xs font-normal text-muted-foreground">
+                {user?.roles?.map((r) => t('role' + r)).join(', ')}
+              </p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-destructive">

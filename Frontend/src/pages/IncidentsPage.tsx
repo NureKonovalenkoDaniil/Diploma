@@ -49,8 +49,8 @@ export default function IncidentsPage() {
   const incidents = tab === 'active' ? active : all;
   const isLoading = tab === 'active' ? aLoading : allLoading;
 
-  const incidentTypeLabel = (t: string) =>
-    t === 'TemperatureViolation' ? '🌡️ Температура' : '💧 Вологість';
+  const incidentTypeLabel = (tType: string) =>
+    tType === 'TemperatureViolation' ? t('incidentTypeTemperature') : t('incidentTypeHumidity');
 
   const statusVariant = (s: string) => {
     if (s === 'Active') return 'destructive';
@@ -59,9 +59,9 @@ export default function IncidentsPage() {
   };
 
   const statusLabel = (s: string) => {
-    if (s === 'Active') return 'Активний';
-    if (s === 'Resolved') return 'Вирішено (вручну)';
-    if (s === 'AutoResolved') return 'Вирішено (авто)';
+    if (s === 'Active') return t('statusActive');
+    if (s === 'Resolved') return t('statusResolvedManual');
+    if (s === 'AutoResolved') return t('statusResolvedAuto');
     return s;
   };
 

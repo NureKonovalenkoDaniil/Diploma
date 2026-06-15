@@ -6,18 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Bell, Check, CheckCheck } from 'lucide-react';
 import { format } from 'date-fns';
-import { useLocale } from '@/contexts/LocaleContext';
-
-const TYPE_CONFIG: Record<
-  string,
-  { label: string; variant: 'destructive' | 'warning' | 'info' | 'secondary' | 'success' }
-> = {
-  StorageViolation: { label: 'Порушення', variant: 'destructive' },
-  StorageRestored: { label: 'Нормалізовано', variant: 'success' },
-  Expiry: { label: 'Термін', variant: 'warning' },
-  LowStock: { label: 'Запас', variant: 'warning' },
-  System: { label: 'Система', variant: 'info' },
-};
+import { useLocale, translateNotification } from '@/contexts/LocaleContext';
 
 export default function NotificationsPage() {
   const qc = useQueryClient();
@@ -39,6 +28,28 @@ export default function NotificationsPage() {
   });
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  const getLabel = (type: string) => {
+    switch (type) {
+      case 'StorageViolation': return t('notificationTypeStorageViolation');
+      case 'StorageRestored': return t('notificationTypeStorageRestored');
+      case 'Expiry': return t('notificationTypeExpiry');
+      case 'LowStock': return t('notificationTypeLowStock');
+      case 'System': return t('notificationTypeSystem');
+      default: return type;
+    }
+  };
+
+  const getVariant = (type: string): 'destructive' | 'success' | 'warning' | 'info' | 'secondary' => {
+    switch (type) {
+      case 'StorageViolation': return 'destructive';
+      case 'StorageRestored': return 'success';
+      case 'Expiry': return 'warning';
+      case 'LowStock': return 'warning';
+      case 'System': return 'info';
+      default: return 'secondary';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -70,7 +81,9 @@ export default function NotificationsPage() {
           </Card>
         ) : (
           notifications.map((n) => {
-            const cfg = TYPE_CONFIG[n.type] ?? { label: n.type, variant: 'secondary' };
+            const label = getLabel(n.type);
+            const variant = getVariant(n.type);
+            const { title: translatedTitle, message: translatedMessage } = translateNotification(n.title, n.message, t);
             return (
               <Card
                 key={n.notificationId}
@@ -79,9 +92,9 @@ export default function NotificationsPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2">
                       {!n.isRead && <div className="h-2 w-2 rounded-full bg-primary shrink-0" />}
-                      <CardTitle className="text-sm font-semibold">{n.title}</CardTitle>
-                      <Badge variant={cfg.variant} className="text-[10px]">
-                        {cfg.label}
+                      <CardTitle className="text-sm font-semibold">{translatedTitle}</CardTitle>
+                      <Badge variant={variant} className="text-[10px]">
+                        {label}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -90,7 +103,7 @@ export default function NotificationsPage() {
                       </CardDescription>
                       {!n.isRead && (
                         <Button
-                          variant="ghost"
+                           variant="ghost"
                           size="icon"
                           className="h-7 w-7"
                           onClick={() => markReadMutation.mutate(n.notificationId)}>
@@ -101,9 +114,11 @@ export default function NotificationsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <p className="text-sm text-muted-foreground">{n.message}</p>
+                  <p className="text-sm text-muted-foreground">{translatedMessage}</p>
                   {n.targetRole !== 'All' && (
-                    <p className="mt-1 text-[10px] text-muted-foreground/60">Для: {n.targetRole}</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground/60">
+                      {t('forRole', { role: t('role' + n.targetRole) })}
+                    </p>
                   )}
                 </CardContent>
               </Card>

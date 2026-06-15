@@ -1,0 +1,1782 @@
+{
+  "App.tsx": [
+    {
+      "lineNum": 22,
+      "text": "// queryClient як singleton — очищення кешу при login/logout в AuthContext"
+    }
+  ],
+  "components\\layout\\Topbar.tsx": [
+    {
+      "lineNum": 86,
+      "text": "<DropdownMenuItem onClick={() => setLocale('uk')}>Українська</DropdownMenuItem>"
+    }
+  ],
+  "contexts\\AuthContext.tsx": [
+    {
+      "lineNum": 63,
+      "text": "// Очищаємо кеш попереднього аккаунту перед входом нового"
+    },
+    {
+      "lineNum": 73,
+      "text": "// Очищаємо весь React Query кеш при виході"
+    }
+  ],
+  "contexts\\LocaleContext.tsx": [
+    {
+      "lineNum": 10,
+      "text": "appSubtitle: 'Система управління медичними препаратами',"
+    },
+    {
+      "lineNum": 11,
+      "text": "loginTitle: 'Вхід у систему',"
+    },
+    {
+      "lineNum": 12,
+      "text": "loginSubtitle: 'Введіть ваші облікові дані для доступу',"
+    },
+    {
+      "lineNum": 14,
+      "text": "password: 'Пароль',"
+    },
+    {
+      "lineNum": 15,
+      "text": "signIn: 'Увійти',"
+    },
+    {
+      "lineNum": 16,
+      "text": "noAccount: 'Немає акаунту?',"
+    },
+    {
+      "lineNum": 17,
+      "text": "register: 'Зареєструватися',"
+    },
+    {
+      "lineNum": 18,
+      "text": "forgotPassword: 'Забули пароль?',"
+    },
+    {
+      "lineNum": 19,
+      "text": "resetPassword: 'Відновити',"
+    },
+    {
+      "lineNum": 20,
+      "text": "loginNeedConfirm: 'Потрібно підтвердити пошту перед входом',"
+    },
+    {
+      "lineNum": 21,
+      "text": "loginInvalid: 'Невірний email або пароль',"
+    },
+    {
+      "lineNum": 22,
+      "text": "confirmCodeButton: 'Ввести код з листа',"
+    },
+    {
+      "lineNum": 23,
+      "text": "resendCode: 'Надіслати код ще раз',"
+    },
+    {
+      "lineNum": 24,
+      "text": "confirmationSent: 'Лист підтвердження надіслано',"
+    },
+    {
+      "lineNum": 25,
+      "text": "confirmationFailed: 'Не вдалося надіслати лист. Спробуйте пізніше.',"
+    },
+    {
+      "lineNum": 26,
+      "text": "enterEmailAbove: 'Вкажіть email у полі вище',"
+    },
+    {
+      "lineNum": 27,
+      "text": "theme: 'Тема',"
+    },
+    {
+      "lineNum": 28,
+      "text": "themeLabel: 'Тема оформлення',"
+    },
+    {
+      "lineNum": 29,
+      "text": "light: 'Світла',"
+    },
+    {
+      "lineNum": 30,
+      "text": "dark: 'Темна',"
+    },
+    {
+      "lineNum": 31,
+      "text": "system: 'Системна',"
+    },
+    {
+      "lineNum": 32,
+      "text": "notifications: 'Сповіщення',"
+    },
+    {
+      "lineNum": 33,
+      "text": "markAllRead: 'Прочитати всі',"
+    },
+    {
+      "lineNum": 34,
+      "text": "noNotifications: 'Нових сповіщень немає',"
+    },
+    {
+      "lineNum": 35,
+      "text": "viewAllNotifications: 'Переглянути всі',"
+    },
+    {
+      "lineNum": 36,
+      "text": "signOut: 'Вийти',"
+    },
+    {
+      "lineNum": 37,
+      "text": "dashboard: 'Дашборд',"
+    },
+    {
+      "lineNum": 38,
+      "text": "medicines: 'Препарати',"
+    },
+    {
+      "lineNum": 39,
+      "text": "storageLocations: 'Локації',"
+    },
+    {
+      "lineNum": 40,
+      "text": "incidents: 'Інциденти',"
+    },
+    {
+      "lineNum": 41,
+      "text": "devices: 'Інвентар пристроїв',"
+    },
+    {
+      "lineNum": 42,
+      "text": "users: 'Користувачі',"
+    },
+    {
+      "lineNum": 43,
+      "text": "auditLog: 'Журнал аудиту',"
+    },
+    {
+      "lineNum": 44,
+      "text": "adminSection: 'Адміністрування',"
+    },
+    {
+      "lineNum": 45,
+      "text": "systemManagement: 'Система управління',"
+    },
+    {
+      "lineNum": 47,
+      "text": "language: 'Мова',"
+    },
+    {
+      "lineNum": 50,
+      "text": "dashboardTitle: 'Дашборд',"
+    },
+    {
+      "lineNum": 51,
+      "text": "dashboardSubtitle: 'Огляд системи моніторингу медичних препаратів',"
+    },
+    {
+      "lineNum": 52,
+      "text": "medicinesCount: 'Препарати',"
+    },
+    {
+      "lineNum": 53,
+      "text": "totalSystem: 'Всього у системі',"
+    },
+    {
+      "lineNum": 54,
+      "text": "activeDevices: 'Активні пристрої',"
+    },
+    {
+      "lineNum": 55,
+      "text": "iotOnline: 'IoT датчиків онлайн',"
+    },
+    {
+      "lineNum": 56,
+      "text": "activeIncidents: 'Активні інциденти',"
+    },
+    {
+      "lineNum": 57,
+      "text": "storageViolations: 'Порушення умов зберігання',"
+    },
+    {
+      "lineNum": 58,
+      "text": "unreadNotifications: 'Непрочитані',"
+    },
+    {
+      "lineNum": 59,
+      "text": "newNotifications: 'Нові сповіщення',"
+    },
+    {
+      "lineNum": 60,
+      "text": "storageConditions: 'Умови зберігання',"
+    },
+    {
+      "lineNum": 61,
+      "text": "chooseDevice: 'Оберіть пристрій',"
+    },
+    {
+      "lineNum": 62,
+      "text": "activeIotDevices: 'Немає активних IoT-пристроїв',"
+    },
+    {
+      "lineNum": 63,
+      "text": "noChartData: 'Немає даних для відображення',"
+    },
+    {
+      "lineNum": 64,
+      "text": "activeIncidentsCard: 'Активні інциденти',"
+    },
+    {
+      "lineNum": 65,
+      "text": "activeViolations: 'активних порушень',"
+    },
+    {
+      "lineNum": 66,
+      "text": "noViolations: '✅ Жодних порушень',"
+    },
+    {
+      "lineNum": 67,
+      "text": "tempKey: 'Температура',"
+    },
+    {
+      "lineNum": 68,
+      "text": "humidityKey: 'Вологість',"
+    },
+    {
+      "lineNum": 69,
+      "text": "lowStockTitle: 'Препарати з низьким запасом',"
+    },
+    {
+      "lineNum": 70,
+      "text": "lowStockSubtitle: '{count} препаратів потребують поповнення',"
+    },
+    {
+      "lineNum": 71,
+      "text": "allStockOk: 'Всі препарати мають достатній запас',"
+    },
+    {
+      "lineNum": 72,
+      "text": "tempViolationShort: '🌡️ Темп.',"
+    },
+    {
+      "lineNum": 73,
+      "text": "humidityViolationShort: '💧 Вол.',"
+    },
+    {
+      "lineNum": 74,
+      "text": "incidentNormValue: '{value} (норма: {min}–{max})',"
+    },
+    {
+      "lineNum": 75,
+      "text": "colMedicineName: 'Назва',"
+    },
+    {
+      "lineNum": 76,
+      "text": "colMedicineType: 'Тип',"
+    },
+    {
+      "lineNum": 77,
+      "text": "colMedicineQty: 'К-сть',"
+    },
+    {
+      "lineNum": 78,
+      "text": "colMedicineLocation: 'Локація',"
+    },
+    {
+      "lineNum": 81,
+      "text": "storageLocationsTitle: 'Локації зберігання',"
+    },
+    {
+      "lineNum": 82,
+      "text": "storageLocationsSubtitle: 'Управління локаціями та холодильниками для препаратів',"
+    },
+    {
+      "lineNum": 83,
+      "text": "addLocation: 'Додати локацію',"
+    },
+    {
+      "lineNum": 84,
+      "text": "noLocations: 'Локацій не знайдено.',"
+    },
+    {
+      "lineNum": 85,
+      "text": "addFirst: 'Додайте першу локацію.',"
+    },
+    {
+      "lineNum": 86,
+      "text": "createLocation: 'Створити локацію',"
+    },
+    {
+      "lineNum": 87,
+      "text": "editLocation: 'Редагувати локацію',"
+    },
+    {
+      "lineNum": 90,
+      "text": "name: 'Назва',"
+    },
+    {
+      "lineNum": 91,
+      "text": "type: 'Тип',"
+    },
+    {
+      "lineNum": 92,
+      "text": "category: 'Категорія',"
+    },
+    {
+      "lineNum": 93,
+      "text": "quantity: 'Кількість',"
+    },
+    {
+      "lineNum": 94,
+      "text": "expiryDate: 'Термін придатності',"
+    },
+    {
+      "lineNum": 95,
+      "text": "manufacturer: 'Виробник',"
+    },
+    {
+      "lineNum": 96,
+      "text": "batchNumber: 'Номер партии',"
+    },
+    {
+      "lineNum": 97,
+      "text": "minStorageTemp: 'Мін. темп. (°C)',"
+    },
+    {
+      "lineNum": 98,
+      "text": "maxStorageTemp: 'Макс. темп. (°C)',"
+    },
+    {
+      "lineNum": 99,
+      "text": "minStorageHumidity: 'Мін. волог. (%)',"
+    },
+    {
+      "lineNum": 100,
+      "text": "maxStorageHumidity: 'Макс. волог. (%)',"
+    },
+    {
+      "lineNum": 101,
+      "text": "storageLocationId: 'Локація',"
+    },
+    {
+      "lineNum": 102,
+      "text": "description: 'Опис',"
+    },
+    {
+      "lineNum": 103,
+      "text": "details: 'Деталі',"
+    },
+    {
+      "lineNum": 106,
+      "text": "incidentsTitle: 'Інциденти зберігання',"
+    },
+    {
+      "lineNum": 107,
+      "text": "incidentsSubtitle: 'Історія та статус температурних порушень',"
+    },
+    {
+      "lineNum": 108,
+      "text": "activeIncidentsCount: 'активних інцидентів',"
+    },
+    {
+      "lineNum": 109,
+      "text": "confirmed: 'Підтверджено',"
+    },
+    {
+      "lineNum": 110,
+      "text": "resolved: 'Вирішено',"
+    },
+    {
+      "lineNum": 111,
+      "text": "activeTab: 'Активні',"
+    },
+    {
+      "lineNum": 112,
+      "text": "allIncidents: 'Всі інциденти',"
+    },
+    {
+      "lineNum": 113,
+      "text": "activeViolationsTitle: 'Активні порушення',"
+    },
+    {
+      "lineNum": 114,
+      "text": "allIncidentsTitle: 'Всі зареєстровані інциденти',"
+    },
+    {
+      "lineNum": 115,
+      "text": "incidentDevice: 'Пристрій',"
+    },
+    {
+      "lineNum": 116,
+      "text": "incidentType: 'Тип порушення',"
+    },
+    {
+      "lineNum": 117,
+      "text": "incidentDetectedValue: 'Показник',"
+    },
+    {
+      "lineNum": 119,
+      "text": "incidentStatus: 'Статус',"
+    },
+    {
+      "lineNum": 120,
+      "text": "incidentStart: 'Початок',"
+    },
+    {
+      "lineNum": 121,
+      "text": "incidentEnd: 'Кінець',"
+    },
+    {
+      "lineNum": 122,
+      "text": "incidentActions: 'Дії',"
+    },
+    {
+      "lineNum": 123,
+      "text": "noActiveIncidents: 'Немає активних інцидентів зберігання',"
+    },
+    {
+      "lineNum": 124,
+      "text": "noIncidents: 'Інцидентів не знайдено',"
+    },
+    {
+      "lineNum": 125,
+      "text": "close: 'Закрити',"
+    },
+    {
+      "lineNum": 126,
+      "text": "incidentTypeTemperature: '🌡️ Температура',"
+    },
+    {
+      "lineNum": 127,
+      "text": "incidentTypeHumidity: '💧 Вологість',"
+    },
+    {
+      "lineNum": 128,
+      "text": "statusActive: 'Активний',"
+    },
+    {
+      "lineNum": 129,
+      "text": "statusResolvedManual: 'Вирішено (вручну)',"
+    },
+    {
+      "lineNum": 130,
+      "text": "statusResolvedAuto: 'Вирішено (авто)',"
+    },
+    {
+      "lineNum": 133,
+      "text": "notificationsTitle: 'Сповіщення',"
+    },
+    {
+      "lineNum": 134,
+      "text": "unreadCount: '{count} непрочитаних',"
+    },
+    {
+      "lineNum": 135,
+      "text": "readAll: 'Прочитати все',"
+    },
+    {
+      "lineNum": 136,
+      "text": "noNotificationsCard: 'Нових сповіщень немає',"
+    },
+    {
+      "lineNum": 137,
+      "text": "viewAllNotificationsCount: 'Переглянути всі ({count})',"
+    },
+    {
+      "lineNum": 138,
+      "text": "typeStorageViolation: 'Порушення',"
+    },
+    {
+      "lineNum": 139,
+      "text": "typeStorageRestored: 'Норма',"
+    },
+    {
+      "lineNum": 140,
+      "text": "typeLowStock: 'Запас',"
+    },
+    {
+      "lineNum": 141,
+      "text": "typeExpiry: 'Термін',"
+    },
+    {
+      "lineNum": 142,
+      "text": "typeSystem: 'Система',"
+    },
+    {
+      "lineNum": 143,
+      "text": "notificationTypeStorageViolation: 'Порушення',"
+    },
+    {
+      "lineNum": 144,
+      "text": "notificationTypeStorageRestored: 'Нормалізовано',"
+    },
+    {
+      "lineNum": 145,
+      "text": "notificationTypeExpiry: 'Термін',"
+    },
+    {
+      "lineNum": 146,
+      "text": "notificationTypeLowStock: 'Запас',"
+    },
+    {
+      "lineNum": 147,
+      "text": "notificationTypeSystem: 'Система',"
+    },
+    {
+      "lineNum": 148,
+      "text": "forRole: 'Для: {role}',"
+    },
+    {
+      "lineNum": 151,
+      "text": "usersTitle: 'Управління користувачами',"
+    },
+    {
+      "lineNum": 152,
+      "text": "usersSubtitle: 'Перегляд та управління акаунтами вашої організації',"
+    },
+    {
+      "lineNum": 153,
+      "text": "addManager: 'Додати менеджера',"
+    },
+    {
+      "lineNum": 154,
+      "text": "createManager: 'Створити менеджера',"
+    },
+    {
+      "lineNum": 155,
+      "text": "role: 'Роль',"
+    },
+    {
+      "lineNum": 156,
+      "text": "organizationId: 'UUID організації',"
+    },
+    {
+      "lineNum": 158,
+      "text": "'Менеджер матиме доступ до управління препаратами, локаціями та пристроями у межах вашої організації. Email підтверджується автоматично — менеджер отримає вітальний лист із даними для входу.',"
+    },
+    {
+      "lineNum": 159,
+      "text": "managerEmailHint: 'Підставляється з вашого профілю автоматично. Змінювати лише при потребі.',"
+    },
+    {
+      "lineNum": 160,
+      "text": "usersSectionManagers: 'Менеджери',"
+    },
+    {
+      "lineNum": 161,
+      "text": "usersSectionOthers: 'Інші користувачі',"
+    },
+    {
+      "lineNum": 162,
+      "text": "usersSectionAdmins: 'Адміністратори',"
+    },
+    {
+      "lineNum": 163,
+      "text": "roleAdministrator: 'Адміністратор',"
+    },
+    {
+      "lineNum": 164,
+      "text": "roleManager: 'Менеджер',"
+    },
+    {
+      "lineNum": 165,
+      "text": "roleUser: 'Користувач',"
+    },
+    {
+      "lineNum": 166,
+      "text": "roleDevice: 'Пристрій',"
+    },
+    {
+      "lineNum": 167,
+      "text": "serverErrorDefault: 'Помилка сервера.',"
+    },
+    {
+      "lineNum": 168,
+      "text": "emailInvalid: 'Введіть коректний email',"
+    },
+    {
+      "lineNum": 169,
+      "text": "passwordMin: 'Мінімум 6 символів',"
+    },
+    {
+      "lineNum": 170,
+      "text": "passwordsMismatch: 'Паролі не збігаються',"
+    },
+    {
+      "lineNum": 171,
+      "text": "organizationIdRequired: \"OrganizationId є обов'язковим\","
+    },
+    {
+      "lineNum": 172,
+      "text": "addManagerTitle: 'Додати менеджера',"
+    },
+    {
+      "lineNum": 173,
+      "text": "managerEmailPlaceholder: 'UUID організації',"
+    },
+    {
+      "lineNum": 174,
+      "text": "cancel: 'Скасувати',"
+    },
+    {
+      "lineNum": 175,
+      "text": "createManagerBtn: 'Створити менеджера',"
+    },
+    {
+      "lineNum": 176,
+      "text": "save: 'Зберегти',"
+    },
+    {
+      "lineNum": 177,
+      "text": "usersSectionAdminsLabel: 'Адміністратори',"
+    },
+    {
+      "lineNum": 178,
+      "text": "usersSectionManagersLabel: 'Менеджери',"
+    },
+    {
+      "lineNum": 179,
+      "text": "usersSectionOthersLabel: 'Користувачі',"
+    },
+    {
+      "lineNum": 180,
+      "text": "allUsersTitle: 'Всі користувачі',"
+    },
+    {
+      "lineNum": 181,
+      "text": "onlyOrgUsersDesc: 'Лише користувачі вашої організації',"
+    },
+    {
+      "lineNum": 182,
+      "text": "loading: 'Завантаження...',"
+    },
+    {
+      "lineNum": 183,
+      "text": "noUsersFound: 'Користувачів не знайдено',"
+    },
+    {
+      "lineNum": 184,
+      "text": "colRoles: 'Ролі',"
+    },
+    {
+      "lineNum": 185,
+      "text": "colActions: 'Дії',"
+    },
+    {
+      "lineNum": 186,
+      "text": "deleteUserConfirm: 'Видалити користувача {email}?',"
+    },
+    {
+      "lineNum": 187,
+      "text": "managerCreatedSuccess: 'Менеджера {email} успішно створено. На його пошту надіслано вітальний лист із даними для входу.',"
+    },
+    {
+      "lineNum": 190,
+      "text": "confirmEmailTitle: 'Підтвердження email',"
+    },
+    {
+      "lineNum": 191,
+      "text": "confirmEmailSubtitle: 'Введіть 6-значний код, надісланий на вашу пошту',"
+    },
+    {
+      "lineNum": 192,
+      "text": "confirmEmailSuccess: 'Email підтверджено успішно. Тепер ви можете увійти.',"
+    },
+    {
+      "lineNum": 193,
+      "text": "confirmEmailError: 'Невірний код або помилка сервера',"
+    },
+    {
+      "lineNum": 194,
+      "text": "confirmEmailFillAll: 'Заповніть всі поля',"
+    },
+    {
+      "lineNum": 195,
+      "text": "yourEmail: 'Ваш Email',"
+    },
+    {
+      "lineNum": 196,
+      "text": "confirmationCode: 'Код підтвердження',"
+    },
+    {
+      "lineNum": 197,
+      "text": "backToLogin: 'Повернутися до входу',"
+    },
+    {
+      "lineNum": 198,
+      "text": "verify: 'Підтвердити',"
+    },
+    {
+      "lineNum": 199,
+      "text": "verifyLoading: 'Перевірка...',"
+    },
+    {
+      "lineNum": 200,
+      "text": "forgotPasswordTitle: 'Відновлення пароля',"
+    },
+    {
+      "lineNum": 201,
+      "text": "forgotPasswordSubtitle: 'Вкажіть email, щоб отримати 6-значний код для скидання',"
+    },
+    {
+      "lineNum": 202,
+      "text": "sendEmail: 'Надіслати лист',"
+    },
+    {
+      "lineNum": 203,
+      "text": "resetPasswordTitle: 'Скидання пароля',"
+    },
+    {
+      "lineNum": 204,
+      "text": "resetPasswordSubtitle: 'Введіть новий пароль',"
+    },
+    {
+      "lineNum": 205,
+      "text": "recoveryCode: 'Код з листа',"
+    },
+    {
+      "lineNum": 206,
+      "text": "newPassword: 'Новий пароль',"
+    },
+    {
+      "lineNum": 207,
+      "text": "confirmPassword: 'Підтвердження пароля',"
+    },
+    {
+      "lineNum": 208,
+      "text": "changePassword: 'Змінити пароль',"
+    },
+    {
+      "lineNum": 209,
+      "text": "passwordUpdated: 'Пароль оновлено успішно.',"
+    },
+    {
+      "lineNum": 210,
+      "text": "goToLogin: 'Перейти до входу',"
+    },
+    {
+      "lineNum": 213,
+      "text": "auditLogTitle: 'Журнал аудиту',"
+    },
+    {
+      "lineNum": 214,
+      "text": "auditLogSubtitle: 'Повний журнал дій у системі',"
+    },
+    {
+      "lineNum": 215,
+      "text": "filters: 'Фільтри',"
+    },
+    {
+      "lineNum": 216,
+      "text": "fromDate: 'З дати',"
+    },
+    {
+      "lineNum": 217,
+      "text": "toDate: 'По дату',"
+    },
+    {
+      "lineNum": 218,
+      "text": "userSearch: 'Користувач',"
+    },
+    {
+      "lineNum": 219,
+      "text": "actionSearch: 'Дія',"
+    },
+    {
+      "lineNum": 220,
+      "text": "apply: 'Застосувати',"
+    },
+    {
+      "lineNum": 221,
+      "text": "reset: 'Скинути',"
+    },
+    {
+      "lineNum": 222,
+      "text": "recordsCount: '{count} записів',"
+    },
+    {
+      "lineNum": 223,
+      "text": "colDateTime: 'Дата/час',"
+    },
+    {
+      "lineNum": 224,
+      "text": "colAction: 'Дія',"
+    },
+    {
+      "lineNum": 225,
+      "text": "colUser: 'Користувач',"
+    },
+    {
+      "lineNum": 226,
+      "text": "colDetails: 'Деталі',"
+    },
+    {
+      "lineNum": 227,
+      "text": "colEntity: 'Сутність',"
+    },
+    {
+      "lineNum": 228,
+      "text": "colLevel: 'Рівень',"
+    },
+    {
+      "lineNum": 229,
+      "text": "noRecordsFound: 'Записів не знайдено',"
+    },
+    {
+      "lineNum": 232,
+      "text": "iotDevicesTitle: 'IoT Пристрої',"
+    },
+    {
+      "lineNum": 233,
+      "text": "iotDevicesSubtitle: '{active} з {total} активних датчиків',"
+    },
+    {
+      "lineNum": 234,
+      "text": "registerDevice: 'Зареєструвати пристрій',"
+    },
+    {
+      "lineNum": 235,
+      "text": "registerDeviceTitle: 'Реєстрація нового IoT-пристрою',"
+    },
+    {
+      "lineNum": 236,
+      "text": "registerDeviceSubtitle: 'Введіть серійний номер датчика (DeviceId) та параметри.',"
+    },
+    {
+      "lineNum": 238,
+      "text": "deviceIdPlaceholder: 'Наприклад, ESP-8800',"
+    },
+    {
+      "lineNum": 239,
+      "text": "deviceLocation: 'Розташування',"
+    },
+    {
+      "lineNum": 240,
+      "text": "deviceLocationPlaceholder: 'Холодильник 1',"
+    },
+    {
+      "lineNum": 241,
+      "text": "deviceType: 'Тип',"
+    },
+    {
+      "lineNum": 242,
+      "text": "deviceTempLabel: 'Темп. (°C)',"
+    },
+    {
+      "lineNum": 243,
+      "text": "deviceHumidityLabel: 'Вологість (%)',"
+    },
+    {
+      "lineNum": 244,
+      "text": "totalDevicesCount: 'Всього пристроїв',"
+    },
+    {
+      "lineNum": 245,
+      "text": "onlineCount: 'Онлайн',"
+    },
+    {
+      "lineNum": 246,
+      "text": "offlineCount: 'Офлайн',"
+    },
+    {
+      "lineNum": 247,
+      "text": "devicesListTitle: 'Список пристроїв',"
+    },
+    {
+      "lineNum": 248,
+      "text": "colDeviceLocation: 'Розташування',"
+    },
+    {
+      "lineNum": 249,
+      "text": "colDeviceType: 'Тип',"
+    },
+    {
+      "lineNum": 250,
+      "text": "colDeviceStatus: 'Статус',"
+    },
+    {
+      "lineNum": 251,
+      "text": "colDeviceTempRange: 'Діапазон темп.',"
+    },
+    {
+      "lineNum": 252,
+      "text": "colDeviceHumidityRange: 'Діапазон вол.',"
+    },
+    {
+      "lineNum": 253,
+      "text": "colDeviceActions: 'Дії',"
+    },
+    {
+      "lineNum": 254,
+      "text": "statusActiveDevice: 'Активний',"
+    },
+    {
+      "lineNum": 255,
+      "text": "statusInactiveDevice: 'Неактивний',"
+    },
+    {
+      "lineNum": 256,
+      "text": "actionDeactivate: 'Вимкнути',"
+    },
+    {
+      "lineNum": 257,
+      "text": "actionActivate: 'Увімкнути',"
+    },
+    {
+      "lineNum": 258,
+      "text": "deleteDeviceConfirmTitle: 'Видалити пристрій?',"
+    },
+    {
+      "lineNum": 259,
+      "text": "deleteDeviceConfirmText: 'Пристрій {id} ({location}) буде назавжди видалено з системи. Цю дію неможливо скасувати.',"
+    },
+    {
+      "lineNum": 260,
+      "text": "deleteDeviceConfirmBtn: 'Видалити',"
+    },
+    {
+      "lineNum": 261,
+      "text": "latestMetricsTitle: 'Останні показники умов зберігання',"
+    },
+    {
+      "lineNum": 262,
+      "text": "noMetricsData: 'Немає даних',"
+    },
+    {
+      "lineNum": 263,
+      "text": "editDeviceTitle: 'Редагування пристрою {id}',"
+    },
+    {
+      "lineNum": 264,
+      "text": "editDeviceSubtitle: 'Змініть параметри пристрою.',"
+    },
+    {
+      "lineNum": 267,
+      "text": "medicineNotFound: 'Препарат не знайдено',"
+    },
+    {
+      "lineNum": 268,
+      "text": "colQuantity: 'Кількість',"
+    },
+    {
+      "lineNum": 269,
+      "text": "colExpiryDate: 'Термін придатності',"
+    },
+    {
+      "lineNum": 270,
+      "text": "colManufacturer: 'Виробник',"
+    },
+    {
+      "lineNum": 271,
+      "text": "colLocation: 'Локація',"
+    },
+    {
+      "lineNum": 272,
+      "text": "details: 'Деталі',"
+    },
+    {
+      "lineNum": 273,
+      "text": "batchNumberLabel: 'Номер партії:',"
+    },
+    {
+      "lineNum": 274,
+      "text": "descriptionLabel: 'Опис:',"
+    },
+    {
+      "lineNum": 275,
+      "text": "minTempLabel: 'Мін. темп. зберіг.:',"
+    },
+    {
+      "lineNum": 276,
+      "text": "maxTempLabel: 'Макс. темп. зберіг.:',"
+    },
+    {
+      "lineNum": 277,
+      "text": "minHumidityLabel: 'Мін. вологість зберіг.:',"
+    },
+    {
+      "lineNum": 278,
+      "text": "maxHumidityLabel: 'Макс. вологість зберіг.:',"
+    },
+    {
+      "lineNum": 279,
+      "text": "lifecycleEventsTitle: 'Lifecycle-події',"
+    },
+    {
+      "lineNum": 280,
+      "text": "eventReceived: 'Надходження',"
+    },
+    {
+      "lineNum": 281,
+      "text": "eventIssued: 'Видача',"
+    },
+    {
+      "lineNum": 282,
+      "text": "eventDisposed: 'Утилізація',"
+    },
+    {
+      "lineNum": 283,
+      "text": "eventMoved: 'Перемістити',"
+    },
+    {
+      "lineNum": 284,
+      "text": "addEvent: 'Додати подію',"
+    },
+    {
+      "lineNum": 285,
+      "text": "colEvent: 'Подія',"
+    },
+    {
+      "lineNum": 286,
+      "text": "colEventQuantity: 'К-сть',"
+    },
+    {
+      "lineNum": 287,
+      "text": "colEventDescription: 'Опис',"
+    },
+    {
+      "lineNum": 288,
+      "text": "colEventLocation: 'Локація',"
+    },
+    {
+      "lineNum": 289,
+      "text": "colEventPerformedBy: 'Виконав',"
+    },
+    {
+      "lineNum": 290,
+      "text": "colEventDate: 'Дата',"
+    },
+    {
+      "lineNum": 291,
+      "text": "noEventsYet: 'Подій ще немає',"
+    },
+    {
+      "lineNum": 292,
+      "text": "moveMedicineTitle: 'Перемістити препарат',"
+    },
+    {
+      "lineNum": 293,
+      "text": "newLocationLabel: 'Нова локація',"
+    },
+    {
+      "lineNum": 294,
+      "text": "chooseLocationOption: 'Оберіть локацію',"
+    },
+    {
+      "lineNum": 295,
+      "text": "requiredForMove: \"Обов'язково для переміщення\","
+    },
+    {
+      "lineNum": 296,
+      "text": "quantityOptional: 'Кількість (опціонально)',"
+    },
+    {
+      "lineNum": 297,
+      "text": "commentOptional: 'Коментар (опціонально)',"
+    },
+    {
+      "lineNum": 298,
+      "text": "commentMovePlaceholder: 'Напр. переміщення для інвентаризації',"
+    },
+    {
+      "lineNum": 299,
+      "text": "disposePlaceholder: '0 = утилізувати все',"
+    },
+    {
+      "lineNum": 300,
+      "text": "disposeHint: 'Якщо вкажеш 0, утилізується весь залишок',"
+    },
+    {
+      "lineNum": 301,
+      "text": "quantityPlaceholder: 'Вкажіть кількість',"
+    },
+    {
+      "lineNum": 302,
+      "text": "locationReceiveOptional: 'Локація (опціонально)',"
+    },
+    {
+      "lineNum": 303,
+      "text": "noLocationChange: 'Не змінювати',"
+    },
+    {
+      "lineNum": 304,
+      "text": "commentReceivePlaceholder: 'Напр. накладна / пацієнт / причина утилізації',"
+    },
+    {
+      "lineNum": 305,
+      "text": "confirmBtn: 'Підтвердити',"
+    },
+    {
+      "lineNum": 306,
+      "text": "newEventTitle: 'Нова lifecycle-подія',"
+    },
+    {
+      "lineNum": 307,
+      "text": "eventTypeLabel: 'Тип події',"
+    },
+    {
+      "lineNum": 308,
+      "text": "relatedLocationOptional: 'Пов\\'язана локація (опціонально)',"
+    },
+    {
+      "lineNum": 309,
+      "text": "notSelected: 'Не вибрано',"
+    },
+    {
+      "lineNum": 312,
+      "text": "medicinesTitle: 'Препарати',"
+    },
+    {
+      "lineNum": 313,
+      "text": "medicinesSubtitle: 'Управління медичними препаратами',"
+    },
+    {
+      "lineNum": 314,
+      "text": "addMedicineBtn: 'Додати',"
+    },
+    {
+      "lineNum": 315,
+      "text": "searchPlaceholder: 'Пошук за назвою або типом...',"
+    },
+    {
+      "lineNum": 316,
+      "text": "filteredCount: '{filtered} із {total}',"
+    },
+    {
+      "lineNum": 317,
+      "text": "medicinesNotFound: 'Препарати не знайдені',"
+    },
+    {
+      "lineNum": 318,
+      "text": "medicineNotFound: 'Препарат не знайдено',"
+    },
+    {
+      "lineNum": 319,
+      "text": "addMedicineTitle: 'Додати препарат',"
+    },
+    {
+      "lineNum": 320,
+      "text": "editMedicineTitle: 'Редагувати препарат',"
+    },
+    {
+      "lineNum": 321,
+      "text": "medicineFormDesc: 'Форма для {mode} медичного препарату',"
+    },
+    {
+      "lineNum": 322,
+      "text": "creatingNew: 'створення нового',"
+    },
+    {
+      "lineNum": 323,
+      "text": "editingExisting: 'редагування існуючого',"
+    },
+    {
+      "lineNum": 324,
+      "text": "nameRequired: \"Назва є обов'язковою\","
+    },
+    {
+      "lineNum": 325,
+      "text": "typeRequired: \"Тип є обов'язковим\","
+    },
+    {
+      "lineNum": 326,
+      "text": "categoryRequired: \"Категорія є обов'язковою\","
+    },
+    {
+      "lineNum": 327,
+      "text": "quantityRequired: 'Вкажіть кількість',"
+    },
+    {
+      "lineNum": 328,
+      "text": "expiryDateRequired: 'Вкажіть термін придатності',"
+    },
+    {
+      "lineNum": 329,
+      "text": "serverErrorMsg: 'Помилка сервера. Спробуйте ще раз.',"
+    },
+    {
+      "lineNum": 330,
+      "text": "statusRecalled: 'Відкликано',"
+    },
+    {
+      "lineNum": 331,
+      "text": "statusDisposed: 'Утилізовано',"
+    },
+    {
+      "lineNum": 332,
+      "text": "statusExpired: 'Прострочено',"
+    },
+    {
+      "lineNum": 333,
+      "text": "statusSoon: 'Скоро',"
+    },
+    {
+      "lineNum": 334,
+      "text": "statusLow: 'Мало',"
+    },
+    {
+      "lineNum": 335,
+      "text": "statusNormal: 'Норма',"
+    },
+    {
+      "lineNum": 338,
+      "text": "registerEmailInvalid: 'Введіть коректний email',"
+    },
+    {
+      "lineNum": 339,
+      "text": "registerPasswordMin: 'Пароль мінімум 4 символи',"
+    },
+    {
+      "lineNum": 340,
+      "text": "registerPasswordsMismatch: 'Паролі не збігаються',"
+    },
+    {
+      "lineNum": 341,
+      "text": "registerEmailExists: 'Користувач з таким email вже існує',"
+    },
+    {
+      "lineNum": 342,
+      "text": "registerErrorDefault: 'Помилка реєстрації. Спробуйте ще раз.',"
+    },
+    {
+      "lineNum": 343,
+      "text": "registerAppDesc: 'Система управління медичними препаратами',"
+    },
+    {
+      "lineNum": 344,
+      "text": "registerRoleAdminHint: 'Перший зареєстрований користувач отримає роль',"
+    },
+    {
+      "lineNum": 345,
+      "text": "registerAdminSpan: 'Адміністратора',"
+    },
+    {
+      "lineNum": 346,
+      "text": "registerSuccessTitle: 'Реєстрація успішна!',"
+    },
+    {
+      "lineNum": 347,
+      "text": "registerSuccessDesc: 'На вашу пошту надіслано 6-значний код. Введіть його на наступній сторінці.',"
+    },
+    {
+      "lineNum": 348,
+      "text": "enterCodeBtn: 'Ввести код',"
+    },
+    {
+      "lineNum": 349,
+      "text": "resendSuccess: 'Лист підтвердження надіслано',"
+    },
+    {
+      "lineNum": 350,
+      "text": "resendFailed: 'Не вдалося надіслати лист. Спробуйте пізніше.',"
+    },
+    {
+      "lineNum": 351,
+      "text": "resendCodeBtn: 'Надіслати лист ще раз',"
+    },
+    {
+      "lineNum": 352,
+      "text": "passwordLabel: 'Пароль',"
+    },
+    {
+      "lineNum": 353,
+      "text": "passwordMinHint: 'мін. 4 символи',"
+    },
+    {
+      "lineNum": 354,
+      "text": "confirmPasswordLabel: 'Підтвердження пароля',"
+    },
+    {
+      "lineNum": 355,
+      "text": "registerBtn: 'Зареєструватися',"
+    },
+    {
+      "lineNum": 356,
+      "text": "alreadyHaveAccount: 'Вже маєте акаунт?',"
+    },
+    {
+      "lineNum": 357,
+      "text": "loginLink: 'Увійти',"
+    }
+  ],
+  "pages\\DashboardPage.tsx": [
+    {
+      "lineNum": 259,
+      "text": "{/* Chart — з перемикачем пристроїв */}"
+    }
+  ],
+  "pages\\MedicinesPage.tsx": [
+    {
+      "lineNum": 36,
+      "text": "if (m.status === 'Recalled') return { label: 'Відкликано', variant: 'destructive' };"
+    },
+    {
+      "lineNum": 37,
+      "text": "if (m.status === 'Disposed') return { label: 'Утилізовано', variant: 'secondary' };"
+    },
+    {
+      "lineNum": 38,
+      "text": "if (m.status === 'Expired') return { label: 'Прострочено', variant: 'destructive' };"
+    },
+    {
+      "lineNum": 41,
+      "text": "if (isPast(expiry)) return { label: 'Прострочено', variant: 'destructive' };"
+    },
+    {
+      "lineNum": 43,
+      "text": "return { label: 'Скоро', variant: 'warning' };"
+    },
+    {
+      "lineNum": 44,
+      "text": "if (m.quantity <= 10) return { label: 'Мало', variant: 'warning' };"
+    },
+    {
+      "lineNum": 45,
+      "text": "return { label: 'Норма', variant: 'success' };"
+    },
+    {
+      "lineNum": 69,
+      "text": "if (!form.name?.trim()) errors.name = \"Назва є обов'язковою\";"
+    },
+    {
+      "lineNum": 70,
+      "text": "if (!form.type?.trim()) errors.type = \"Тип є обов'язковим\";"
+    },
+    {
+      "lineNum": 71,
+      "text": "if (!form.category?.trim()) errors.category = \"Категорія є обов'язковою\";"
+    },
+    {
+      "lineNum": 72,
+      "text": "if (!form.quantity && form.quantity !== 0) errors.quantity = 'Вкажіть кількість';"
+    },
+    {
+      "lineNum": 73,
+      "text": "if (!form.expiryDate) errors.expiryDate = 'Вкажіть термін придатності';"
+    },
+    {
+      "lineNum": 93,
+      "text": "// позначити всі обов'язкові поля як торкнуті"
+    },
+    {
+      "lineNum": 102,
+      "text": "'Назва',"
+    },
+    {
+      "lineNum": 113,
+      "text": "'Тип',"
+    },
+    {
+      "lineNum": 124,
+      "text": "'Категорія',"
+    },
+    {
+      "lineNum": 135,
+      "text": "'Кількість',"
+    },
+    {
+      "lineNum": 147,
+      "text": "'Термін придатності',"
+    },
+    {
+      "lineNum": 158,
+      "text": "'Виробник',"
+    },
+    {
+      "lineNum": 167,
+      "text": "'Номер партії',"
+    },
+    {
+      "lineNum": 176,
+      "text": "'Мін. температура (°C)',"
+    },
+    {
+      "lineNum": 189,
+      "text": "'Макс. температура (°C)',"
+    },
+    {
+      "lineNum": 202,
+      "text": "'Мін. вологість (%)',"
+    },
+    {
+      "lineNum": 215,
+      "text": "'Макс. вологість (%)',"
+    },
+    {
+      "lineNum": 228,
+      "text": "<Label>Локація (опціонально)</Label>"
+    },
+    {
+      "lineNum": 230,
+      "text": "title=\"Оберіть локацію\""
+    },
+    {
+      "lineNum": 236,
+      "text": "<option value=\"\">Не вибрано</option>"
+    },
+    {
+      "lineNum": 246,
+      "text": "<Label>Опис</Label>"
+    },
+    {
+      "lineNum": 254,
+      "text": "Скасувати"
+    },
+    {
+      "lineNum": 258,
+      "text": "Зберегти"
+    },
+    {
+      "lineNum": 309,
+      "text": "err?.response?.data?.title || err?.response?.data || 'Помилка сервера. Спробуйте ще раз.';"
+    },
+    {
+      "lineNum": 348,
+      "text": "<h1 className=\"text-2xl font-bold\">Препарати</h1>"
+    },
+    {
+      "lineNum": 349,
+      "text": "<p className=\"text-muted-foreground\">Управління медичними препаратами</p>"
+    },
+    {
+      "lineNum": 357,
+      "text": "<Plus className=\"h-4 w-4\" /> Додати"
+    },
+    {
+      "lineNum": 368,
+      "text": "placeholder=\"Пошук за назвою або типом...\""
+    },
+    {
+      "lineNum": 375,
+      "text": "{filtered.length} із {medicines.length}"
+    },
+    {
+      "lineNum": 390,
+      "text": "<TableHead>Назва</TableHead>"
+    },
+    {
+      "lineNum": 391,
+      "text": "<TableHead>Тип</TableHead>"
+    },
+    {
+      "lineNum": 392,
+      "text": "<TableHead>К-сть</TableHead>"
+    },
+    {
+      "lineNum": 393,
+      "text": "<TableHead>Термін</TableHead>"
+    },
+    {
+      "lineNum": 394,
+      "text": "<TableHead>Статус</TableHead>"
+    },
+    {
+      "lineNum": 395,
+      "text": "<TableHead>Локація</TableHead>"
+    },
+    {
+      "lineNum": 396,
+      "text": "{canManage && <TableHead className=\"text-right\">Дії</TableHead>}"
+    },
+    {
+      "lineNum": 403,
+      "text": "Препарати не знайдені"
+    },
+    {
+      "lineNum": 475,
+      "text": "{dialogMode === 'create' ? 'Додати препарат' : 'Редагувати препарат'}"
+    },
+    {
+      "lineNum": 478,
+      "text": "Форма для {dialogMode === 'create' ? 'створення нового' : 'редагування існуючого'}{' '}"
+    },
+    {
+      "lineNum": 479,
+      "text": "медичного препарату"
+    }
+  ],
+  "pages\\NotificationsPage.tsx": [
+    {
+      "lineNum": 15,
+      "text": "StorageViolation: { label: 'Порушення', variant: 'destructive' },"
+    },
+    {
+      "lineNum": 16,
+      "text": "StorageRestored: { label: 'Нормалізовано', variant: 'success' },"
+    },
+    {
+      "lineNum": 17,
+      "text": "Expiry: { label: 'Термін', variant: 'warning' },"
+    },
+    {
+      "lineNum": 18,
+      "text": "LowStock: { label: 'Запас', variant: 'warning' },"
+    },
+    {
+      "lineNum": 19,
+      "text": "System: { label: 'Система', variant: 'info' },"
+    },
+    {
+      "lineNum": 106,
+      "text": "<p className=\"mt-1 text-[10px] text-muted-foreground/60\">Для: {n.targetRole}</p>"
+    }
+  ],
+  "pages\\RegisterPage.tsx": [
+    {
+      "lineNum": 16,
+      "text": "email: z.string().email('Введіть коректний email'),"
+    },
+    {
+      "lineNum": 17,
+      "text": "password: z.string().min(4, 'Пароль мінімум 4 символи'),"
+    },
+    {
+      "lineNum": 21,
+      "text": "message: 'Паролі не збігаються',"
+    },
+    {
+      "lineNum": 53,
+      "text": "setError('Користувач з таким email вже існує');"
+    },
+    {
+      "lineNum": 55,
+      "text": "setError('Помилка реєстрації. Спробуйте ще раз.');"
+    },
+    {
+      "lineNum": 71,
+      "text": "Система управління медичними препаратами"
+    },
+    {
+      "lineNum": 79,
+      "text": "<CardTitle>Реєстрація</CardTitle>"
+    },
+    {
+      "lineNum": 81,
+      "text": "Перший зареєстрований користувач отримає роль{' '}"
+    },
+    {
+      "lineNum": 82,
+      "text": "<span className=\"font-semibold text-foreground\">Адміністратора</span>"
+    },
+    {
+      "lineNum": 89,
+      "text": "<p className=\"font-semibold\">Реєстрація успішна!</p>"
+    },
+    {
+      "lineNum": 91,
+      "text": "На вашу пошту надіслано 6-значний код. Введіть його на наступній сторінці."
+    },
+    {
+      "lineNum": 94,
+      "text": "Ввести код"
+    },
+    {
+      "lineNum": 103,
+      "text": "setResendStatus('Лист підтвердження надіслано');"
+    },
+    {
+      "lineNum": 105,
+      "text": "setResendStatus('Не вдалося надіслати лист. Спробуйте пізніше.');"
+    },
+    {
+      "lineNum": 108,
+      "text": "Надіслати лист ще раз"
+    },
+    {
+      "lineNum": 129,
+      "text": "<Label htmlFor=\"reg-password\">Пароль</Label>"
+    },
+    {
+      "lineNum": 134,
+      "text": "placeholder=\"мін. 4 символи\""
+    },
+    {
+      "lineNum": 151,
+      "text": "<Label htmlFor=\"reg-confirm\">Підтвердження пароля</Label>"
+    },
+    {
+      "lineNum": 172,
+      "text": "Зареєструватися"
+    },
+    {
+      "lineNum": 180,
+      "text": "Вже маєте акаунт?{' '}"
+    },
+    {
+      "lineNum": 182,
+      "text": "Увійти"
+    }
+  ],
+  "pages\\StorageLocationsPage.tsx": [
+    {
+      "lineNum": 55,
+      "text": "<Label>Назва *</Label>"
+    },
+    {
+      "lineNum": 59,
+      "text": "placeholder=\"Холодильник A\""
+    },
+    {
+      "lineNum": 63,
+      "text": "<Label>Адреса</Label>"
+    },
+    {
+      "lineNum": 67,
+      "text": "placeholder=\"Кімната 203, 2 поверх\""
+    },
+    {
+      "lineNum": 71,
+      "text": "<Label>Тип локації</Label>"
+    },
+    {
+      "lineNum": 73,
+      "text": "aria-label=\"Тип локації\""
+    },
+    {
+      "lineNum": 85,
+      "text": "<Label>IoT-пристрій</Label>"
+    },
+    {
+      "lineNum": 87,
+      "text": "aria-label=\"IoT-пристрій\""
+    },
+    {
+      "lineNum": 91,
+      "text": "<option value=\"\">Немає (Без пристрою)</option>"
+    },
+    {
+      "lineNum": 101,
+      "text": "Скасувати"
+    },
+    {
+      "lineNum": 105,
+      "text": "Зберегти"
+    },
+    {
+      "lineNum": 212,
+      "text": "<Pencil className=\"h-3 w-3\" /> Редагувати"
+    }
+  ],
+  "pages\\UsersPage.tsx": [
+    {
+      "lineNum": 59,
+      "text": "Administrator: { label: 'Адміністратор', variant: 'destructive' },"
+    },
+    {
+      "lineNum": 60,
+      "text": "Manager: { label: 'Менеджер', variant: 'default' },"
+    },
+    {
+      "lineNum": 61,
+      "text": "User: { label: 'Користувач', variant: 'secondary' },"
+    },
+    {
+      "lineNum": 62,
+      "text": "Device: { label: 'Пристрій', variant: 'outline' },"
+    },
+    {
+      "lineNum": 106,
+      "text": "const msg = err?.response?.data?.title || err?.response?.data || 'Помилка сервера.';"
+    },
+    {
+      "lineNum": 113,
+      "text": "if (!form.email.includes('@')) e.email = 'Введіть коректний email';"
+    },
+    {
+      "lineNum": 114,
+      "text": "if (form.password.length < 6) e.password = 'Мінімум 6 символів';"
+    },
+    {
+      "lineNum": 115,
+      "text": "if (form.password !== form.confirmPassword) e.confirmPassword = 'Паролі не збігаються';"
+    },
+    {
+      "lineNum": 116,
+      "text": "if (!form.organizationId.trim()) e.organizationId = \"OrganizationId є обов'язковим\";"
+    },
+    {
+      "lineNum": 129,
+      "text": "<DialogTitle>Додати менеджера</DialogTitle>"
+    },
+    {
+      "lineNum": 131,
+      "text": "Менеджер матиме доступ до управління препаратами, локаціями та пристроями у межах вашої"
+    },
+    {
+      "lineNum": 132,
+      "text": "організації. Email підтверджується автоматично — менеджер отримає вітальний лист із"
+    },
+    {
+      "lineNum": 133,
+      "text": "даними для входу."
+    },
+    {
+      "lineNum": 158,
+      "text": "Пароль"
+    },
+    {
+      "lineNum": 171,
+      "text": "Підтвердження паролю"
+    },
+    {
+      "lineNum": 191,
+      "text": "placeholder=\"UUID організації\""
+    },
+    {
+      "lineNum": 198,
+      "text": "Підставляється з вашого профілю автоматично. Змінювати лише при потребі."
+    },
+    {
+      "lineNum": 205,
+      "text": "Скасувати"
+    },
+    {
+      "lineNum": 209,
+      "text": "Створити менеджера"
+    },
+    {
+      "lineNum": 270,
+      "text": "label: 'Адміністратори',"
+    },
+    {
+      "lineNum": 275,
+      "text": "{ label: 'Менеджери', count: managers.length, icon: Users, color: 'text-primary' },"
+    },
+    {
+      "lineNum": 277,
+      "text": "label: 'Користувачі',"
+    },
+    {
+      "lineNum": 298,
+      "text": "<CardTitle>Всі користувачі</CardTitle>"
+    },
+    {
+      "lineNum": 299,
+      "text": "<CardDescription>Лише користувачі вашої організації</CardDescription>"
+    },
+    {
+      "lineNum": 303,
+      "text": "<div className=\"p-6 text-center text-muted-foreground text-sm\">Завантаження...</div>"
+    },
+    {
+      "lineNum": 306,
+      "text": "Користувачів не знайдено"
+    },
+    {
+      "lineNum": 313,
+      "text": "<TableHead>Ролі</TableHead>"
+    },
+    {
+      "lineNum": 315,
+      "text": "<TableHead className=\"text-right\">Дії</TableHead>"
+    },
+    {
+      "lineNum": 340,
+      "text": "if (confirm(`Видалити користувача ${u.email}?`)) {"
+    },
+    {
+      "lineNum": 362,
+      "text": "`Менеджера ${email} успішно створено. На його пошту надіслано вітальний лист із даними для входу.`,"
+    }
+  ]
+}
