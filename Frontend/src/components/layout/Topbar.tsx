@@ -1,12 +1,12 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Bell, Sun, Moon, Monitor, LogOut, User } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { notificationApi } from '@/api'
-import { useAuth } from '@/contexts/AuthContext'
-import { useLocale } from '@/contexts/LocaleContext'
-import { useTheme } from '@/contexts/ThemeContext'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Bell, Sun, Moon, Monitor, LogOut, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { notificationApi } from '@/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,35 +14,35 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { format } from 'date-fns'
+} from '@/components/ui/dropdown-menu';
+import { format } from 'date-fns';
 
 export function Topbar() {
-  const { user, logout } = useAuth()
-  const { locale, setLocale, t } = useLocale()
-  const { theme, setTheme } = useTheme()
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
+  const { user, logout } = useAuth();
+  const { locale, setLocale, t } = useLocale();
+  const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: unread = [] } = useQuery({
     queryKey: ['notifications', 'unread'],
     queryFn: notificationApi.getUnread,
     refetchInterval: 10000,
-  })
+  });
 
   const markAllMutation = useMutation({
     mutationFn: notificationApi.markAllAsRead,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
-  })
+  });
 
   const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+    logout();
+    navigate('/login');
+  };
 
-  const ThemeIcon = theme === 'dark' ? Moon : theme === 'light' ? Sun : Monitor
+  const ThemeIcon = theme === 'dark' ? Moon : theme === 'light' ? Sun : Monitor;
 
   return (
     <header className="flex h-16 items-center justify-between border-b bg-background px-6">
@@ -109,8 +109,7 @@ export function Topbar() {
                   variant="ghost"
                   size="sm"
                   className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() => markAllMutation.mutate()}
-                >
+                  onClick={() => markAllMutation.mutate()}>
                   {t('markAllRead')}
                 </Button>
               )}
@@ -123,22 +122,31 @@ export function Topbar() {
             ) : (
               <>
                 {unread.slice(0, 5).map((n) => (
-                  <DropdownMenuItem key={n.notificationId} className="flex-col items-start gap-0.5 py-2">
+                  <DropdownMenuItem
+                    key={n.notificationId}
+                    className="flex-col items-start gap-0.5 py-2">
                     <div className="flex w-full items-center justify-between">
                       <span className="text-sm font-medium">{n.title}</span>
                       <Badge
                         variant={
-                          n.type === 'StorageViolation' ? 'destructive' : 
-                          n.type === 'StorageRestored' ? 'success' :
-                          (n.type === 'LowStock' || n.type === 'Expiry') ? 'warning' : 
-                          'info'
+                          n.type === 'StorageViolation'
+                            ? 'destructive'
+                            : n.type === 'StorageRestored'
+                              ? 'success'
+                              : n.type === 'LowStock' || n.type === 'Expiry'
+                                ? 'warning'
+                                : 'info'
                         }
-                        className="text-[10px]"
-                      >
-                        {n.type === 'StorageViolation' ? 'Порушення' : 
-                         n.type === 'StorageRestored' ? 'Норма' :
-                         n.type === 'LowStock' ? 'Запас' :
-                         n.type === 'Expiry' ? 'Термін' : n.type}
+                        className="text-[10px]">
+                        {n.type === 'StorageViolation'
+                          ? 'Порушення'
+                          : n.type === 'StorageRestored'
+                            ? 'Норма'
+                            : n.type === 'LowStock'
+                              ? 'Запас'
+                              : n.type === 'Expiry'
+                                ? 'Термін'
+                                : n.type}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-2">{n.message}</p>
@@ -148,7 +156,9 @@ export function Topbar() {
                   </DropdownMenuItem>
                 ))}
                 {unread.length > 5 && (
-                  <DropdownMenuItem onClick={() => navigate('/notifications')} className="justify-center text-xs text-primary">
+                  <DropdownMenuItem
+                    onClick={() => navigate('/notifications')}
+                    className="justify-center text-xs text-primary">
                     Переглянути всі ({unread.length})
                   </DropdownMenuItem>
                 )}
@@ -181,5 +191,5 @@ export function Topbar() {
         </DropdownMenu>
       </div>
     </header>
-  )
+  );
 }

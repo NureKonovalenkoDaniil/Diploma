@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import type { ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 
-export type Locale = 'uk' | 'en'
+export type Locale = 'uk' | 'en';
 
 const dictionaries = {
   uk: {
@@ -184,55 +184,55 @@ const dictionaries = {
     passwordUpdated: 'Password updated successfully.',
     goToLogin: 'Go to sign in',
   },
-} as const
+} as const;
 
 type LocaleContextValue = {
-  locale: Locale
-  setLocale: (locale: Locale) => void
-  t: (key: string, params?: Record<string, string | number>) => string
-}
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
+};
 
 const LocaleContext = createContext<LocaleContextValue>({
   locale: 'uk',
   setLocale: () => {},
   t: (key) => key,
-})
+});
 
 function interpolate(template: string, params?: Record<string, string | number>) {
-  if (!params) return template
+  if (!params) return template;
   return Object.entries(params).reduce(
     (result, [key, value]) => result.split(`{${key}}`).join(String(value)),
     template,
-  )
+  );
 }
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocale] = useState<Locale>(() => {
-    const stored = localStorage.getItem('locale')
-    return stored === 'en' ? 'en' : 'uk'
-  })
+    const stored = localStorage.getItem('locale');
+    return stored === 'en' ? 'en' : 'uk';
+  });
 
   useEffect(() => {
-    document.documentElement.lang = locale
-    localStorage.setItem('locale', locale)
-  }, [locale])
+    document.documentElement.lang = locale;
+    localStorage.setItem('locale', locale);
+  }, [locale]);
 
   const value = useMemo<LocaleContextValue>(
     () => ({
       locale,
       setLocale,
       t: (key, params) => {
-        const current = dictionaries[locale] as Record<string, string>
-        const fallback = dictionaries.uk as Record<string, string>
-        return interpolate(current[key] ?? fallback[key] ?? key, params)
+        const current = dictionaries[locale] as Record<string, string>;
+        const fallback = dictionaries.uk as Record<string, string>;
+        return interpolate(current[key] ?? fallback[key] ?? key, params);
       },
     }),
     [locale],
-  )
+  );
 
-  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
+  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
 }
 
 export function useLocale() {
-  return useContext(LocaleContext)
+  return useContext(LocaleContext);
 }

@@ -134,13 +134,23 @@ export default function LoginPage() {
 
               {errorType === 'unconfirmed' && (
                 <div className="space-y-2">
-                  <Button type="button" variant="outline" className="w-full" onClick={() => navigate('/confirm-email')}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => navigate('/confirm-email')}>
                     {t('confirmCodeButton')}
                   </Button>
-                  <Button type="button" variant="ghost" className="w-full text-xs" onClick={resendConfirmation}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full text-xs"
+                    onClick={resendConfirmation}>
                     {t('resendCode')}
                   </Button>
-                  {resendStatus && <p className="text-xs text-muted-foreground text-center">{resendStatus}</p>}
+                  {resendStatus && (
+                    <p className="text-xs text-muted-foreground text-center">{resendStatus}</p>
+                  )}
                 </div>
               )}
 

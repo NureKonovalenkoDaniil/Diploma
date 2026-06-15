@@ -1,12 +1,19 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Pill, Cpu, AlertTriangle, Bell, TrendingDown, Package } from 'lucide-react'
-import { medicineApi, iotApi, incidentApi, notificationApi } from '@/api'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Pill, Cpu, AlertTriangle, Bell, TrendingDown, Package } from 'lucide-react';
+import { medicineApi, iotApi, incidentApi, notificationApi } from '@/api';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import {
   AreaChart,
   Area,
@@ -16,10 +23,10 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-} from 'recharts'
-import { format } from 'date-fns'
-import { useAuth } from '@/contexts/AuthContext'
-import { useLocale } from '@/contexts/LocaleContext'
+} from 'recharts';
+import { format } from 'date-fns';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 
 function StatCard({
   title,
@@ -28,17 +35,17 @@ function StatCard({
   description,
   variant = 'default',
 }: {
-  title: string
-  value: number | string
-  icon: React.ElementType
-  description?: string
-  variant?: 'default' | 'warning' | 'danger'
+  title: string;
+  value: number | string;
+  icon: React.ElementType;
+  description?: string;
+  variant?: 'default' | 'warning' | 'danger';
 }) {
   const iconColors = {
     default: 'text-primary bg-primary/10',
     warning: 'text-amber-500 bg-amber-500/10',
     danger: 'text-destructive bg-destructive/10',
-  }
+  };
 
   return (
     <Card>
@@ -53,32 +60,34 @@ function StatCard({
         {description && <p className="mt-1 text-xs text-muted-foreground">{description}</p>}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // ─── Storage Conditions Chart with device switcher ────────────────────────────
-function StorageChart({ devices }: { devices: { deviceID: string; location: string; isActive: boolean }[] }) {
-  const activeDevices = devices.filter(d => d.isActive)
-  const [selectedId, setSelectedId] = useState<string | null>(activeDevices[0]?.deviceID ?? null)
+function StorageChart({
+  devices,
+}: {
+  devices: { deviceID: string; location: string; isActive: boolean }[];
+}) {
+  const activeDevices = devices.filter((d) => d.isActive);
+  const [selectedId, setSelectedId] = useState<string | null>(activeDevices[0]?.deviceID ?? null);
 
   const { data: conditionsData = [], isLoading } = useQuery({
     queryKey: ['conditions-chart', selectedId],
     queryFn: async () => {
-      if (!selectedId) return []
-      const conds = await iotApi.getConditions(selectedId)
-      return conds
-        .slice(-24)
-        .map((c) => ({
-          time: format(new Date(c.timestamp), 'HH:mm'),
-          Температура: c.temperature,
-          Вологість: c.humidity,
-        }))
+      if (!selectedId) return [];
+      const conds = await iotApi.getConditions(selectedId);
+      return conds.slice(-24).map((c) => ({
+        time: format(new Date(c.timestamp), 'HH:mm'),
+        Температура: c.temperature,
+        Вологість: c.humidity,
+      }));
     },
     enabled: !!selectedId,
     refetchInterval: 60_000,
-  })
+  });
 
-  const selectedDevice = activeDevices.find(d => d.deviceID === selectedId)
+  const selectedDevice = activeDevices.find((d) => d.deviceID === selectedId);
 
   return (
     <Card className="lg:col-span-2">
@@ -87,19 +96,20 @@ function StorageChart({ devices }: { devices: { deviceID: string; location: stri
           <div>
             <CardTitle className="text-base">Умови зберігання</CardTitle>
             <CardDescription>
-              {selectedDevice ? `📍 ${selectedDevice.location} (${selectedDevice.deviceID})` : 'Оберіть пристрій'}
+              {selectedDevice
+                ? `📍 ${selectedDevice.location} (${selectedDevice.deviceID})`
+                : 'Оберіть пристрій'}
             </CardDescription>
           </div>
           {activeDevices.length > 1 && (
             <div className="flex flex-wrap gap-1">
-              {activeDevices.map(d => (
+              {activeDevices.map((d) => (
                 <Button
                   key={d.deviceID}
                   variant={selectedId === d.deviceID ? 'default' : 'outline'}
                   size="sm"
                   className="text-xs h-7"
-                  onClick={() => setSelectedId(d.deviceID)}
-                >
+                  onClick={() => setSelectedId(d.deviceID)}>
                   {d.location}
                 </Button>
               ))}
@@ -143,51 +153,63 @@ function StorageChart({ devices }: { devices: { deviceID: string; location: stri
                 }}
               />
               <Legend wrapperStyle={{ fontSize: '12px' }} />
-              <Area type="monotone" dataKey="Температура" stroke="hsl(221.2 83.2% 53.3%)" fill="url(#temp)" strokeWidth={2} />
-              <Area type="monotone" dataKey="Вологість" stroke="hsl(160 60% 45%)" fill="url(#hum)" strokeWidth={2} />
+              <Area
+                type="monotone"
+                dataKey="Температура"
+                stroke="hsl(221.2 83.2% 53.3%)"
+                fill="url(#temp)"
+                strokeWidth={2}
+              />
+              <Area
+                type="monotone"
+                dataKey="Вологість"
+                stroke="hsl(160 60% 45%)"
+                fill="url(#hum)"
+                strokeWidth={2}
+              />
             </AreaChart>
           </ResponsiveContainer>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export default function DashboardPage() {
-  const { isAdmin, isManager, isUser } = useAuth()
-  const { t } = useLocale()
-  const canManage = isAdmin || isManager || isUser
+  const { isAdmin, isManager, isUser } = useAuth();
+  const { t } = useLocale();
+  const canManage = isAdmin || isManager || isUser;
 
   const { data: medicines = [], isLoading: mLoading } = useQuery({
     queryKey: ['medicines'],
     queryFn: medicineApi.getAll,
-  })
+  });
 
   const { data: devices = [], isLoading: dLoading } = useQuery({
     queryKey: ['iot-devices'],
     queryFn: iotApi.getAll,
-  })
+  });
 
   const { data: activeIncidents = [], isLoading: iLoading } = useQuery({
     queryKey: ['incidents', 'active'],
     queryFn: incidentApi.getActive,
     refetchInterval: 10000,
-  })
+  });
 
   const { data: unread = [] } = useQuery({
     queryKey: ['notifications', 'unread'],
     queryFn: notificationApi.getUnread,
     refetchInterval: 10000,
-  })
+  });
 
   const { data: lowStock = [] } = useQuery({
     queryKey: ['medicines', 'low-stock'],
     queryFn: () => medicineApi.getLowStock(),
     enabled: canManage,
-  })
+  });
 
-  const isLoading = mLoading || dLoading || iLoading
-  const activeDevices = devices.filter((d) => d.isActive).length
+  const isLoading = mLoading || dLoading || iLoading;
+  const activeDevices = devices.filter((d) => d.isActive).length;
 
   return (
     <div className="space-y-6">
@@ -202,7 +224,12 @@ export default function DashboardPage() {
           Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28" />)
         ) : (
           <>
-            <StatCard title={t('medicinesCount')} value={medicines.length} icon={Pill} description={t('totalSystem')} />
+            <StatCard
+              title={t('medicinesCount')}
+              value={medicines.length}
+              icon={Pill}
+              description={t('totalSystem')}
+            />
             <StatCard
               title={t('activeDevices')}
               value={`${activeDevices} / ${devices.length}`}
@@ -235,11 +262,13 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{t('activeIncidentsCard')}</CardTitle>
-            <CardDescription>{activeIncidents.length} {t('activeViolations')}</CardDescription>
+            <CardDescription>
+              {activeIncidents.length} {t('activeViolations')}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {activeIncidents.length === 0 ? (
-                <div className="py-8 text-center text-sm text-muted-foreground">
+              <div className="py-8 text-center text-sm text-muted-foreground">
                 {t('noViolations')}
               </div>
             ) : (
@@ -294,7 +323,9 @@ export default function DashboardPage() {
                     <TableCell>
                       <span className="text-amber-600 font-semibold">{m.quantity}</span>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{m.storageLocationName ?? '—'}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {m.storageLocationName ?? '—'}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -313,5 +344,5 @@ export default function DashboardPage() {
         </Card>
       )}
     </div>
-  )
+  );
 }
