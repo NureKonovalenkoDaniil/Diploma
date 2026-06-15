@@ -15,7 +15,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:text="Підтвердження email"
+            android:text="@string/email_confirmation_title"
             android:textAppearance="@style/TextAppearance.Material3.HeadlineMedium"
             android:textStyle="bold" />
 
@@ -38,7 +38,7 @@
                 android:id="@+id/codeInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="6-значний код"
+                android:hint="@string/email_confirmation_hint"
                 android:inputType="number"
                 android:maxLength="6"
                 android:gravity="center"
@@ -58,14 +58,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
-            android:text="Підтвердити" />
+            android:text="@string/email_confirmation_confirm" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/resendBtn"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Надіслати код повторно" />
+            android:text="@string/email_confirmation_resend" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

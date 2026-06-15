@@ -64,13 +64,13 @@ class AddMedicineActivity : AppCompatActivity() {
             val e = expiryInput.text.toString().trim()
 
             if (n.isEmpty() || t.isEmpty() || c.isEmpty() || qStr.isEmpty() || e.isEmpty()) {
-                Toast.makeText(this, "Заповніть усі поля", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.medicine_fill_all_fields, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             val q = qStr.toIntOrNull()
             if (q == null || q < 0) {
-                Toast.makeText(this, "Некоректна кількість", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.medicine_invalid_quantity, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -115,7 +115,7 @@ class AddMedicineActivity : AppCompatActivity() {
     ) {
         val btnCreate = findViewById<Button>(R.id.btnCreate)
         btnCreate.isEnabled = false
-        btnCreate.text = "Створення..."
+    btnCreate.text = getString(R.string.medicine_creating)
 
         lifecycleScope.launch {
             try {
@@ -140,17 +140,17 @@ class AddMedicineActivity : AppCompatActivity() {
                 val response = api.createMedicine(newMedicine)
 
                 if (response.isSuccessful) {
-                    Toast.makeText(this@AddMedicineActivity, "Препарат успішно додано", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@AddMedicineActivity, R.string.medicine_created_success, Toast.LENGTH_SHORT).show()
                     finish()
                 } else {
-                    Toast.makeText(this@AddMedicineActivity, "Помилка: ${response.code()}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@AddMedicineActivity, getString(R.string.medicine_create_failed, response.code()), Toast.LENGTH_SHORT).show()
                     btnCreate.isEnabled = true
-                    btnCreate.text = "Create"
+                    btnCreate.text = getString(R.string.create)
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@AddMedicineActivity, "Помилка мережі", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@AddMedicineActivity, R.string.medicine_create_network_error, Toast.LENGTH_SHORT).show()
                 btnCreate.isEnabled = true
-                btnCreate.text = "Create"
+                btnCreate.text = getString(R.string.create)
             }
         }
     }

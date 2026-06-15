@@ -40,7 +40,7 @@ class EditMedicineActivity : AppCompatActivity() {
 
         medicineID = intent.getIntExtra("medicineID", -1)
         if (medicineID == -1) {
-            Toast.makeText(this, "Invalid medicine ID", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.medicine_invalid_id, Toast.LENGTH_SHORT).show()
             finish()
             return
         }
@@ -73,13 +73,13 @@ class EditMedicineActivity : AppCompatActivity() {
             val e = expiryInput.text.toString().trim()
 
             if (n.isEmpty() || t.isEmpty() || c.isEmpty() || qStr.isEmpty() || e.isEmpty()) {
-                Toast.makeText(this, "Заповніть усі поля", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.medicine_fill_all_fields, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             val q = qStr.toIntOrNull()
             if (q == null || q < 0) {
-                Toast.makeText(this, "Некоректна кількість", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.medicine_invalid_quantity, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -208,17 +208,17 @@ class EditMedicineActivity : AppCompatActivity() {
                 val response = api.updateMedicine(medicineID, patchBody)
 
                 if (response.isSuccessful) {
-                    Toast.makeText(this@EditMedicineActivity, "Успішно оновлено", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EditMedicineActivity, R.string.medicine_updated_success, Toast.LENGTH_SHORT).show()
                     finish()
                 } else {
-                    Toast.makeText(this@EditMedicineActivity, "Помилка оновлення", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EditMedicineActivity, R.string.medicine_update_failed, Toast.LENGTH_SHORT).show()
                     btn.isEnabled = true
-                    btn.text = "Save"
+                    btn.text = getString(R.string.edit_medicine)
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@EditMedicineActivity, "Помилка мережі", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@EditMedicineActivity, R.string.medicine_update_network_error, Toast.LENGTH_SHORT).show()
                 btn.isEnabled = true
-                btn.text = "Save"
+                btn.text = getString(R.string.edit_medicine)
             }
         }
     }

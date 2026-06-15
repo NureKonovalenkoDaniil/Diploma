@@ -63,7 +63,7 @@ class NotificationsFragment : Fragment() {
 
         btnMarkAllRead.setOnClickListener {
             viewModel.markAllAsRead()
-            Toast.makeText(requireContext(), "Всі сповіщення позначено як прочитані", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), R.string.notifications_all_read, Toast.LENGTH_SHORT).show()
             (activity as? MainActivity)?.updateNotificationBadge()
         }
 

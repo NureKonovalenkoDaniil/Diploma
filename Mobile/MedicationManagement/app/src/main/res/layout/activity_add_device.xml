@@ -19,7 +19,7 @@
             android:padding="20dp">
 
             <TextView
-                android:text="Прив'язка нового датчика"
+                android:text="@string/device_binding_title"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="16dp"
@@ -27,7 +27,7 @@
                 android:layout_height="wrap_content"/>
 
             <TextView
-                android:text="Знайдіть ID датчика на його упаковці або корпусі."
+                android:text="@string/device_binding_help"
                 android:textSize="14sp"
                 android:textColor="#555"
                 android:layout_marginBottom="24dp"
@@ -38,7 +38,7 @@
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="ID Датчика (наприклад: DHT-101)">
+                android:hint="@string/device_binding_id_hint">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/inputId"
@@ -51,7 +51,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:hint="Локація (наприклад: Холодильник)">
+                android:hint="@string/device_binding_location_hint">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/inputLocation"
@@ -61,7 +61,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCreateDevice"
-                android:text="Додати"
+                android:text="@string/device_binding_button"
                 android:layout_marginTop="32dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

@@ -25,7 +25,7 @@ class AddDeviceActivity : AppCompatActivity() {
             val location = inputLocation.text.toString().trim()
 
             if (deviceId.isEmpty()) {
-                Toast.makeText(this, "Введіть ID датчика", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.device_binding_enter_id, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -35,13 +35,13 @@ class AddDeviceActivity : AppCompatActivity() {
 
     private fun addDevice(deviceId: String, location: String, btn: Button) {
         btn.isEnabled = false
-        btn.text = "Додавання..."
+        btn.text = getString(R.string.device_binding_adding)
 
         // Default values for home user device registration
         val deviceData = mapOf(
             "deviceID" to deviceId,
             "location" to location,
-            "type" to "Термометр",
+            "type" to getString(R.string.device_default_type_thermometer),
             "parameters" to "{}",
             "isActive" to true,
             "minTemperature" to 2.0f,
@@ -56,17 +56,17 @@ class AddDeviceActivity : AppCompatActivity() {
                 val response = api.createDevice(deviceData)
 
                 if (response.isSuccessful) {
-                    Toast.makeText(this@AddDeviceActivity, "Датчик успішно додано", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@AddDeviceActivity, R.string.device_binding_success, Toast.LENGTH_SHORT).show()
                     finish()
                 } else {
-                    Toast.makeText(this@AddDeviceActivity, "Помилка (Можливо, датчик вже прив'язаний)", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@AddDeviceActivity, R.string.device_binding_already_linked, Toast.LENGTH_SHORT).show()
                     btn.isEnabled = true
-                    btn.text = "Додати"
+                    btn.text = getString(R.string.device_binding_button)
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@AddDeviceActivity, "Помилка мережі", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@AddDeviceActivity, R.string.device_binding_network_error, Toast.LENGTH_SHORT).show()
                 btn.isEnabled = true
-                btn.text = "Додати"
+                btn.text = getString(R.string.device_binding_button)
             }
         }
     }

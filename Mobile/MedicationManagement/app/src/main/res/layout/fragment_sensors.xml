@@ -50,7 +50,7 @@
                     android:id="@+id/emptyStateText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="У вас ще немає датчиків.\nНатисніть +, щоб додати новий пристрій."
+                    android:text="@string/sensors_empty_state"
                     android:textAlignment="center"
                     android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="16sp" />
@@ -65,7 +65,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="24dp"
-        android:contentDescription="Додати датчик"
+        android:contentDescription="@string/add_device"
         app:backgroundTint="@color/brand_primary"
         app:srcCompat="@android:drawable/ic_input_add"
         app:tint="@android:color/white" />

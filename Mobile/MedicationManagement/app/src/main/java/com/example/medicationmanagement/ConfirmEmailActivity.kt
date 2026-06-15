@@ -36,12 +36,12 @@ class ConfirmEmailActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.confirmProgressBar)
 
         val emailLabel = findViewById<TextView>(R.id.emailLabel)
-        emailLabel.text = "Код підтвердження надіслано на: $email"
+        emailLabel.text = getString(R.string.email_confirmation_sent_to, email)
 
         confirmBtn.setOnClickListener {
             val code = codeInput.text.toString().trim()
             if (code.length != 6) {
-                Toast.makeText(this, "Введіть 6-значний код", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.email_confirmation_enter_code, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             confirmEmail(code)
@@ -60,13 +60,13 @@ class ConfirmEmailActivity : AppCompatActivity() {
                 val response = api.confirmEmail(ConfirmEmailRequest(email, code))
 
                 if (response.isSuccessful) {
-                    Toast.makeText(this@ConfirmEmailActivity, "Email підтверджено! Тепер можна увійти.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@ConfirmEmailActivity, R.string.email_confirmation_success, Toast.LENGTH_LONG).show()
                     startActivity(Intent(this@ConfirmEmailActivity, LoginActivity::class.java).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     })
                     finish()
                 } else {
-                    Toast.makeText(this@ConfirmEmailActivity, "Невірний або прострочений код", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@ConfirmEmailActivity, R.string.email_confirmation_invalid, Toast.LENGTH_LONG).show()
                     setLoading(false)
                 }
             } catch (e: Exception) {
@@ -85,11 +85,11 @@ class ConfirmEmailActivity : AppCompatActivity() {
                 val response = api.resendConfirmation(ResendConfirmationRequest(email))
                 Toast.makeText(
                     this@ConfirmEmailActivity,
-                    if (response.isSuccessful) "Новий код надіслано на $email" else "Не вдалося надіслати код",
+                    if (response.isSuccessful) getString(R.string.email_confirmation_code_resent, email) else getString(R.string.email_confirmation_send_failed),
                     Toast.LENGTH_SHORT
                 ).show()
             } catch (e: Exception) {
-                Toast.makeText(this@ConfirmEmailActivity, "Помилка мережі", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ConfirmEmailActivity, R.string.network_error, Toast.LENGTH_SHORT).show()
             } finally {
                 setLoading(false)
             }

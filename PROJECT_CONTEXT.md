@@ -64,6 +64,19 @@
 - Додано відсутні українські локалізації для Users-розділу (щоб не було fallback на англійське `Users`).
 - Android збірка після правок: `assembleDebug` — успішно.
 
+### [ВИКОНАНО 2026-05-13] Локалізація mobile app українською та англійською
+
+- Завершено перший системний прохід по hardcoded текстах у mobile UI та основних flows.
+- Переведено на ресурси:
+  - `ConfirmEmailActivity`, `RegisterActivity`, `AddDeviceActivity`;
+  - `AddMedicineActivity`, `EditMedicineActivity`;
+  - `NotificationsFragment`;
+  - `activity_confirm_email.xml`, `activity_login.xml`, `activity_add_device.xml`;
+  - `fragment_medicines.xml`, `fragment_sensors.xml`, `item_medicine.xml`.
+- Додано нові ключі у `values/strings.xml` та `values-uk/strings.xml` для email confirmation, device binding, medicine CRUD, notifications і reusable labels.
+- Підтверджено, що runtime locale switching уже працював через `AppPreferences` / `SettingsFragment`, тому зміни зосереджені саме на покритті UI-рядків ресурсами.
+- Android збірка після локалізації: `assembleDebug` — успішно.
+
 ### [ВИКОНАНО 2026-05-11] Оновлення рольової моделі (RBAC) та стабілізація тестів
 
 - Змінено логіку доступу: звичайні юзери (User) та менеджери (Manager) тепер мають повний доступ до всього функціоналу системи (включно зі створенням локацій, інцидентів, налаштуванням датчиків тощо).

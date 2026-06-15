@@ -31,7 +31,7 @@ class RegisterActivity : AppCompatActivity() {
             val pass = password.text.toString().trim()
 
             if (mail.isEmpty() || pass.isEmpty()) {
-                Toast.makeText(this, "Fill in all fields", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.register_fill_all_fields, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -47,7 +47,7 @@ class RegisterActivity : AppCompatActivity() {
     private fun performRegister(email: String, password: String) {
         val originalText = registerBtn.text
         registerBtn.isEnabled = false
-        registerBtn.text = "Loading..."
+        registerBtn.text = getString(R.string.register_loading)
 
         lifecycleScope.launch {
             try {
@@ -55,19 +55,19 @@ class RegisterActivity : AppCompatActivity() {
                 val response = api.register(RegisterRequest(email, password))
 
                 if (response.isSuccessful) {
-                    Toast.makeText(this@RegisterActivity, "Реєстрація успішна! Введіть код з пошти.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@RegisterActivity, R.string.register_success, Toast.LENGTH_SHORT).show()
                     val intent = Intent(this@RegisterActivity, ConfirmEmailActivity::class.java)
                     intent.putExtra("email", email)
                     startActivity(intent)
                     finish()
                 } else {
                     val code = response.code()
-                    Toast.makeText(this@RegisterActivity, "Registration failed: $code", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@RegisterActivity, getString(R.string.register_failed, code), Toast.LENGTH_LONG).show()
                     registerBtn.isEnabled = true
                     registerBtn.text = originalText
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@RegisterActivity, "Network error: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@RegisterActivity, getString(R.string.register_network_error, e.message ?: ""), Toast.LENGTH_LONG).show()
                 registerBtn.isEnabled = true
                 registerBtn.text = originalText
             }
