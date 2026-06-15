@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { notificationApi } from '@/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,9 +9,13 @@ import { Bell, Check, CheckCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { useLocale, translateNotification } from '@/contexts/LocaleContext';
 
+const NOTIFICATION_TYPES = ['StorageViolation', 'StorageRestored', 'Expiry', 'LowStock', 'System'];
+
 export default function NotificationsPage() {
   const qc = useQueryClient();
   const { t } = useLocale();
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [readFilter, setReadFilter] = useState<'all' | 'unread' | 'read'>('all');
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications', 'all'],
@@ -28,6 +33,15 @@ export default function NotificationsPage() {
   });
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  const filtered = notifications.filter((n) => {
+    const matchType = typeFilter === 'all' || n.type === typeFilter;
+    const matchRead =
+      readFilter === 'all' ||
+      (readFilter === 'unread' && !n.isRead) ||
+      (readFilter === 'read' && n.isRead);
+    return matchType && matchRead;
+  });
 
   const getLabel = (type: string) => {
     switch (type) {
@@ -69,6 +83,40 @@ export default function NotificationsPage() {
         )}
       </div>
 
+      {/* Filter bar */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-muted-foreground whitespace-nowrap">{t('filterByType')}:</label>
+          <select
+            aria-label={t('filterByType')}
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}>
+            <option value="all">{t('filterAll')}</option>
+            {NOTIFICATION_TYPES.map((nt) => (
+              <option key={nt} value={nt}>
+                {getLabel(nt)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-muted-foreground whitespace-nowrap">{t('filterByRead')}:</label>
+          <select
+            aria-label={t('filterByRead')}
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+            value={readFilter}
+            onChange={(e) => setReadFilter(e.target.value as 'all' | 'unread' | 'read')}>
+            <option value="all">{t('filterAll')}</option>
+            <option value="unread">{t('filterUnread')}</option>
+            <option value="read">{t('filterRead')}</option>
+          </select>
+        </div>
+        <span className="text-xs text-muted-foreground">
+          {t('filteredCount', { filtered: filtered.length, total: notifications.length })}
+        </span>
+      </div>
+
       <div className="space-y-3">
         {isLoading ? (
           Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20" />)
@@ -79,8 +127,15 @@ export default function NotificationsPage() {
               <p className="text-muted-foreground">{t('noNotificationsCard')}</p>
             </CardContent>
           </Card>
+        ) : filtered.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center gap-3 py-16">
+              <Bell className="h-10 w-10 text-muted-foreground/40" />
+              <p className="text-muted-foreground">{t('noItemsMatchFilter')}</p>
+            </CardContent>
+          </Card>
         ) : (
-          notifications.map((n) => {
+          filtered.map((n) => {
             const label = getLabel(n.type);
             const variant = getVariant(n.type);
             const { title: translatedTitle, message: translatedMessage } = translateNotification(n.title, n.message, t);

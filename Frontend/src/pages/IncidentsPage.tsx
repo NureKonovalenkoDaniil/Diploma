@@ -13,8 +13,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { useLocale } from '@/contexts/LocaleContext';
 
@@ -26,6 +27,8 @@ export default function IncidentsPage() {
   const canManage = isAdmin || isManager || isUser;
   const qc = useQueryClient();
   const [tab, setTab] = useState<TabType>('active');
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
 
   const { data: active = [], isLoading: aLoading } = useQuery({
     queryKey: ['incidents', 'active'],
@@ -46,7 +49,7 @@ export default function IncidentsPage() {
     },
   });
 
-  const incidents = tab === 'active' ? active : all;
+  const rawIncidents = tab === 'active' ? active : all;
   const isLoading = tab === 'active' ? aLoading : allLoading;
 
   const incidentTypeLabel = (tType: string) =>
@@ -64,6 +67,16 @@ export default function IncidentsPage() {
     if (s === 'AutoResolved') return t('statusResolvedAuto');
     return s;
   };
+
+  const incidents = rawIncidents.filter((inc) => {
+    const q = search.toLowerCase();
+    const matchSearch =
+      !q ||
+      (inc.deviceLocation ?? '').toLowerCase().includes(q) ||
+      (inc.locationName ?? '').toLowerCase().includes(q);
+    const matchType = typeFilter === 'all' || inc.incidentType === typeFilter;
+    return matchSearch && matchType;
+  });
 
   return (
     <div className="space-y-6">
@@ -129,6 +142,34 @@ export default function IncidentsPage() {
         </Button>
       </div>
 
+      {/* Filter bar */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder={t('incidentDeviceFilter')}
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-muted-foreground whitespace-nowrap">{t('filterByIncidentType')}:</label>
+          <select
+            aria-label={t('filterByIncidentType')}
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}>
+            <option value="all">{t('filterAll')}</option>
+            <option value="TemperatureViolation">{t('incidentTypeTemperature')}</option>
+            <option value="HumidityViolation">{t('incidentTypeHumidity')}</option>
+          </select>
+        </div>
+        <span className="text-xs text-muted-foreground">
+          {t('filteredCount', { filtered: incidents.length, total: rawIncidents.length })}
+        </span>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
@@ -162,7 +203,9 @@ export default function IncidentsPage() {
                     <TableCell
                       colSpan={canManage ? 8 : 7}
                       className="py-10 text-center text-muted-foreground">
-                      {tab === 'active' ? t('noActiveIncidents') : t('noIncidents')}
+                      {rawIncidents.length === 0
+                        ? (tab === 'active' ? t('noActiveIncidents') : t('noIncidents'))
+                        : t('noItemsMatchFilter')}
                     </TableCell>
                   </TableRow>
                 ) : (

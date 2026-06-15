@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Loader2, Users, ShieldCheck, User as UserIcon } from 'lucide-react';
+import { Plus, Trash2, Loader2, Users, ShieldCheck, User as UserIcon, Search } from 'lucide-react';
 import { api } from '@/api/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -219,6 +219,8 @@ export default function UsersPage() {
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
   const { t } = useLocale();
 
   const { data: users = [], isLoading } = useQuery({
@@ -236,6 +238,18 @@ export default function UsersPage() {
     const ar = roleOrder.indexOf(a.roles[0] ?? 'User');
     const br = roleOrder.indexOf(b.roles[0] ?? 'User');
     return ar - br;
+  });
+
+  const filtered = sorted.filter((u) => {
+    const q = search.toLowerCase();
+    const matchSearch =
+      !q ||
+      u.email.toLowerCase().includes(q) ||
+      u.userName.toLowerCase().includes(q);
+    const matchRole =
+      roleFilter === 'all' ||
+      u.roles.includes(roleFilter);
+    return matchSearch && matchRole;
   });
 
   const managers = sorted.filter((u) => u.roles.includes('Manager'));
@@ -295,8 +309,38 @@ export default function UsersPage() {
       {/* Table */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('allUsersTitle')}</CardTitle>
-          <CardDescription>{t('onlyOrgUsersDesc')}</CardDescription>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex-1">
+              <CardTitle>{t('allUsersTitle')}</CardTitle>
+              <CardDescription>{t('onlyOrgUsersDesc')}</CardDescription>
+            </div>
+            <div className="relative min-w-48">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder={t('userSearch')}
+                className="pl-9 h-9"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-muted-foreground whitespace-nowrap">{t('filterByRole')}:</label>
+              <select
+                aria-label={t('filterByRole')}
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}>
+                <option value="all">{t('filterAll')}</option>
+                <option value="Administrator">{t('roleAdministrator')}</option>
+                <option value="Manager">{t('roleManager')}</option>
+                <option value="User">{t('roleUser')}</option>
+                <option value="Device">{t('roleDevice')}</option>
+              </select>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {t('filteredCount', { filtered: filtered.length, total: sorted.length })}
+            </span>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
@@ -304,6 +348,10 @@ export default function UsersPage() {
           ) : sorted.length === 0 ? (
             <div className="p-6 text-center text-muted-foreground text-sm">
               {t('noUsersFound')}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="p-6 text-center text-muted-foreground text-sm">
+              {t('noItemsMatchFilter')}
             </div>
           ) : (
             <Table>
@@ -316,7 +364,7 @@ export default function UsersPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sorted.map((u) => (
+                {filtered.map((u) => (
                   <TableRow key={u.id}>
                     <TableCell className="font-medium">{u.email}</TableCell>
                     <TableCell>

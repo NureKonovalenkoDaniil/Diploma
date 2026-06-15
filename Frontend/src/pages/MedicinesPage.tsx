@@ -341,11 +341,38 @@ export default function MedicinesPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['medicines'] }),
   });
 
-  const filtered = medicines.filter(
-    (m) =>
-      m.name.toLowerCase().includes(search.toLowerCase()) ||
-      m.type.toLowerCase().includes(search.toLowerCase()),
-  );
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortOrder, setSortOrder] = useState<string>('name');
+
+  const filtered = medicines
+    .filter((m) => {
+      const q = search.toLowerCase();
+      const matchSearch =
+        !q ||
+        m.name.toLowerCase().includes(q) ||
+        m.type.toLowerCase().includes(q) ||
+        (m.manufacturer ?? '').toLowerCase().includes(q) ||
+        (m.batchNumber ?? '').toLowerCase().includes(q);
+
+      if (!matchSearch) return false;
+
+      if (statusFilter === 'all') return true;
+      const expiry = new Date(m.expiryDate);
+      const soon = isWithinInterval(expiry, { start: new Date(), end: addDays(new Date(), 7) });
+      if (statusFilter === 'expired') return m.status === 'Expired' || isPast(expiry);
+      if (statusFilter === 'soon') return !isPast(expiry) && soon;
+      if (statusFilter === 'low') return m.quantity <= 10 && !isPast(expiry) && !soon;
+      if (statusFilter === 'recalled') return m.status === 'Recalled';
+      if (statusFilter === 'disposed') return m.status === 'Disposed';
+      if (statusFilter === 'normal') return !isPast(expiry) && !soon && m.quantity > 10 && m.status === 'Active';
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortOrder === 'name') return a.name.localeCompare(b.name);
+      if (sortOrder === 'expiry') return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+      if (sortOrder === 'quantity') return a.quantity - b.quantity;
+      return 0;
+    });
 
   return (
     <div className="space-y-6">
@@ -367,8 +394,8 @@ export default function MedicinesPage() {
 
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-3">
-            <div className="relative flex-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-48">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder={t('searchPlaceholder')}
@@ -377,7 +404,35 @@ export default function MedicinesPage() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <CardDescription>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-muted-foreground whitespace-nowrap">{t('filterByStatus')}:</label>
+              <select
+                aria-label={t('filterByStatus')}
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}>
+                <option value="all">{t('filterAll')}</option>
+                <option value="normal">{t('filterExpiryNormal')}</option>
+                <option value="soon">{t('filterExpirySoon')}</option>
+                <option value="expired">{t('filterExpiryExpired')}</option>
+                <option value="low">{t('filterExpiryLow')}</option>
+                <option value="recalled">{t('statusRecalled')}</option>
+                <option value="disposed">{t('statusDisposed')}</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-muted-foreground whitespace-nowrap">{t('sortBy')}:</label>
+              <select
+                aria-label={t('sortBy')}
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}>
+                <option value="name">{t('sortByName')}</option>
+                <option value="expiry">{t('sortByExpiry')}</option>
+                <option value="quantity">{t('sortByQuantity')}</option>
+              </select>
+            </div>
+            <CardDescription className="text-xs">
               {t('filteredCount', { filtered: filtered.length, total: medicines.length })}
             </CardDescription>
           </div>

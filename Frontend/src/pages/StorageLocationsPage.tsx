@@ -5,7 +5,7 @@ import type { StorageLocationDto, IoTDeviceDto } from '@/types/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -25,7 +25,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Pencil, Trash2, Loader2, MapPin } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, MapPin, Search } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 
 const LOCATION_TYPES = ['Refrigerator', 'Shelf', 'Warehouse', 'Cabinet', 'Other'];
@@ -117,6 +117,8 @@ export default function StorageLocationsPage() {
   const qc = useQueryClient();
   const [dialogMode, setDialogMode] = useState<'create' | 'edit' | null>(null);
   const [selected, setSelected] = useState<StorageLocationDto | null>(null);
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
 
   const { data: locations = [], isLoading } = useQuery({
     queryKey: ['locations'],
@@ -157,6 +159,17 @@ export default function StorageLocationsPage() {
     Other: 'outline',
   };
 
+  const filtered = locations.filter((l) => {
+    const q = search.toLowerCase();
+    const matchSearch =
+      !q ||
+      l.name.toLowerCase().includes(q) ||
+      (l.address ?? '').toLowerCase().includes(q) ||
+      (l.ioTDeviceLocation ?? '').toLowerCase().includes(q);
+    const matchType = typeFilter === 'all' || l.locationType === typeFilter;
+    return matchSearch && matchType;
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -175,10 +188,41 @@ export default function StorageLocationsPage() {
         )}
       </div>
 
+      {/* Filter bar */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder={t('locationSearch')}
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-muted-foreground whitespace-nowrap">{t('filterByLocationType')}:</label>
+          <select
+            aria-label={t('filterByLocationType')}
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}>
+            <option value="all">{t('filterAll')}</option>
+            {LOCATION_TYPES.map((lt) => (
+              <option key={lt} value={lt}>
+                {t('locationType' + lt)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <span className="text-xs text-muted-foreground">
+          {t('filteredCount', { filtered: filtered.length, total: locations.length })}
+        </span>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {isLoading
           ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32" />)
-          : locations.map((l) => (
+          : filtered.map((l) => (
               <Card key={l.locationId} className="relative overflow-hidden">
                 <div className="absolute right-4 top-4">
                   <Badge
@@ -224,10 +268,12 @@ export default function StorageLocationsPage() {
                 </CardContent>
               </Card>
             ))}
-        {!isLoading && locations.length === 0 && (
+        {!isLoading && filtered.length === 0 && (
           <Card className="col-span-3">
             <CardContent className="py-10 text-center text-muted-foreground">
-              {t('noLocations')} {canManage && t('addFirst')}
+              {locations.length === 0
+                ? `${t('noLocations')} ${canManage ? t('addFirst') : ''}`
+                : t('noItemsMatchFilter')}
             </CardContent>
           </Card>
         )}

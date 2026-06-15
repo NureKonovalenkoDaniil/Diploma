@@ -17,7 +17,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Cpu, Activity, ChevronRight, Power, Trash2, Pencil } from 'lucide-react';
+import { Cpu, Activity, ChevronRight, Power, Trash2, Pencil, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Dialog,
@@ -117,6 +117,22 @@ export default function IoTDevicesPage() {
   });
 
   const activeCount = devices.filter((d) => d.isActive).length;
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
+  const filteredDevices = devices.filter((d) => {
+    const q = search.toLowerCase();
+    const matchSearch =
+      !q ||
+      d.deviceID.toLowerCase().includes(q) ||
+      d.location.toLowerCase().includes(q) ||
+      (d.type ?? '').toLowerCase().includes(q);
+    const matchStatus =
+      statusFilter === 'all' ||
+      (statusFilter === 'active' && d.isActive) ||
+      (statusFilter === 'inactive' && !d.isActive);
+    return matchSearch && matchStatus;
+  });
 
   return (
     <div className="space-y-6">
@@ -284,7 +300,33 @@ export default function IoTDevicesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{t('devicesListTitle')}</CardTitle>
+          <div className="flex flex-wrap items-center gap-3">
+            <CardTitle className="text-base flex-1">{t('devicesListTitle')}</CardTitle>
+            <div className="relative min-w-48">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder={t('deviceSearch')}
+                className="pl-9 h-9"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-muted-foreground whitespace-nowrap">{t('filterByStatus')}:</label>
+              <select
+                aria-label={t('filterByStatus')}
+                className="h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}>
+                <option value="all">{t('filterAll')}</option>
+                <option value="active">{t('filterActive')}</option>
+                <option value="inactive">{t('filterInactive')}</option>
+              </select>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {t('filteredCount', { filtered: filteredDevices.length, total: devices.length })}
+            </span>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
@@ -308,7 +350,13 @@ export default function IoTDevicesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {devices.map((d) => (
+                {filteredDevices.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={canManage ? 8 : 7} className="py-10 text-center text-muted-foreground">
+                      {devices.length === 0 ? t('noMetricsData') : t('noItemsMatchFilter')}
+                    </TableCell>
+                  </TableRow>
+                ) : filteredDevices.map((d) => (
                   <Fragment key={d.deviceID}>
                     <TableRow
                        className="cursor-pointer"
