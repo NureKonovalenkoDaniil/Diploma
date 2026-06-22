@@ -48,51 +48,65 @@ object RetrofitClient {
             .build()
     }
 
+    private val mockApis = java.util.concurrent.ConcurrentHashMap<Class<*>, Any>()
+
+    fun <T : Any> registerMockApi(apiClass: Class<T>, mockInstance: T) {
+        mockApis[apiClass] = mockInstance
+    }
+
+    fun clearMockApis() {
+        mockApis.clear()
+    }
+
     // ──────────────────────────────────────────
     // API Service Getters
     // ──────────────────────────────────────────
 
     fun getAuthApi(context: Context): AuthApi {
-        return getRetrofit(context).create(AuthApi::class.java)
+        return (mockApis[AuthApi::class.java] as? AuthApi) ?: getRetrofit(context).create(AuthApi::class.java)
     }
 
     fun getMedicineApi(context: Context): MedicineApi {
-        return getRetrofit(context).create(MedicineApi::class.java)
+        return (mockApis[MedicineApi::class.java] as? MedicineApi) ?: getRetrofit(context).create(MedicineApi::class.java)
     }
 
     fun getMedicineActionsApi(context: Context): MedicineActionsApi {
-        return getRetrofit(context).create(MedicineActionsApi::class.java)
+        return (mockApis[MedicineActionsApi::class.java] as? MedicineActionsApi) ?: getRetrofit(context).create(MedicineActionsApi::class.java)
     }
 
     fun getLifecycleApi(context: Context): LifecycleApi {
-        return getRetrofit(context).create(LifecycleApi::class.java)
+        return (mockApis[LifecycleApi::class.java] as? LifecycleApi) ?: getRetrofit(context).create(LifecycleApi::class.java)
     }
 
     fun getIoTDeviceApi(context: Context): IoTDeviceApi {
-        return getRetrofit(context).create(IoTDeviceApi::class.java)
+        return (mockApis[IoTDeviceApi::class.java] as? IoTDeviceApi) ?: getRetrofit(context).create(IoTDeviceApi::class.java)
     }
 
     fun getNotificationApi(context: Context): NotificationApi {
-        return getRetrofit(context).create(NotificationApi::class.java)
+        return (mockApis[NotificationApi::class.java] as? NotificationApi) ?: getRetrofit(context).create(NotificationApi::class.java)
     }
 
     fun getStorageLocationApi(context: Context): StorageLocationApi {
-        return getRetrofit(context).create(StorageLocationApi::class.java)
+        return (mockApis[StorageLocationApi::class.java] as? StorageLocationApi) ?: getRetrofit(context).create(StorageLocationApi::class.java)
     }
 
     fun getStorageConditionApi(context: Context): StorageConditionApi {
-        return getRetrofit(context).create(StorageConditionApi::class.java)
+        return (mockApis[StorageConditionApi::class.java] as? StorageConditionApi) ?: getRetrofit(context).create(StorageConditionApi::class.java)
     }
 
     fun getStorageIncidentApi(context: Context): StorageIncidentApi {
-        return getRetrofit(context).create(StorageIncidentApi::class.java)
+        return (mockApis[StorageIncidentApi::class.java] as? StorageIncidentApi) ?: getRetrofit(context).create(StorageIncidentApi::class.java)
     }
 
     fun getUserApi(context: Context): UserApi {
-        return getRetrofit(context).create(UserApi::class.java)
+        return (mockApis[UserApi::class.java] as? UserApi) ?: getRetrofit(context).create(UserApi::class.java)
     }
 
     fun getAuditLogApi(context: Context): AuditLogApi {
-        return getRetrofit(context).create(AuditLogApi::class.java)
+        return (mockApis[AuditLogApi::class.java] as? AuditLogApi) ?: getRetrofit(context).create(AuditLogApi::class.java)
+    }
+
+    fun setRetrofitForTesting(retrofitInstance: Retrofit?) {
+        retrofit = retrofitInstance
     }
 }

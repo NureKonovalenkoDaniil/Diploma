@@ -13,7 +13,7 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.medicationmanagement.api.ApiClient
+import com.example.medicationmanagement.api.RetrofitClient
 import com.example.medicationmanagement.api.LifecycleApi
 import com.example.medicationmanagement.api.MedicineApi
 import com.example.medicationmanagement.api.MedicineActionsApi
@@ -132,7 +132,7 @@ class MedicineDetailsActivity : AppCompatActivity() {
 
             lifecycleScope.launch {
                 try {
-                    val storageApi = ApiClient.createService<StorageLocationApi>(this@MedicineDetailsActivity)
+                    val storageApi = RetrofitClient.getStorageLocationApi(this@MedicineDetailsActivity)
                     val resp = storageApi.getAll()
                     if (!resp.isSuccessful) {
                         Toast.makeText(this@MedicineDetailsActivity, R.string.network_error, Toast.LENGTH_SHORT).show()
@@ -192,7 +192,7 @@ class MedicineDetailsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val api = ApiClient.createService<MedicineApi>(this@MedicineDetailsActivity)
+                val api = RetrofitClient.getMedicineApi(this@MedicineDetailsActivity)
                 val response = api.getMedicine(medicineID)
                 if (response.isSuccessful) {
                     response.body()?.let { medicine ->
@@ -237,7 +237,7 @@ class MedicineDetailsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val api = ApiClient.createService<LifecycleApi>(this@MedicineDetailsActivity)
+                val api = RetrofitClient.getLifecycleApi(this@MedicineDetailsActivity)
                 val response = api.getEventsByMedicineId(medicineID)
                 
                 if (response.isSuccessful) {
@@ -309,7 +309,7 @@ class MedicineDetailsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val api = ApiClient.createService<MedicineActionsApi>(this@MedicineDetailsActivity)
+                val api = RetrofitClient.getMedicineActionsApi(this@MedicineDetailsActivity)
                 val response = call(api, medicineID, quantity)
 
                 if (response.isSuccessful) {
@@ -339,7 +339,7 @@ class MedicineDetailsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val api = ApiClient.createService<MedicineActionsApi>(this@MedicineDetailsActivity)
+                val api = RetrofitClient.getMedicineActionsApi(this@MedicineDetailsActivity)
                 val response = api.move(medicineID, MoveRequest(targetLocationId, null))
 
                 if (response.isSuccessful) {
@@ -371,7 +371,7 @@ class MedicineDetailsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val api = ApiClient.createService<MedicineApi>(this@MedicineDetailsActivity)
+                val api = RetrofitClient.getMedicineApi(this@MedicineDetailsActivity)
                 val response = api.deleteMedicine(medicineID)
 
                 if (response.isSuccessful) {

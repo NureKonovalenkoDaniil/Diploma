@@ -8,7 +8,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.example.medicationmanagement.api.ApiClient
+import com.example.medicationmanagement.api.RetrofitClient
 import com.example.medicationmanagement.api.AuthApi
 import com.example.medicationmanagement.api.RegisterRequest
 import kotlinx.coroutines.launch
@@ -51,7 +51,7 @@ class RegisterActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val api = ApiClient.createService<AuthApi>(this@RegisterActivity)
+                val api = RetrofitClient.getAuthApi(this@RegisterActivity)
                 val response = api.register(RegisterRequest(email, password))
 
                 if (response.isSuccessful) {

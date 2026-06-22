@@ -62,12 +62,6 @@
     <string name="register_success">Registration successful! Enter the code from your email.</string>
     <string name="register_failed">Registration failed: %1$d</string>
     <string name="register_network_error">Network error: %1$s</string>
-    <string name="email_confirmation_sent_to">Confirmation code sent to: %1$s</string>
-    <string name="email_confirmation_enter_code">Enter the 6-digit code</string>
-    <string name="email_confirmation_success">Email confirmed! You can sign in now.</string>
-    <string name="email_confirmation_invalid">Invalid or expired code</string>
-    <string name="email_confirmation_code_resent">New code sent to %1$s</string>
-    <string name="email_confirmation_send_failed">Failed to send code</string>
     <string name="medicine_fill_all_fields">Fill in all fields</string>
     <string name="medicine_invalid_quantity">Enter a valid quantity</string>
     <string name="medicine_creating">Creating...</string>
@@ -143,11 +137,6 @@
     <string name="device_binding_success">Sensor added successfully</string>
     <string name="device_binding_already_linked">Error (the sensor may already be linked)</string>
     <string name="device_binding_network_error">Network error</string>
-    <string name="device_binding_enter_id">Enter sensor ID</string>
-    <string name="device_binding_adding">Adding...</string>
-    <string name="device_binding_success">Sensor added successfully</string>
-    <string name="device_binding_already_linked">Failed (sensor may already be linked)</string>
-    <string name="device_binding_network_error">Network error</string>
     <string name="chart_description_latest">Latest readings</string>
     <string name="no_chart_data">No chart data available</string>
     <string name="confirm_delete">Confirm Delete</string>
@@ -221,4 +210,20 @@
     <string name="medicine_max_value">Max value</string>
     <string name="in_stock_label">in stock</string>
     <string name="app_name_short">Medication Management</string>
+    <string name="incidents">Incidents</string>
+    <string name="incidents_empty_state">No incidents recorded yet.</string>
+    <string name="resolve_incident">Resolve</string>
+    <string name="incident_severity_critical">Critical</string>
+    <string name="incident_severity_warning">Warning</string>
+    <string name="resolved_incident_at">Resolved at: %1$s</string>
+    <string name="incident_resolved_label">Resolved</string>
+    <string name="incident_unresolved_label">Unresolved</string>
+    <string name="resolve_dialog_title">Resolve Incident</string>
+    <string name="resolve_dialog_message">Enter resolution details / action taken:</string>
+    <string name="resolve_dialog_hint">Resolution details</string>
+    <string name="resolve_dialog_submit">Submit</string>
+    <string name="medicines_empty_state">No medicines found</string>
+    <string name="sensors_empty_state">No sensors found</string>
+    <string name="incident_type_temp">Temperature Deviation</string>
+    <string name="incident_type_humidity">Humidity Deviation</string>
 </resources>

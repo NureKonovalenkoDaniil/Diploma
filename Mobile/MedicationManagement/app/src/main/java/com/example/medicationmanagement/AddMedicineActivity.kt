@@ -6,10 +6,11 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.example.medicationmanagement.api.ApiClient
-import com.example.medicationmanagement.api.MedicineApi
 import com.example.medicationmanagement.model.Medicine
+import com.example.medicationmanagement.ui.AddMedicineViewModel
+import com.example.medicationmanagement.ui.AddMedicineViewModelFactory
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -17,12 +18,16 @@ import java.util.Locale
 
 class AddMedicineActivity : AppCompatActivity() {
 
+    private lateinit var viewModel: AddMedicineViewModel
     private val calendar = Calendar.getInstance()
     private lateinit var expiryInput: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_medicine)
+
+        val factory = AddMedicineViewModelFactory(this)
+        viewModel = ViewModelProvider(this, factory)[AddMedicineViewModel::class.java]
 
         val name = findViewById<EditText>(R.id.inputName)
         val type = findViewById<EditText>(R.id.inputType)
@@ -74,21 +79,52 @@ class AddMedicineActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            createMedicine(
+            val newMedicine = Medicine(
+                medicineID = 0,
                 name = n,
                 type = t,
                 category = c,
                 quantity = q,
-                expiryDate = e,
+                expiryDate = "${e}T00:00:00",
                 manufacturer = manufacturer.text.toString().trim().ifBlank { null },
                 batchNumber = batchNumber.text.toString().trim().ifBlank { null },
                 description = description.text.toString().trim().ifBlank { null },
-                minTemp = minTemp.text.toString().trim().toDoubleOrNull(),
-                maxTemp = maxTemp.text.toString().trim().toDoubleOrNull(),
-                minHumidity = minHumidity.text.toString().trim().toDoubleOrNull(),
-                maxHumidity = maxHumidity.text.toString().trim().toDoubleOrNull(),
+                minStorageTemp = minTemp.text.toString().trim().toDoubleOrNull(),
+                maxStorageTemp = maxTemp.text.toString().trim().toDoubleOrNull(),
+                minStorageHumidity = minHumidity.text.toString().trim().toDoubleOrNull(),
+                maxStorageHumidity = maxHumidity.text.toString().trim().toDoubleOrNull(),
                 storageLocationId = storageLocationId.text.toString().trim().toIntOrNull()
             )
+
+            viewModel.createMedicine(newMedicine)
+        }
+
+        setupObservers(btnCreate)
+    }
+
+    private fun setupObservers(btnCreate: Button) {
+        lifecycleScope.launch {
+            viewModel.isLoading.collect { isLoading ->
+                btnCreate.isEnabled = !isLoading
+                btnCreate.text = if (isLoading) getString(R.string.medicine_creating) else getString(R.string.create)
+            }
+        }
+
+        lifecycleScope.launch {
+            viewModel.success.collect { isSuccess ->
+                if (isSuccess) {
+                    Toast.makeText(this@AddMedicineActivity, R.string.medicine_created_success, Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            viewModel.error.collect { errorMsg ->
+                if (errorMsg != null) {
+                    Toast.makeText(this@AddMedicineActivity, errorMsg, Toast.LENGTH_LONG).show()
+                }
+            }
         }
     }
 
@@ -96,62 +132,5 @@ class AddMedicineActivity : AppCompatActivity() {
         val myFormat = "yyyy-MM-dd"
         val sdf = SimpleDateFormat(myFormat, Locale.getDefault())
         expiryInput.setText(sdf.format(calendar.time))
-    }
-
-    private fun createMedicine(
-        name: String,
-        type: String,
-        category: String,
-        quantity: Int,
-        expiryDate: String,
-        manufacturer: String?,
-        batchNumber: String?,
-        description: String?,
-        minTemp: Double?,
-        maxTemp: Double?,
-        minHumidity: Double?,
-        maxHumidity: Double?,
-        storageLocationId: Int?
-    ) {
-        val btnCreate = findViewById<Button>(R.id.btnCreate)
-        btnCreate.isEnabled = false
-    btnCreate.text = getString(R.string.medicine_creating)
-
-        lifecycleScope.launch {
-            try {
-                val api = ApiClient.createService<MedicineApi>(this@AddMedicineActivity)
-                val newMedicine = Medicine(
-                    medicineID = 0,
-                    name = name,
-                    type = type,
-                    category = category,
-                    quantity = quantity,
-                    expiryDate = "${expiryDate}T00:00:00",
-                    manufacturer = manufacturer,
-                    batchNumber = batchNumber,
-                    description = description,
-                    minStorageTemp = minTemp,
-                    maxStorageTemp = maxTemp,
-                    minStorageHumidity = minHumidity,
-                    maxStorageHumidity = maxHumidity,
-                    storageLocationId = storageLocationId
-                )
-                
-                val response = api.createMedicine(newMedicine)
-
-                if (response.isSuccessful) {
-                    Toast.makeText(this@AddMedicineActivity, R.string.medicine_created_success, Toast.LENGTH_SHORT).show()
-                    finish()
-                } else {
-                    Toast.makeText(this@AddMedicineActivity, getString(R.string.medicine_create_failed, response.code()), Toast.LENGTH_SHORT).show()
-                    btnCreate.isEnabled = true
-                    btnCreate.text = getString(R.string.create)
-                }
-            } catch (e: Exception) {
-                Toast.makeText(this@AddMedicineActivity, R.string.medicine_create_network_error, Toast.LENGTH_SHORT).show()
-                btnCreate.isEnabled = true
-                btnCreate.text = getString(R.string.create)
-            }
-        }
     }
 }

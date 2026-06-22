@@ -8,11 +8,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.medicationmanagement.utils.TokenManager
-import org.json.JSONObject
-import java.io.OutputStreamWriter
-import java.net.HttpURLConnection
-import java.net.URL
-import kotlin.concurrent.thread
+import androidx.lifecycle.lifecycleScope
+import com.example.medicationmanagement.api.RetrofitClient
+import com.example.medicationmanagement.api.LoginRequest
+import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
 
@@ -50,56 +49,31 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun performLogin(email: String, password: String) {
-        thread {
+        val loginButton = findViewById<Button>(R.id.loginBtn)
+        loginButton.isEnabled = false
+        lifecycleScope.launch {
             try {
-                val url = URL("http://10.0.2.2:5001/api/auth/login")
-                val connection = (url.openConnection() as HttpURLConnection).apply {
-                    requestMethod = "POST"
-                    setRequestProperty("Content-Type", "application/json")
-                    doOutput = true
-                }
-
-                val request = JSONObject().apply {
-                    put("email", email)
-                    put("password", password)
-                }
-
-                OutputStreamWriter(connection.outputStream).use { writer ->
-                    writer.write(request.toString())
-                    writer.flush()
-                }
-
-                val responseCode = connection.responseCode
-                if (responseCode in 200..299) {
-                    val responseText = connection.inputStream.bufferedReader().use { it.readText() }
-                    val token = JSONObject(responseText).optString("token")
-                        .ifBlank { JSONObject(responseText).optString("Token") }
-
-                    if (token.isBlank()) {
-                        runOnUiThread {
-                            Toast.makeText(this, R.string.login_failed, Toast.LENGTH_SHORT).show()
-                        }
-                        return@thread
+                val api = RetrofitClient.getAuthApi(this@LoginActivity)
+                val response = api.login(LoginRequest(email, password))
+                if (response.isSuccessful) {
+                    val token = response.body()?.token
+                    if (token.isNullOrBlank()) {
+                        Toast.makeText(this@LoginActivity, R.string.login_failed, Toast.LENGTH_SHORT).show()
+                        loginButton.isEnabled = true
+                        return@launch
                     }
-
-                    TokenManager.getInstance(this).saveToken(token)
-                    TokenManager.getInstance(this).saveUserEmail(email)
-                    runOnUiThread {
-                        startActivity(Intent(this, MainActivity::class.java))
-                        finish()
-                    }
+                    TokenManager.getInstance(this@LoginActivity).saveToken(token)
+                    TokenManager.getInstance(this@LoginActivity).saveUserEmail(email)
+                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                    finish()
                 } else {
-                    runOnUiThread {
-                        Toast.makeText(this, R.string.login_failed, Toast.LENGTH_SHORT).show()
-                    }
+                    Toast.makeText(this@LoginActivity, R.string.login_failed, Toast.LENGTH_SHORT).show()
+                    loginButton.isEnabled = true
                 }
-
-                connection.disconnect()
             } catch (exception: Exception) {
-                runOnUiThread {
-                    Toast.makeText(this, exception.message ?: getString(R.string.login_failed), Toast.LENGTH_LONG).show()
-                }
+                Toast.makeText(this@LoginActivity, exception.message ?: getString(R.string.login_failed), Toast.LENGTH_LONG).show()
+                loginButton.isEnabled = true
             }
         }
     }
-}
+}

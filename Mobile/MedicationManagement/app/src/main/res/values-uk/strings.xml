@@ -62,12 +62,6 @@
     <string name="register_success">Реєстрація успішна! Введіть код з пошти.</string>
     <string name="register_failed">Помилка реєстрації: %1$d</string>
     <string name="register_network_error">Помилка мережі: %1$s</string>
-    <string name="email_confirmation_sent_to">Код підтвердження надіслано на: %1$s</string>
-    <string name="email_confirmation_enter_code">Введіть 6-значний код</string>
-    <string name="email_confirmation_success">Email підтверджено! Тепер можна увійти.</string>
-    <string name="email_confirmation_invalid">Невірний або прострочений код</string>
-    <string name="email_confirmation_code_resent">Новий код надіслано на %1$s</string>
-    <string name="email_confirmation_send_failed">Не вдалося надіслати код</string>
     <string name="medicine_fill_all_fields">Заповніть усі поля</string>
     <string name="medicine_invalid_quantity">Введіть коректну кількість</string>
     <string name="medicine_creating">Створення...</string>
@@ -133,7 +127,7 @@
     <string name="device_update_failed">Не вдалося оновити пристрій</string>
     <string name="device_deleted">Пристрій видалено</string>
     <string name="device_delete_failed">Не вдалося видалити</string>
-    <string name="device_binding_title">Прив'язка нового датчика</string>
+    <string name="device_binding_title">Прив\'язка нового датчика</string>
     <string name="device_binding_help">Знайдіть ID датчика на його упаковці або корпусі.</string>
     <string name="device_binding_id_hint">ID Датчика (наприклад: DHT-101)</string>
     <string name="device_binding_location_hint">Локація (наприклад: Холодильник)</string>
@@ -141,12 +135,7 @@
     <string name="device_binding_enter_id">Введіть ID датчика</string>
     <string name="device_binding_adding">Додавання...</string>
     <string name="device_binding_success">Датчик успішно додано</string>
-    <string name="device_binding_already_linked">Помилка (можливо, датчик вже прив'язаний)</string>
-    <string name="device_binding_network_error">Помилка мережі</string>
-    <string name="device_binding_enter_id">Введіть ID датчика</string>
-    <string name="device_binding_adding">Додавання...</string>
-    <string name="device_binding_success">Датчик успішно додано</string>
-    <string name="device_binding_already_linked">Помилка (Можливо, датчик вже прив'язаний)</string>
+    <string name="device_binding_already_linked">Помилка (можливо, датчик вже прив\'язаний)</string>
     <string name="device_binding_network_error">Помилка мережі</string>
     <string name="chart_description_latest">Останні показники</string>
     <string name="no_chart_data">Немає даних для графіка</string>
@@ -220,4 +209,20 @@
     <string name="medicine_max_value">Максимальне значення</string>
     <string name="in_stock_label">в наявності</string>
     <string name="app_name_short">Керування Медикаментами</string>
+    <string name="incidents">Інциденти</string>
+    <string name="incidents_empty_state">Інцидентів поки не зафіксовано.</string>
+    <string name="resolve_incident">Вирішити</string>
+    <string name="incident_severity_critical">Критичний</string>
+    <string name="incident_severity_warning">Попередження</string>
+    <string name="resolved_incident_at">Вирішено: %1$s</string>
+    <string name="incident_resolved_label">Вирішено</string>
+    <string name="incident_unresolved_label">Не вирішено</string>
+    <string name="resolve_dialog_title">Вирішити інцидент</string>
+    <string name="resolve_dialog_message">Введіть деталі вирішення / вжиті заходи:</string>
+    <string name="resolve_dialog_hint">Деталі вирішення</string>
+    <string name="resolve_dialog_submit">Надіслати</string>
+    <string name="medicines_empty_state">Препаратів не знайдено</string>
+    <string name="sensors_empty_state">Сенсорів не знайдено</string>
+    <string name="incident_type_temp">Відхилення температури</string>
+    <string name="incident_type_humidity">Відхилення вологості</string>
 </resources>

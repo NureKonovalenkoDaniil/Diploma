@@ -96,10 +96,13 @@ interface IoTDeviceApi {
     suspend fun getDevice(@Path("id") id: String): Response<IoTDevice>
 
     @POST("api/iotdevice")
-    suspend fun createDevice(@Body device: Map<String, Any>): Response<IoTDevice>
+    suspend fun createDevice(@Body device: @JvmSuppressWildcards Map<String, Any>): Response<IoTDevice>
 
     @PATCH("api/iotdevice/setstatus/{id}")
     suspend fun setDeviceStatus(@Path("id") deviceId: String, @Query("isActive") isActive: Boolean): Response<Any>
+
+    @PATCH("api/iotdevice/{id}")
+    suspend fun patchDevice(@Path("id") id: String, @Body patchOperations: @JvmSuppressWildcards List<@JvmSuppressWildcards Map<String, Any?>>): Response<IoTDevice>
 
     @DELETE("api/iotdevice/{id}")
     suspend fun deleteDevice(@Path("id") id: String): Response<Unit>
@@ -159,10 +162,10 @@ interface StorageLocationApi {
     suspend fun getById(@Path("id") id: Int): Response<StorageLocationDto>
 
     @POST("api/storagelocation")
-    suspend fun create(@Body location: Map<String, Any?>): Response<StorageLocationDto>
+    suspend fun create(@Body location: @JvmSuppressWildcards Map<String, Any?>): Response<StorageLocationDto>
 
     @PUT("api/storagelocation/{id}")
-    suspend fun update(@Path("id") id: Int, @Body location: Map<String, Any?>): Response<StorageLocationDto>
+    suspend fun update(@Path("id") id: Int, @Body location: @JvmSuppressWildcards Map<String, Any?>): Response<StorageLocationDto>
 
     @DELETE("api/storagelocation/{id}")
     suspend fun delete(@Path("id") id: Int): Response<Unit>
@@ -193,7 +196,7 @@ interface StorageIncidentApi {
     suspend fun delete(@Path("id") id: Int): Response<Unit>
 
     @POST("api/storageincident/{id}/resolve")
-    suspend fun resolve(@Path("id") id: Int, @Body comment: Map<String, String>): Response<StorageIncidentDto>
+    suspend fun resolve(@Path("id") id: Int, @Body comment: @JvmSuppressWildcards Map<String, String>): Response<StorageIncidentDto>
 }
 
 // ──────────────────────────────────────────
