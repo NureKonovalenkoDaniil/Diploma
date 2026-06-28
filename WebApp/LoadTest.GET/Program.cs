@@ -1,12 +1,12 @@
-﻿using NBomber.CSharp;
+using NBomber.CSharp;
 
 using var httpClient = new HttpClient
 {
-    BaseAddress = new Uri("https://localhost:7069")
+    BaseAddress = new Uri("http://localhost:5001")
 };
 
 httpClient.DefaultRequestHeaders.Authorization =
-    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI2OGE2N2I1Mi1jZjc3LTQwY2ItYjk0Yy05MTAyYjlmOGZlOTYiLCJ1bmlxdWVfbmFtZSI6ImFkbWluQGdtYWlsLmNvbSIsImVtYWlsIjoiYWRtaW5AZ21haWwuY29tIiwicm9sZSI6IkFkbWluaXN0cmF0b3IiLCJuYmYiOjE3NDg2MTI1MDgsImV4cCI6MTc4MDE0ODUwOCwiaWF0IjoxNzQ4NjEyNTA4LCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjcwNjkiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjcwNjkifQ.fQJRmaCU8TkjI3g63VCq68PSjBNtUVY43mLtmFd_FPI");
+    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJiYzA5YjNhOC00YzVhLTQ1YzUtOWVlOS03NjFhNmU4MDc0NmEiLCJ1bmlxdWVfbmFtZSI6ImFkbWluQG1lZHN0b3JhZ2UuY29tIiwiZW1haWwiOiJhZG1pbkBtZWRzdG9yYWdlLmNvbSIsInJvbGUiOiJBZG1pbmlzdHJhdG9yIiwiT3JnYW5pemF0aW9uSWQiOiJhOTVlNDYyYS1lYTA3LTQ5NzAtODZjMi0yOTExY2M1MzA4MzEiLCJuYmYiOjE3ODIxMzYzNjgsImV4cCI6MTc4NDcyODM2OCwiaWF0IjoxNzgyMTM2MzY4LCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjUwMDEiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjUwMDEifQ.8sRU8P5lHcGVx31qGXpl5y-vTc0zgbkfanecT_BQydQ");
 
 var scenario = Scenario.Create("GET /api/medicine", async context =>
 {

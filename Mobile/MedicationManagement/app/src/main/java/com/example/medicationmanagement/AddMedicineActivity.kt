@@ -2,12 +2,16 @@ package com.example.medicationmanagement
 
 import android.app.DatePickerDialog
 import android.os.Bundle
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.example.medicationmanagement.api.RetrofitClient
+import com.example.medicationmanagement.api.StorageLocationDto
 import com.example.medicationmanagement.model.Medicine
 import com.example.medicationmanagement.ui.AddMedicineViewModel
 import com.example.medicationmanagement.ui.AddMedicineViewModelFactory
@@ -40,9 +44,37 @@ class AddMedicineActivity : AppCompatActivity() {
         val maxTemp = findViewById<EditText>(R.id.inputMaxTemp)
         val minHumidity = findViewById<EditText>(R.id.inputMinHumidity)
         val maxHumidity = findViewById<EditText>(R.id.inputMaxHumidity)
-        val storageLocationId = findViewById<EditText>(R.id.inputStorageLocationId)
+        val storageLocationSpinner = findViewById<AutoCompleteTextView>(R.id.inputStorageLocationSpinner)
         expiryInput = findViewById(R.id.inputExpiry)
         val btnCreate = findViewById<Button>(R.id.btnCreate)
+
+        var selectedLocationId: Int? = null
+        var locationsList: List<StorageLocationDto> = emptyList()
+
+        // Fetch storage locations
+        lifecycleScope.launch {
+            try {
+                val api = RetrofitClient.getStorageLocationApi(this@AddMedicineActivity)
+                val response = api.getAll()
+                if (response.isSuccessful) {
+                    locationsList = response.body() ?: emptyList()
+                    val locationNames = mutableListOf("Без локації")
+                    locationNames.addAll(locationsList.map { it.name })
+
+                    val adapter = ArrayAdapter(
+                        this@AddMedicineActivity,
+                        android.R.layout.simple_dropdown_item_1line,
+                        locationNames
+                    )
+                    storageLocationSpinner.setAdapter(adapter)
+                    storageLocationSpinner.setOnItemClickListener { _, _, position, _ ->
+                        selectedLocationId = if (position == 0) null else locationsList[position - 1].locationId
+                    }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@AddMedicineActivity, "Помилка завантаження локацій", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         // DatePicker for Expiry Date
         val dateSetListener = DatePickerDialog.OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
@@ -79,13 +111,19 @@ class AddMedicineActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            val formattedDate = formatToIsoDate(e)
+            if (formattedDate == null) {
+                Toast.makeText(this, "Некоректний формат дати терміну придатності. Спробуйте РРРР-ММ-ДД або ДД-ММ-РРРР", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
             val newMedicine = Medicine(
                 medicineID = 0,
                 name = n,
                 type = t,
                 category = c,
                 quantity = q,
-                expiryDate = "${e}T00:00:00",
+                expiryDate = "${formattedDate}T00:00:00",
                 manufacturer = manufacturer.text.toString().trim().ifBlank { null },
                 batchNumber = batchNumber.text.toString().trim().ifBlank { null },
                 description = description.text.toString().trim().ifBlank { null },
@@ -93,7 +131,7 @@ class AddMedicineActivity : AppCompatActivity() {
                 maxStorageTemp = maxTemp.text.toString().trim().toDoubleOrNull(),
                 minStorageHumidity = minHumidity.text.toString().trim().toDoubleOrNull(),
                 maxStorageHumidity = maxHumidity.text.toString().trim().toDoubleOrNull(),
-                storageLocationId = storageLocationId.text.toString().trim().toIntOrNull()
+                storageLocationId = selectedLocationId
             )
 
             viewModel.createMedicine(newMedicine)
@@ -132,5 +170,30 @@ class AddMedicineActivity : AppCompatActivity() {
         val myFormat = "yyyy-MM-dd"
         val sdf = SimpleDateFormat(myFormat, Locale.getDefault())
         expiryInput.setText(sdf.format(calendar.time))
+    }
+
+    private fun formatToIsoDate(input: String): String? {
+        val formats = listOf(
+            "yyyy-MM-dd",
+            "dd-MM-yyyy",
+            "dd.MM.yyyy",
+            "yyyy.MM.dd",
+            "dd/MM/yyyy",
+            "yyyy/MM/dd"
+        )
+        for (format in formats) {
+            try {
+                val sdf = SimpleDateFormat(format, Locale.US)
+                sdf.isLenient = false
+                val date = sdf.parse(input)
+                if (date != null) {
+                    val isoFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                    return isoFormat.format(date)
+                }
+            } catch (ex: Exception) {
+                // Ignore and try next format
+            }
+        }
+        return null
     }
 }

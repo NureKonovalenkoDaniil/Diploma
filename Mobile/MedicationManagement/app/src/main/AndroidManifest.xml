@@ -29,6 +29,8 @@
 		<activity android:name=".EditDeviceActivity" android:exported="false" />
 		<activity android:name=".AddDeviceActivity" android:exported="false" />
 		<activity android:name=".ConfirmEmailActivity" android:exported="false" />
+		<activity android:name=".ForgotPasswordActivity" android:exported="false" />
+		<activity android:name=".ResetPasswordActivity" android:exported="false" />
 	</application>
 
 </manifest>

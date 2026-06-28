@@ -17,6 +17,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.medicationmanagement.R
 import com.example.medicationmanagement.StorageIncidentAdapter
 import com.example.medicationmanagement.api.StorageIncidentDto
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -31,17 +33,28 @@ class IncidentsFragment : Fragment() {
     private lateinit var progressBar: ProgressBar
     private lateinit var emptyStateContainer: View
     private lateinit var emptyStateText: TextView
+    private lateinit var chipFilterGroup: ChipGroup
+    private lateinit var chipAll: Chip
+    private lateinit var chipActive: Chip
+    private lateinit var chipResolved: Chip
+
+    private var allIncidents: List<StorageIncidentDto> = emptyList()
+    private var currentFilter: String = "all"
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_incidents, container, false)
-        
+
         recyclerView = view.findViewById(R.id.incidentsRecyclerView)
         progressBar = view.findViewById(R.id.progressBar)
         emptyStateContainer = view.findViewById(R.id.emptyStateContainer)
         emptyStateText = view.findViewById(R.id.emptyStateText)
+        chipFilterGroup = view.findViewById(R.id.incidentFilterChips)
+        chipAll = view.findViewById(R.id.chipIncidentAll)
+        chipActive = view.findViewById(R.id.chipIncidentActive)
+        chipResolved = view.findViewById(R.id.chipIncidentResolved)
 
         return view
     }
@@ -54,6 +67,7 @@ class IncidentsFragment : Fragment() {
 
         setupRecyclerView()
         setupObservers()
+        setupChipFilters()
     }
 
     override fun onResume() {
@@ -61,9 +75,37 @@ class IncidentsFragment : Fragment() {
         viewModel.fetchIncidents()
     }
 
+    private fun setupChipFilters() {
+        chipAll.setOnClickListener {
+            currentFilter = "all"
+            applyFilter()
+        }
+        chipActive.setOnClickListener {
+            currentFilter = "active"
+            applyFilter()
+        }
+        chipResolved.setOnClickListener {
+            currentFilter = "resolved"
+            applyFilter()
+        }
+    }
+
+    private fun applyFilter() {
+        val filtered = when (currentFilter) {
+            "active" -> allIncidents.filter { !it.isResolvedCalculated }
+            "resolved" -> allIncidents.filter { it.isResolvedCalculated }
+            else -> allIncidents
+        }
+        updateList(filtered)
+    }
+
     private fun setupRecyclerView() {
         adapter = StorageIncidentAdapter(emptyList()) { incident ->
             showResolveDialog(incident)
+        }
+        // Довгий клік — видалення
+        adapter.setOnLongClickListener { incident ->
+            showDeleteDialog(incident)
         }
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
@@ -72,16 +114,8 @@ class IncidentsFragment : Fragment() {
     private fun setupObservers() {
         lifecycleScope.launch {
             viewModel.incidents.collect { incidents ->
-                adapter.updateIncidents(incidents)
-                if (incidents.isEmpty()) {
-                    emptyStateContainer.visibility = View.VISIBLE
-                    emptyStateText.visibility = View.VISIBLE
-                    recyclerView.visibility = View.GONE
-                } else {
-                    emptyStateContainer.visibility = View.GONE
-                    emptyStateText.visibility = View.GONE
-                    recyclerView.visibility = View.VISIBLE
-                }
+                allIncidents = incidents
+                applyFilter()
             }
         }
 
@@ -97,6 +131,19 @@ class IncidentsFragment : Fragment() {
                     Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_LONG).show()
                 }
             }
+        }
+    }
+
+    private fun updateList(incidents: List<StorageIncidentDto>) {
+        adapter.updateIncidents(incidents)
+        if (incidents.isEmpty()) {
+            emptyStateContainer.visibility = View.VISIBLE
+            emptyStateText.visibility = View.VISIBLE
+            recyclerView.visibility = View.GONE
+        } else {
+            emptyStateContainer.visibility = View.GONE
+            emptyStateText.visibility = View.GONE
+            recyclerView.visibility = View.VISIBLE
         }
     }
 
@@ -130,5 +177,17 @@ class IncidentsFragment : Fragment() {
             }
         }
         dialog.show()
+    }
+
+    private fun showDeleteDialog(incident: StorageIncidentDto) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.incident_delete_confirm_title)
+            .setMessage(R.string.incident_delete_confirm_msg)
+            .setPositiveButton(R.string.delete) { _, _ ->
+                viewModel.deleteIncident(incident.id)
+                Toast.makeText(requireContext(), R.string.incident_deleted, Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 }

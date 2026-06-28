@@ -9,9 +9,9 @@
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="16dp"
-        app:cardBackgroundColor="@color/brand_surface"
-        app:cardCornerRadius="24dp"
+        android:layout_margin="8dp"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardCornerRadius="16dp"
         app:cardElevation="0dp"
         app:strokeColor="@color/brand_primary_container"
         app:strokeWidth="1dp">

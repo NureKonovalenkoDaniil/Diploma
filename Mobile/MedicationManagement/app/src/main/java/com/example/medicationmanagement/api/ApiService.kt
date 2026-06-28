@@ -17,6 +17,16 @@ data class RegisterRequest(val email: String, val password: String)
 data class ConfirmEmailRequest(val email: String, val code: String)
 data class ResendConfirmationRequest(val email: String)
 data class CreateManagerRequest(val email: String, val password: String, val organizationId: String)
+data class ForgotPasswordRequest(val email: String)
+data class ResetPasswordRequest(val email: String, val code: String, val newPassword: String)
+
+data class MeDto(
+    val id: String,
+    val userName: String?,
+    val email: String?,
+    val roles: List<String>,
+    val organizationId: String?
+)
 
 // ──────────────────────────────────────────
 // Auth API
@@ -33,6 +43,15 @@ interface AuthApi {
 
     @POST("api/auth/resend-confirmation")
     suspend fun resendConfirmation(@Body request: ResendConfirmationRequest): Response<Any>
+
+    @POST("api/auth/forgot-password")
+    suspend fun forgotPassword(@Body request: ForgotPasswordRequest): Response<Any>
+
+    @POST("api/auth/reset-password")
+    suspend fun resetPassword(@Body request: ResetPasswordRequest): Response<Any>
+
+    @GET("api/auth/me")
+    suspend fun getMe(): Response<MeDto>
 
     @GET("api/auth/users")
     suspend fun getUsers(): Response<List<UserDto>>
@@ -57,11 +76,17 @@ interface MedicineApi {
     @GET("api/medicine/{id}")
     suspend fun getMedicine(@Path("id") id: Int): Response<Medicine>
 
+    @GET("api/medicine/low-stock")
+    suspend fun getLowStock(@Query("threshold") threshold: Int = 10): Response<List<Medicine>>
+
+    @GET("api/medicine/expiring")
+    suspend fun getExpiring(@Query("daysThreshold") daysThreshold: Int = 30): Response<List<Medicine>>
+
     @POST("api/medicine")
     suspend fun createMedicine(@Body medicine: Medicine): Response<Medicine>
 
     @PATCH("api/medicine/{id}")
-    suspend fun updateMedicine(@Path("id") id: Int, @Body patchOperations: List<Map<String, Any?>>): Response<Medicine>
+    suspend fun updateMedicine(@Path("id") id: Int, @Body patchOperations: @JvmSuppressWildcards List<@JvmSuppressWildcards Map<String, Any?>>): Response<Medicine>
 
     @DELETE("api/medicine/{id}")
     suspend fun deleteMedicine(@Path("id") id: Int): Response<Unit>
@@ -175,15 +200,37 @@ interface StorageLocationApi {
 // Storage Incident API
 // ──────────────────────────────────────────
 data class StorageIncidentDto(
-    val id: Int,
-    val storageLocationId: Int,
-    val incidentType: String,
-    val severity: String,
-    val description: String,
-    val detectedAt: String,
-    val resolvedAt: String?,
-    val isResolved: Boolean
-)
+    @com.google.gson.annotations.SerializedName(value = "id", alternate = ["incidentId"])
+    val id: Int = 0,
+
+    @com.google.gson.annotations.SerializedName(value = "storageLocationId", alternate = ["locationId"])
+    val storageLocationId: Int = 0,
+
+    val incidentType: String = "",
+
+    val severity: String? = null,
+
+    val description: String? = null,
+
+    @com.google.gson.annotations.SerializedName(value = "detectedAt", alternate = ["startTime", "createdAt"])
+    val detectedAt: String = "",
+
+    @com.google.gson.annotations.SerializedName(value = "resolvedAt", alternate = ["endTime"])
+    val resolvedAt: String? = null,
+
+    val isResolved: Boolean = false,
+
+    // Нові поля з бекенду для відображення деталей
+    val deviceId: String? = null,
+    val deviceLocation: String? = null,
+    val detectedValue: Float? = null,
+    val expectedMin: Float? = null,
+    val expectedMax: Float? = null,
+    val status: String? = null
+) {
+    val isResolvedCalculated: Boolean
+        get() = if (status != null) status.lowercase() != "active" else isResolved
+}
 
 interface StorageIncidentApi {
     @GET("api/storageincident")
@@ -195,7 +242,7 @@ interface StorageIncidentApi {
     @DELETE("api/storageincident/{id}")
     suspend fun delete(@Path("id") id: Int): Response<Unit>
 
-    @POST("api/storageincident/{id}/resolve")
+    @PATCH("api/storageincident/{id}/resolve")
     suspend fun resolve(@Path("id") id: Int, @Body comment: @JvmSuppressWildcards Map<String, String>): Response<StorageIncidentDto>
 }
 
@@ -266,6 +313,7 @@ data class QuantityRequest(
 )
 
 data class MoveRequest(
+    @com.google.gson.annotations.SerializedName("storageLocationId")
     val targetLocationId: Int,
     val description: String? = null
 )

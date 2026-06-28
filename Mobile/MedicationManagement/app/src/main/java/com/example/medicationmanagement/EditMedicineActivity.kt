@@ -2,12 +2,16 @@ package com.example.medicationmanagement
 
 import android.app.DatePickerDialog
 import android.os.Bundle
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.example.medicationmanagement.api.RetrofitClient
+import com.example.medicationmanagement.api.StorageLocationDto
 import com.example.medicationmanagement.ui.EditMedicineViewModel
 import com.example.medicationmanagement.ui.EditMedicineViewModelFactory
 import kotlinx.coroutines.launch
@@ -33,8 +37,11 @@ class EditMedicineActivity : AppCompatActivity() {
     private lateinit var maxTemp: EditText
     private lateinit var minHumidity: EditText
     private lateinit var maxHumidity: EditText
-    private lateinit var storageLocationId: EditText
+    private lateinit var storageLocationSpinner: AutoCompleteTextView
     private lateinit var saveBtn: Button
+
+    private var selectedLocationId: Int? = null
+    private var locationsList: List<StorageLocationDto> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,7 +61,7 @@ class EditMedicineActivity : AppCompatActivity() {
         maxTemp = findViewById(R.id.editMaxTemp)
         minHumidity = findViewById(R.id.editMinHumidity)
         maxHumidity = findViewById(R.id.editMaxHumidity)
-        storageLocationId = findViewById(R.id.editStorageLocationId)
+        storageLocationSpinner = findViewById(R.id.editStorageLocationSpinner)
         expiryInput = findViewById(R.id.editExpiry)
         saveBtn = findViewById(R.id.saveBtn)
 
@@ -63,6 +70,34 @@ class EditMedicineActivity : AppCompatActivity() {
             Toast.makeText(this, R.string.medicine_invalid_id, Toast.LENGTH_SHORT).show()
             finish()
             return
+        }
+
+        // Fetch storage locations
+        lifecycleScope.launch {
+            try {
+                val api = RetrofitClient.getStorageLocationApi(this@EditMedicineActivity)
+                val response = api.getAll()
+                if (response.isSuccessful) {
+                    locationsList = response.body() ?: emptyList()
+                    val locationNames = mutableListOf("Без локації")
+                    locationNames.addAll(locationsList.map { it.name })
+
+                    val adapter = ArrayAdapter(
+                        this@EditMedicineActivity,
+                        android.R.layout.simple_dropdown_item_1line,
+                        locationNames
+                    )
+                    storageLocationSpinner.setAdapter(adapter)
+                    storageLocationSpinner.setOnItemClickListener { _, _, position, _ ->
+                        selectedLocationId = if (position == 0) null else locationsList[position - 1].locationId
+                    }
+
+                    // Pre-select if medicine data is already loaded
+                    updateSelectedLocationInSpinner()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@EditMedicineActivity, "Помилка завантаження локацій", Toast.LENGTH_SHORT).show()
+            }
         }
 
         // DatePicker for Expiry Date
@@ -102,12 +137,18 @@ class EditMedicineActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            val formattedDate = formatToIsoDate(e)
+            if (formattedDate == null) {
+                Toast.makeText(this, "Некоректний формат дати терміну придатності. Спробуйте РРРР-ММ-ДД або ДД-ММ-РРРР", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
             saveChanges(
                 name = n,
                 type = t,
                 category = c,
                 quantity = q,
-                expiryDate = e,
+                expiryDate = formattedDate,
                 manufacturer = manufacturer.text.toString().trim().ifBlank { null },
                 batchNumber = batchNumber.text.toString().trim().ifBlank { null },
                 description = description.text.toString().trim().ifBlank { null },
@@ -115,11 +156,26 @@ class EditMedicineActivity : AppCompatActivity() {
                 maxTemp = maxTemp.text.toString().trim().toDoubleOrNull(),
                 minHumidity = minHumidity.text.toString().trim().toDoubleOrNull(),
                 maxHumidity = maxHumidity.text.toString().trim().toDoubleOrNull(),
-                storageLocationId = storageLocationId.text.toString().trim().toIntOrNull()
+                storageLocationId = selectedLocationId
             )
         }
 
         setupObservers()
+    }
+
+    private fun updateSelectedLocationInSpinner() {
+        if (locationsList.isEmpty()) return
+        val currentId = selectedLocationId
+        if (currentId == null) {
+            storageLocationSpinner.setText("Без локації", false)
+        } else {
+            val loc = locationsList.find { it.locationId == currentId }
+            if (loc != null) {
+                storageLocationSpinner.setText(loc.name, false)
+            } else {
+                storageLocationSpinner.setText("Без локації", false)
+            }
+        }
     }
 
     private fun setupObservers() {
@@ -137,7 +193,9 @@ class EditMedicineActivity : AppCompatActivity() {
                     maxTemp.setText(data.maxStorageTemp?.toString().orEmpty())
                     minHumidity.setText(data.minStorageHumidity?.toString().orEmpty())
                     maxHumidity.setText(data.maxStorageHumidity?.toString().orEmpty())
-                    storageLocationId.setText(data.storageLocationId?.toString().orEmpty())
+                    
+                    selectedLocationId = data.storageLocationId
+                    updateSelectedLocationInSpinner()
                     
                     try {
                         val isoParser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
@@ -217,5 +275,30 @@ class EditMedicineActivity : AppCompatActivity() {
             mapOf("op" to "replace", "path" to "/storageLocationId", "value" to storageLocationId)
         )
         viewModel.updateMedicine(medicineID, patchBody)
+    }
+
+    private fun formatToIsoDate(input: String): String? {
+        val formats = listOf(
+            "yyyy-MM-dd",
+            "dd-MM-yyyy",
+            "dd.MM.yyyy",
+            "yyyy.MM.dd",
+            "dd/MM/yyyy",
+            "yyyy/MM/dd"
+        )
+        for (format in formats) {
+            try {
+                val sdf = SimpleDateFormat(format, Locale.US)
+                sdf.isLenient = false
+                val date = sdf.parse(input)
+                if (date != null) {
+                    val isoFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                    return isoFormat.format(date)
+                }
+            } catch (ex: Exception) {
+                // Ignore and try next format
+            }
+        }
+        return null
     }
 }

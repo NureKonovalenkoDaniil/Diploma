@@ -30,6 +30,7 @@ class LoginActivity : AppCompatActivity() {
         val passwordInput = findViewById<EditText>(R.id.passwordInput)
         val loginButton = findViewById<Button>(R.id.loginBtn)
         val registerLink = findViewById<TextView>(R.id.registerLink)
+        val forgotPasswordLink = findViewById<TextView>(R.id.forgotPasswordLink)
 
         loginButton.setOnClickListener {
             val email = emailInput.text.toString().trim()
@@ -45,6 +46,10 @@ class LoginActivity : AppCompatActivity() {
 
         registerLink.setOnClickListener {
             startActivity(Intent(this, RegisterActivity::class.java))
+        }
+
+        forgotPasswordLink.setOnClickListener {
+            startActivity(Intent(this, ForgotPasswordActivity::class.java))
         }
     }
 

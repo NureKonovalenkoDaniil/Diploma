@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Керування Медикаментами</string>
+    <string name="drawer_open">Відкрити меню навігації</string>
+    <string name="drawer_close">Закрити меню навігації</string>
     <string name="choose_language">Оберіть мову</string>
     <string name="language_ukrainian">Українська</string>
     <string name="language_english">Англійська</string>
@@ -207,6 +209,10 @@
     <string name="medicine_storage_humidity_range">Діапазон вологості зберігання</string>
     <string name="medicine_min_value">Мінімальне значення</string>
     <string name="medicine_max_value">Максимальне значення</string>
+    <string name="medicine_min_temp">Мінімальна температура (°C)</string>
+    <string name="medicine_max_temp">Максимальна температура (°C)</string>
+    <string name="medicine_min_humidity">Мінімальна вологість (%)</string>
+    <string name="medicine_max_humidity">Максимальна вологість (%)</string>
     <string name="in_stock_label">в наявності</string>
     <string name="app_name_short">Керування Медикаментами</string>
     <string name="incidents">Інциденти</string>
@@ -225,4 +231,45 @@
     <string name="sensors_empty_state">Сенсорів не знайдено</string>
     <string name="incident_type_temp">Відхилення температури</string>
     <string name="incident_type_humidity">Відхилення вологості</string>
+
+    <!-- Forgot / Reset Password -->
+    <string name="forgot_password">Забули пароль?</string>
+    <string name="forgot_password_title">Відновлення пароля</string>
+    <string name="forgot_password_description">Введіть вашу email-адресу, щоб отримати код відновлення.</string>
+    <string name="forgot_password_email_hint">Email-адреса</string>
+    <string name="forgot_password_send_code">Надіслати код</string>
+    <string name="forgot_password_code_sent">Код відновлення надіслано на %1$s</string>
+    <string name="reset_password_title">Новий пароль</string>
+    <string name="reset_password_description">Введіть код з листа та новий пароль.</string>
+    <string name="reset_password_code_hint">Код відновлення</string>
+    <string name="reset_password_new_hint">Новий пароль</string>
+    <string name="reset_password_confirm_hint">Підтвердіть пароль</string>
+    <string name="reset_password_submit">Змінити пароль</string>
+    <string name="reset_password_success">Пароль успішно змінено. Увійдіть знову.</string>
+    <string name="reset_password_mismatch">Паролі не збігаються</string>
+    <string name="reset_password_too_short">Пароль має бути не менше 6 символів</string>
+    <string name="reset_password_code_required">Введіть код відновлення</string>
+    <string name="forgot_email_required">Введіть вашу email-адресу</string>
+
+    <!-- Profile -->
+    <string name="profile">Профіль</string>
+    <string name="profile_title">Мій профіль</string>
+    <string name="profile_email_label">Email</string>
+    <string name="profile_role_label">Роль</string>
+    <string name="profile_org_label">ID організації</string>
+    <string name="profile_loading">Завантаження профілю…</string>
+    <string name="profile_error">Не вдалося завантажити профіль</string>
+
+    <!-- Medicine filters -->
+    <string name="filter_all">Усі</string>
+    <string name="filter_low_stock">Малий запас</string>
+    <string name="filter_expiring">Термін минає</string>
+
+    <!-- Incident filters -->
+    <string name="filter_active">Активні</string>
+    <string name="filter_resolved">Вирішені</string>
+    <string name="incident_delete_confirm_title">Видалити інцидент</string>
+    <string name="incident_delete_confirm_msg">Ви впевнені, що хочете видалити цей інцидент?</string>
+    <string name="incident_deleted">Інцидент видалено</string>
+    <string name="incident_delete_error">Не вдалося видалити інцидент</string>
 </resources>

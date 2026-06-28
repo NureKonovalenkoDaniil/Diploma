@@ -120,6 +120,44 @@ class MedicinesViewModel(private val context: Context) : ViewModel() {
     fun clearError() {
         _error.value = null
     }
+
+    fun fetchLowStock() {
+        _isLoading.value = true
+        _error.value = null
+        viewModelScope.launch {
+            try {
+                val response = medicineApi.getLowStock()
+                if (response.isSuccessful) {
+                    _medicines.value = response.body() ?: emptyList()
+                } else {
+                    _error.value = "Помилка завантаження: ${response.code()}"
+                }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Помилка мережі"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun fetchExpiring() {
+        _isLoading.value = true
+        _error.value = null
+        viewModelScope.launch {
+            try {
+                val response = medicineApi.getExpiring()
+                if (response.isSuccessful) {
+                    _medicines.value = response.body() ?: emptyList()
+                } else {
+                    _error.value = "Помилка завантаження: ${response.code()}"
+                }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Помилка мережі"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 }
 
 class MedicinesViewModelFactory(private val context: Context) : ViewModelProvider.Factory {

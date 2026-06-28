@@ -18,12 +18,14 @@ import com.example.medicationmanagement.AddMedicineActivity
 import com.example.medicationmanagement.MedicineAdapter
 import com.example.medicationmanagement.R
 import com.example.medicationmanagement.utils.RoleHelper
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 
 /**
- * MedicinesFragment — Головний екран списку препаратів з StateFlow
+ * MedicinesFragment — Головний екран списку препаратів з StateFlow і фільтрами
  */
 class MedicinesFragment : Fragment() {
 
@@ -36,22 +38,31 @@ class MedicinesFragment : Fragment() {
     private lateinit var emptyStateText: TextView
     private lateinit var searchInput: TextInputEditText
     private lateinit var fabAddMedicine: FloatingActionButton
+    private lateinit var chipFilterGroup: ChipGroup
+    private lateinit var chipAll: Chip
+    private lateinit var chipLowStock: Chip
+    private lateinit var chipExpiring: Chip
 
     private var allMedicines: List<com.example.medicationmanagement.model.Medicine> = emptyList()
     private var searchQuery: String = ""
+    private var currentFilter: String = "all"
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_medicines, container, false)
-        
+
         recyclerView = view.findViewById(R.id.medicinesRecyclerView)
         progressBar = view.findViewById(R.id.progressBar)
         emptyStateContainer = view.findViewById(R.id.emptyStateContainer)
         emptyStateText = view.findViewById(R.id.emptyStateText)
         searchInput = view.findViewById(R.id.medicineSearchInput)
         fabAddMedicine = view.findViewById(R.id.fabAddMedicine)
+        chipFilterGroup = view.findViewById(R.id.medicineFilterChips)
+        chipAll = view.findViewById(R.id.chipMedAll)
+        chipLowStock = view.findViewById(R.id.chipMedLowStock)
+        chipExpiring = view.findViewById(R.id.chipMedExpiring)
 
         return view
     }
@@ -70,17 +81,41 @@ class MedicinesFragment : Fragment() {
 
         searchInput.addTextChangedListener { text ->
             searchQuery = text?.toString().orEmpty()
-            applyFilter()
+            applyLocalSearch()
         }
 
         fabAddMedicine.setOnClickListener {
             startActivity(Intent(requireContext(), AddMedicineActivity::class.java))
         }
+
+        // Chip фільтри
+        chipAll.setOnClickListener { applyChipFilter("all") }
+        chipLowStock.setOnClickListener { applyChipFilter("low_stock") }
+        chipExpiring.setOnClickListener { applyChipFilter("expiring") }
+
+        // Початкове завантаження
+        viewModel.fetchMedicines()
     }
 
     override fun onResume() {
         super.onResume()
-        viewModel.fetchMedicines()
+        reloadForCurrentFilter()
+    }
+
+    private fun applyChipFilter(filter: String) {
+        if (currentFilter == filter) return
+        currentFilter = filter
+        searchInput.setText("")
+        searchQuery = ""
+        reloadForCurrentFilter()
+    }
+
+    private fun reloadForCurrentFilter() {
+        when (currentFilter) {
+            "low_stock" -> viewModel.fetchLowStock()
+            "expiring" -> viewModel.fetchExpiring()
+            else -> viewModel.fetchMedicines()
+        }
     }
 
     private fun setupRecyclerView() {
@@ -90,22 +125,19 @@ class MedicinesFragment : Fragment() {
     }
 
     private fun setupFlowObservers() {
-        // Observe medicines list using StateFlow
         lifecycleScope.launch {
             viewModel.medicines.collect { medicines ->
                 allMedicines = medicines
-                applyFilter()
+                applyLocalSearch()
             }
         }
 
-        // Observe loading state
         lifecycleScope.launch {
             viewModel.isLoading.collect { isLoading ->
                 progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
             }
         }
 
-        // Observe errors
         lifecycleScope.launch {
             viewModel.error.collect { errorMsg ->
                 if (errorMsg != null) {
@@ -116,7 +148,7 @@ class MedicinesFragment : Fragment() {
         }
     }
 
-    private fun applyFilter() {
+    private fun applyLocalSearch() {
         val filteredMedicines = if (searchQuery.isBlank()) {
             allMedicines
         } else {

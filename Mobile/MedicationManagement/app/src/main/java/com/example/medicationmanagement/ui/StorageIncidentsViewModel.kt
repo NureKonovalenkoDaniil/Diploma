@@ -60,6 +60,21 @@ class StorageIncidentsViewModel(private val context: Context) : ViewModel() {
             }
         }
     }
+
+    fun deleteIncident(incidentId: Int) {
+        viewModelScope.launch {
+            try {
+                val response = storageIncidentApi.delete(incidentId)
+                if (response.isSuccessful) {
+                    fetchIncidents()
+                } else {
+                    _error.value = "Не вдалося видалити інцидент: ${response.code()}"
+                }
+            } catch (e: Exception) {
+                _error.value = "Помилка: ${e.message}"
+            }
+        }
+    }
 }
 
 class StorageIncidentsViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
