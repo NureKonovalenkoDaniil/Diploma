@@ -122,6 +122,24 @@ namespace MedicationManagement.Services
                 var location = await query.FirstOrDefaultAsync(l => l.LocationId == id);
                 if (location is null) return false;
 
+                // 1. Оновлюємо пристрої, які прив'язані до цієї локації за назвою або ID пристрою
+                var devicesToUpdate = await _context.IoTDevices
+                    .Where(d => (d.Location == location.Name || d.DeviceID == location.IoTDeviceId) && d.OrganizationId == location.OrganizationId)
+                    .ToListAsync();
+                foreach (var dev in devicesToUpdate)
+                {
+                    dev.Location = "Unassigned";
+                }
+
+                // 2. Явно оновлюємо препарати
+                var medicinesToUpdate = await _context.Medicines
+                    .Where(m => m.StorageLocationId == id && m.OrganizationId == location.OrganizationId)
+                    .ToListAsync();
+                foreach (var med in medicinesToUpdate)
+                {
+                    med.StorageLocationId = null;
+                }
+
                 _context.StorageLocations.Remove(location);
                 await _context.SaveChangesAsync();
                 return true;

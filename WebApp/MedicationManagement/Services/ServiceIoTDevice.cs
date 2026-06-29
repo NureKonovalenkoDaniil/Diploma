@@ -111,6 +111,9 @@ namespace MedicationManagement.Services
 
                 await _context.IoTDevices.AddAsync(IoTDevice);
                 await _context.SaveChangesAsync();
+
+                await SynchronizeLocationForDevice(IoTDevice);
+
                 return (IoTDevice, deviceSecret);
             }
             catch (Exception ex)
@@ -139,6 +142,9 @@ namespace MedicationManagement.Services
                 IoTDevice.DeviceSecretHash = string.Empty;
                 await _context.IoTDevices.AddAsync(IoTDevice);
                 await _context.SaveChangesAsync();
+
+                await SynchronizeLocationForDevice(IoTDevice);
+
                 return IoTDevice;
             }
             catch (Exception ex)
@@ -271,8 +277,16 @@ namespace MedicationManagement.Services
                     return null;
                 }
 
+                var oldLocation = deviceToUpdate.Location;
+
                 patchDocument.ApplyTo(deviceToUpdate);
                 await _context.SaveChangesAsync();
+
+                if (oldLocation != deviceToUpdate.Location)
+                {
+                    await SynchronizeLocationForDevice(deviceToUpdate);
+                }
+
                 return deviceToUpdate;
             }
             catch (Exception ex)
@@ -296,6 +310,15 @@ namespace MedicationManagement.Services
                     return false;
                 }
 
+                // Очищаємо посилання на цей пристрій у локаціях
+                var locationsToUpdate = await _context.StorageLocations
+                    .Where(l => l.IoTDeviceId == id && l.OrganizationId == device.OrganizationId)
+                    .ToListAsync();
+                foreach (var loc in locationsToUpdate)
+                {
+                    loc.IoTDeviceId = null;
+                }
+
                 var incidents = _context.StorageIncidents.Where(i => i.DeviceId == id);
                 var conditions = _context.StorageConditions.Where(c => c.DeviceID == id);
                 if (!IsAdmin && !string.IsNullOrEmpty(device.OrganizationId))
@@ -316,6 +339,31 @@ namespace MedicationManagement.Services
                 _logger.LogError(ex, $"Error deleting IoT device with ID {id}");
                 return false;
             }
+        }
+
+        private async Task SynchronizeLocationForDevice(IoTDevice device)
+        {
+            // 1. Прибираємо цей девайс з інших локацій, де він міг бути прив'язаний
+            var otherLocations = await _context.StorageLocations
+                .Where(l => l.IoTDeviceId == device.DeviceID && l.OrganizationId == device.OrganizationId)
+                .ToListAsync();
+            foreach (var loc in otherLocations)
+            {
+                loc.IoTDeviceId = null;
+            }
+
+            // 2. Якщо назва локації не пуста, знаходимо локацію з таким ім'ям в тій самій організації і прив'язуємо девайс
+            if (!string.IsNullOrWhiteSpace(device.Location))
+            {
+                var targetLocation = await _context.StorageLocations
+                    .FirstOrDefaultAsync(l => l.Name == device.Location && l.OrganizationId == device.OrganizationId);
+                if (targetLocation != null)
+                {
+                    targetLocation.IoTDeviceId = device.DeviceID;
+                }
+            }
+
+            await _context.SaveChangesAsync();
         }
 
         private static string GenerateDeviceSecret()

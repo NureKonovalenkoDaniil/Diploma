@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, Fragment } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { iotApi } from '@/api';
+import { iotApi, locationApi } from '@/api';
 import type { IoTDeviceDto } from '@/types/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -59,6 +59,11 @@ export default function IoTDevicesPage() {
     maxHum: 60,
   });
 
+  const { data: locations = [] } = useQuery({
+    queryKey: ['locations'],
+    queryFn: locationApi.getAll,
+  });
+
   const { data: devices = [], isLoading } = useQuery({
     queryKey: ['iot-devices'],
     queryFn: iotApi.getAll,
@@ -74,6 +79,7 @@ export default function IoTDevicesPage() {
     mutationFn: (device: any) => iotApi.create(device),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['iot-devices'] });
+      qc.invalidateQueries({ queryKey: ['locations'] });
       setIsDialogOpen(false);
       setNewDevice({
         deviceID: '',
@@ -89,7 +95,10 @@ export default function IoTDevicesPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => iotApi.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['iot-devices'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['iot-devices'] });
+      qc.invalidateQueries({ queryKey: ['locations'] });
+    },
   });
 
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -112,6 +121,7 @@ export default function IoTDevicesPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['iot-devices'] });
+      qc.invalidateQueries({ queryKey: ['locations'] });
       setEditingDevice(null);
     },
   });
@@ -168,17 +178,22 @@ export default function IoTDevicesPage() {
                     placeholder={t('deviceIdPlaceholder')}
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
+                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="location" className="text-right">
                     {t('deviceLocation')}
                   </Label>
-                  <Input
+                  <select
                     id="location"
                     value={newDevice.location}
                     onChange={(e) => setNewDevice({ ...newDevice, location: e.target.value })}
-                    className="col-span-3"
-                    placeholder={t('deviceLocationPlaceholder')}
-                  />
+                    className="col-span-3 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground">
+                    <option value="">{t('chooseLocationOption')}</option>
+                    {locations.map((loc) => (
+                      <option key={loc.locationId} value={loc.name}>
+                        {loc.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="type" className="text-right">
@@ -362,7 +377,7 @@ export default function IoTDevicesPage() {
                        className="cursor-pointer"
                       onClick={() => setExpanded(expanded === d.deviceID ? null : d.deviceID)}>
                       <TableCell className="font-mono text-xs">#{d.deviceID}</TableCell>
-                      <TableCell className="font-medium">{d.location}</TableCell>
+                      <TableCell className="font-medium">{d.location === 'Unassigned' ? t('unassigned') : d.location}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{d.type}</Badge>
                       </TableCell>
@@ -405,7 +420,7 @@ export default function IoTDevicesPage() {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>{t('deleteDeviceConfirmTitle')}</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  {t('deleteDeviceConfirmText', { id: d.deviceID, location: d.location })}
+                                  {t('deleteDeviceConfirmText', { id: d.deviceID, location: d.location === 'Unassigned' ? t('unassigned') : d.location })}
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -478,12 +493,18 @@ export default function IoTDevicesPage() {
                 <Label htmlFor="edit-location" className="text-right">
                   {t('deviceLocation')}
                 </Label>
-                <Input
+                <select
                   id="edit-location"
                   value={editingDevice.location}
                   onChange={(e) => setEditingDevice({ ...editingDevice, location: e.target.value })}
-                  className="col-span-3"
-                />
+                  className="col-span-3 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground">
+                  <option value="">{t('chooseLocationOption')}</option>
+                  {locations.map((loc) => (
+                    <option key={loc.locationId} value={loc.name}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-type" className="text-right">

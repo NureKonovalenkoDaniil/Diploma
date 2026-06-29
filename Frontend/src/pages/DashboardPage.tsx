@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Pill, Cpu, AlertTriangle, Bell, TrendingDown, Package } from 'lucide-react';
 import { medicineApi, iotApi, incidentApi, notificationApi } from '@/api';
@@ -70,8 +70,18 @@ function StorageChart({
   devices: { deviceID: string; location: string; isActive: boolean }[];
 }) {
   const { t } = useLocale();
-  const activeDevices = devices.filter((d) => d.isActive);
+  const activeDevices = devices.filter(
+    (d) => d.isActive && d.location && d.location !== 'Unassigned'
+  );
   const [selectedId, setSelectedId] = useState<string | null>(activeDevices[0]?.deviceID ?? null);
+
+  useEffect(() => {
+    if (selectedId && !activeDevices.some((d) => d.deviceID === selectedId)) {
+      setSelectedId(activeDevices[0]?.deviceID ?? null);
+    } else if (!selectedId && activeDevices.length > 0) {
+      setSelectedId(activeDevices[0]?.deviceID ?? null);
+    }
+  }, [activeDevices, selectedId]);
 
   const { data: conditionsData = [], isLoading } = useQuery({
     queryKey: ['conditions-chart', selectedId, t('tempKey'), t('humidityKey')],

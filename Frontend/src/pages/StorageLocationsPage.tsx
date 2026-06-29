@@ -27,6 +27,17 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Pencil, Trash2, Loader2, MapPin, Search } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const LOCATION_TYPES = ['Refrigerator', 'Shelf', 'Warehouse', 'Cabinet', 'Other'];
 
@@ -92,7 +103,7 @@ function LocationForm({
           <option value="">{t('noDeviceOption')}</option>
           {devices.map((d) => (
             <option key={d.deviceID} value={d.deviceID}>
-              {d.deviceID} ({d.location})
+              {d.deviceID} ({d.location === 'Unassigned' ? t('unassigned') : d.location})
             </option>
           ))}
         </select>
@@ -148,7 +159,11 @@ export default function StorageLocationsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => locationApi.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['locations'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['locations'] });
+      qc.invalidateQueries({ queryKey: ['iot-devices'] });
+      qc.invalidateQueries({ queryKey: ['medicines'] });
+    },
   });
 
   const typeColors: Record<string, string> = {
@@ -256,13 +271,32 @@ export default function StorageLocationsPage() {
                         }}>
                         <Pencil className="h-3 w-3" /> {t('edit')}
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => deleteMutation.mutate(l.locationId)}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>{t('deleteLocationConfirmTitle')}</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {t('deleteLocationConfirmText', { name: l.name })}
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={() => deleteMutation.mutate(l.locationId)}>
+                              {t('deleteLocationConfirmBtn')}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   )}
                 </CardContent>
