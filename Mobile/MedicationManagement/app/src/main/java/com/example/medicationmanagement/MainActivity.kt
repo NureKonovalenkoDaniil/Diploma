@@ -1,9 +1,21 @@
 package com.example.medicationmanagement
 
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -22,6 +34,8 @@ import com.example.medicationmanagement.utils.RoleHelper
 import com.example.medicationmanagement.utils.TokenManager
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.navigation.NavigationView
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -74,6 +88,81 @@ class MainActivity : AppCompatActivity() {
             updateToolbarTitle(R.string.medicines)
             navigationView.setCheckedItem(R.id.nav_medicines)
         }
+
+        // Ініціалізація каналу сповіщень та запуск циклу опитування
+        createNotificationChannel()
+        requestNotificationPermission()
+        startPeriodicSync()
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    101
+                )
+            }
+        }
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Storage Violations"
+            val descriptionText = "Notifications about storage temperature/humidity violations"
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel("storage_violations_channel", name, importance).apply {
+                description = descriptionText
+            }
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun startPeriodicSync() {
+        lifecycleScope.launch {
+            while (isActive) {
+                updateNavigationBadgesAndCheckNotifications()
+                delay(10000) // Опитування кожні 10 секунд
+            }
+        }
+    }
+
+    private fun showSystemNotification(title: String, message: String, notificationId: Int) {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this, notificationId, intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val builder = NotificationCompat.Builder(this, "storage_violations_channel")
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+
+        val notificationManager = NotificationManagerCompat.from(this)
+        try {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+            ) {
+                notificationManager.notify(notificationId, builder.build())
+            }
+        } catch (_: SecurityException) {
+            // Ignore
+        }
     }
 
     private fun handleNavigation(item: MenuItem) {
@@ -124,25 +213,69 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        updateNotificationBadge()
+        updateNavigationBadgesAndCheckNotifications()
     }
 
     fun updateNotificationBadge() {
+        updateNavigationBadgesAndCheckNotifications()
+    }
+
+    fun updateNavigationBadgesAndCheckNotifications() {
         lifecycleScope.launch {
+            // 1. Оновлення баджа сповіщень та показ системних push-повідомлень
             try {
                 val api = RetrofitClient.getNotificationApi(this@MainActivity)
                 val response = api.getNotifications()
                 if (response.isSuccessful) {
-                    val count = response.body()?.filter { !it.isRead }?.size ?: 0
+                    val notifications = response.body() ?: emptyList()
+                    val unreadNotifications = notifications.filter { !it.isRead }
+                    val count = unreadNotifications.size
+
                     val menuItem = navigationView.menu.findItem(R.id.nav_notifications)
                     menuItem?.title = if (count > 0) {
                         "${getString(R.string.notifications)} ($count)"
                     } else {
                         getString(R.string.notifications)
                     }
+
+                    // Перевірка наявності нових сповіщень для виведення в шторку Android
+                    val sharedPrefs = getSharedPreferences("app_notifications", Context.MODE_PRIVATE)
+                    val lastNotifiedId = sharedPrefs.getInt("last_notified_id", 0)
+
+                    var maxId = lastNotifiedId
+                    var hasNew = false
+                    for (notif in unreadNotifications) {
+                        if (notif.notificationId > lastNotifiedId) {
+                            showSystemNotification(notif.title, notif.message, notif.notificationId)
+                            if (notif.notificationId > maxId) {
+                                maxId = notif.notificationId
+                            }
+                            hasNew = true
+                        }
+                    }
+                    if (hasNew) {
+                        sharedPrefs.edit().putInt("last_notified_id", maxId).apply()
+                    }
                 }
             } catch (_: Exception) {
-                // Ignore background errors
+                // Ignore
+            }
+
+            // 2. Оновлення баджа активних інцидентів
+            try {
+                val incidentApi = RetrofitClient.getStorageIncidentApi(this@MainActivity)
+                val response = incidentApi.getAll()
+                if (response.isSuccessful) {
+                    val count = response.body()?.filter { !it.isResolvedCalculated }?.size ?: 0
+                    val menuItem = navigationView.menu.findItem(R.id.nav_incidents)
+                    menuItem?.title = if (count > 0) {
+                        "${getString(R.string.incidents)} ($count)"
+                    } else {
+                        getString(R.string.incidents)
+                    }
+                }
+            } catch (_: Exception) {
+                // Ignore
             }
         }
     }

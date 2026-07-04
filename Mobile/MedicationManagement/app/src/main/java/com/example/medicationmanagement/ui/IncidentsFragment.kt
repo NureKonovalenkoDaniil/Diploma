@@ -68,6 +68,13 @@ class IncidentsFragment : Fragment() {
         setupRecyclerView()
         setupObservers()
         setupChipFilters()
+        
+        viewModel.startPolling()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        viewModel.stopPolling()
     }
 
     override fun onResume() {
@@ -101,7 +108,8 @@ class IncidentsFragment : Fragment() {
 
     private fun setupRecyclerView() {
         adapter = StorageIncidentAdapter(emptyList()) { incident ->
-            showResolveDialog(incident)
+            viewModel.resolveIncident(incident.id, "Resolved manually")
+            Toast.makeText(requireContext(), "Інцидент позначено як вирішений", Toast.LENGTH_SHORT).show()
         }
         // Довгий клік — видалення
         adapter.setOnLongClickListener { incident ->
@@ -145,38 +153,6 @@ class IncidentsFragment : Fragment() {
             emptyStateText.visibility = View.GONE
             recyclerView.visibility = View.VISIBLE
         }
-    }
-
-    private fun showResolveDialog(incident: StorageIncidentDto) {
-        val context = requireContext()
-        val inputLayout = TextInputLayout(context).apply {
-            hint = context.getString(R.string.resolve_dialog_hint)
-        }
-        val input = TextInputEditText(context).apply {
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
-        }
-        inputLayout.addView(input)
-
-        val dialog = MaterialAlertDialogBuilder(context)
-            .setTitle(R.string.resolve_dialog_title)
-            .setMessage(R.string.resolve_dialog_message)
-            .setView(inputLayout)
-            .setNegativeButton(R.string.cancel, null)
-            .setPositiveButton(R.string.resolve_dialog_submit, null)
-            .create()
-
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val comment = input.text?.toString().orEmpty().trim()
-                if (comment.isEmpty()) {
-                    Toast.makeText(context, "Введіть опис вжитих заходів", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-                viewModel.resolveIncident(incident.id, comment)
-                dialog.dismiss()
-            }
-        }
-        dialog.show()
     }
 
     private fun showDeleteDialog(incident: StorageIncidentDto) {

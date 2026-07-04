@@ -78,10 +78,13 @@
     <string name="medicine_update_failed">Update failed</string>
     <string name="medicine_update_network_error">Network error</string>
     <string name="search_hint">Search medicine...</string>
+    <string name="medicine_details_title">Medicine Details</string>
     <string name="medicine_details_unknown">Unknown medicine</string>
     <string name="medicine_details_type_category">%1$s | %2$s</string>
     <string name="medicine_details_quantity">In stock: %1$d pcs.</string>
     <string name="medicine_details_expiry">Expiry date: %1$s</string>
+    <string name="medicine_valid_until">Valid until: %1$s</string>
+    <string name="medicine_expired_uppercase">EXPIRED: %1$s</string>
     <string name="medicine_diary_load_failed">Failed to load diary</string>
     <string name="medicine_lifecycle_title">Medicine lifecycle</string>
     <string name="medicine_lifecycle_empty">No lifecycle events yet.</string>
@@ -195,8 +198,10 @@
     <string name="notifications_title">Your Notifications</string>
     <string name="notifications_mark_all_read">Mark All Read</string>
     <string name="notifications_filter_all">All</string>
+    <string name="notifications_filter_violation">Violation</string>
+    <string name="notifications_filter_restored">Normal</string>
     <string name="notifications_filter_expiry">Expiry</string>
-    <string name="notifications_filter_incident">Incidents</string>
+    <string name="notifications_filter_low_stock">Stock</string>
     <string name="notifications_empty_state">No new notifications</string>
     <string name="notifications_all_read">All notifications marked as read</string>
     <string name="device_default_type_thermometer">Thermometer</string>
@@ -205,6 +210,10 @@
     <string name="medicine_batch_number">Batch number</string>
     <string name="medicine_description">Description</string>
     <string name="medicine_status_label">Status</string>
+    <string name="status_active">Active</string>
+    <string name="status_expired">Expired</string>
+    <string name="status_disposed">Disposed</string>
+    <string name="status_recalled">Recalled</string>
     <string name="medicine_storage_location">Storage location</string>
     <string name="medicine_storage_temp_range">Storage temperature range</string>
     <string name="medicine_storage_humidity_range">Storage humidity range</string>
@@ -257,9 +266,29 @@
     <string name="profile_title">My Profile</string>
     <string name="profile_email_label">Email</string>
     <string name="profile_role_label">Role</string>
+    <string name="role_administrator">Administrator</string>
+    <string name="role_manager">Manager</string>
+    <string name="role_user">User</string>
     <string name="profile_org_label">Organization ID</string>
     <string name="profile_loading">Loading profile…</string>
     <string name="profile_error">Failed to load profile</string>
+    <string name="error_loading">Failed to load: %1$s</string>
+    <string name="error_network">Network error: %1$s</string>
+    <string name="error_generic">Error: %1$s</string>
+    <string name="error_org_id_missing">Failed to determine Organization ID</string>
+    <string name="error_create_manager_failed">Failed to create manager: %1$s</string>
+    <string name="error_deactivate_user_failed">Failed to deactivate user: %1$s</string>
+    <string name="error_create_location_failed">Failed to create location: %1$s</string>
+    <string name="error_update_location_failed">Failed to update location: %1$s</string>
+    <string name="error_delete_location_failed">Failed to delete location: %1$s</string>
+    <string name="error_resolve_incident_failed">Failed to resolve incident: %1$s</string>
+    <string name="error_delete_incident_failed">Failed to delete incident: %1$s</string>
+    <string name="error_toggle_device_failed">Failed to change device status: %1$s</string>
+    <string name="error_mark_notification_failed">Failed to mark notification as read: %1$s</string>
+    <string name="error_issue_medicine_failed">Failed to issue medicine: %1$s</string>
+    <string name="error_receive_medicine_failed">Failed to receive medicine: %1$s</string>
+    <string name="error_dispose_medicine_failed">Failed to dispose medicine: %1$s</string>
+    <string name="error_delete_medicine_failed">Failed to delete medicine: %1$s</string>
 
     <!-- Medicine filters -->
     <string name="filter_all">All</string>
@@ -273,4 +302,19 @@
     <string name="incident_delete_confirm_msg">Are you sure you want to delete this incident?</string>
     <string name="incident_deleted">Incident deleted</string>
     <string name="incident_delete_error">Failed to delete incident</string>
+
+    <!-- Audit filters -->
+    <string name="filters">Filters</string>
+    <string name="fromDate">From Date</string>
+    <string name="toDate">To Date</string>
+    <string name="apply">Apply</string>
+    <string name="reset">Reset</string>
+    <string name="location_type_refrigerator">Refrigerator</string>
+    <string name="location_type_shelf">Shelf</string>
+    <string name="location_type_warehouse">Warehouse</string>
+    <string name="location_type_cabinet">Cabinet</string>
+    <string name="location_type_other">Other</string>
+    <string name="no_device_option">No Device</string>
+    <string name="unassigned">Unassigned</string>
+    <string name="edit_device">Edit Device</string>
 </resources>

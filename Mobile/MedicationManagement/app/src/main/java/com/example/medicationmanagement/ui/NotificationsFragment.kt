@@ -30,8 +30,10 @@ class NotificationsFragment : Fragment() {
     private lateinit var btnMarkAllRead: TextView
     private lateinit var chipFilterGroup: com.google.android.material.chip.ChipGroup
     private lateinit var chipAll: com.google.android.material.chip.Chip
+    private lateinit var chipViolation: com.google.android.material.chip.Chip
+    private lateinit var chipRestored: com.google.android.material.chip.Chip
     private lateinit var chipExpiry: com.google.android.material.chip.Chip
-    private lateinit var chipIncident: com.google.android.material.chip.Chip
+    private lateinit var chipLowStock: com.google.android.material.chip.Chip
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -46,8 +48,10 @@ class NotificationsFragment : Fragment() {
         btnMarkAllRead = view.findViewById(R.id.btnMarkAllRead)
         chipFilterGroup = view.findViewById(R.id.chipFilterGroup)
         chipAll = view.findViewById(R.id.chipAll)
+        chipViolation = view.findViewById(R.id.chipViolation)
+        chipRestored = view.findViewById(R.id.chipRestored)
         chipExpiry = view.findViewById(R.id.chipExpiry)
-        chipIncident = view.findViewById(R.id.chipIncident)
+        chipLowStock = view.findViewById(R.id.chipLowStock)
 
         return view
     }
@@ -68,8 +72,10 @@ class NotificationsFragment : Fragment() {
         }
 
         chipAll.setOnClickListener { applyFilter("all") }
-        chipExpiry.setOnClickListener { applyFilter("expiry") }
-        chipIncident.setOnClickListener { applyFilter("incident") }
+        chipViolation.setOnClickListener { applyFilter("StorageViolation") }
+        chipRestored.setOnClickListener { applyFilter("StorageRestored") }
+        chipExpiry.setOnClickListener { applyFilter("Expiry") }
+        chipLowStock.setOnClickListener { applyFilter("LowStock") }
 
         // Start polling when fragment view is created
         viewModel.startPolling()
@@ -103,15 +109,16 @@ class NotificationsFragment : Fragment() {
 
                 // Apply current chip filter
                 val selectedFilter = when {
-                    chipExpiry.isChecked -> "expiry"
-                    chipIncident.isChecked -> "incident"
+                    chipViolation.isChecked -> "StorageViolation"
+                    chipRestored.isChecked -> "StorageRestored"
+                    chipExpiry.isChecked -> "Expiry"
+                    chipLowStock.isChecked -> "LowStock"
                     else -> "all"
                 }
 
                 val filtered = when (selectedFilter) {
-                    "expiry" -> notifications.filter { it.type.contains("expiry", true) }
-                    "incident" -> notifications.filter { it.type.contains("incident", true) }
-                    else -> notifications
+                    "all" -> notifications
+                    else -> notifications.filter { it.type.equals(selectedFilter, ignoreCase = true) }
                 }
 
                 adapter.updateNotifications(filtered)
@@ -162,28 +169,15 @@ class NotificationsFragment : Fragment() {
 
     private fun applyFilter(filter: String) {
         // update chip selection
-        when (filter) {
-            "expiry" -> {
-                chipExpiry.isChecked = true
-                chipAll.isChecked = false
-                chipIncident.isChecked = false
-            }
-            "incident" -> {
-                chipIncident.isChecked = true
-                chipAll.isChecked = false
-                chipExpiry.isChecked = false
-            }
-            else -> {
-                chipAll.isChecked = true
-                chipExpiry.isChecked = false
-                chipIncident.isChecked = false
-            }
-        }
+        chipAll.isChecked = filter == "all"
+        chipViolation.isChecked = filter.equals("StorageViolation", ignoreCase = true)
+        chipRestored.isChecked = filter.equals("StorageRestored", ignoreCase = true)
+        chipExpiry.isChecked = filter.equals("Expiry", ignoreCase = true)
+        chipLowStock.isChecked = filter.equals("LowStock", ignoreCase = true)
 
         val filtered = when (filter) {
-            "expiry" -> currentNotifications.filter { it.type.contains("expiry", true) }
-            "incident" -> currentNotifications.filter { it.type.contains("incident", true) }
-            else -> currentNotifications
+            "all" -> currentNotifications
+            else -> currentNotifications.filter { it.type.equals(filter, ignoreCase = true) }
         }
 
         adapter.updateNotifications(filtered)

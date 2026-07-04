@@ -36,7 +36,15 @@ class MedicineAdapter(
         holder.name.text = item.name
         holder.type.text = "${item.type} | ${item.category}"
         holder.quantity.text = item.quantity.toString()
-        holder.status.text = item.status.ifBlank { "Active" }
+        val context = holder.itemView.context
+        val rawStatus = item.status.ifBlank { "Active" }
+        holder.status.text = when (rawStatus.lowercase()) {
+            "active" -> context.getString(R.string.status_active)
+            "expired" -> context.getString(R.string.status_expired)
+            "disposed" -> context.getString(R.string.status_disposed)
+            "recalled" -> context.getString(R.string.status_recalled)
+            else -> rawStatus
+        }
         holder.location.text = item.storageLocationName ?: "—"
 
         // Форматування дати
@@ -45,13 +53,14 @@ class MedicineAdapter(
             val formatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
             val date = parser.parse(item.expiryDate)
             if (date != null) {
-                holder.expiry.text = "Дійсний до: ${formatter.format(date)}"
+                val formattedDate = formatter.format(date)
+                holder.expiry.text = context.getString(R.string.medicine_valid_until, formattedDate)
                 // Підсвітка протермінованих
                 if (date.before(Date())) {
-                    holder.expiry.setTextColor(holder.itemView.context.getColor(android.R.color.holo_red_dark))
-                    holder.expiry.text = "ПРОТЕРМІНОВАНО: ${formatter.format(date)}"
+                    holder.expiry.setTextColor(context.getColor(android.R.color.holo_red_dark))
+                    holder.expiry.text = context.getString(R.string.medicine_expired_uppercase, formattedDate)
                 } else {
-                    holder.expiry.setTextColor(holder.itemView.context.getColor(android.R.color.darker_gray))
+                    holder.expiry.setTextColor(context.getColor(android.R.color.darker_gray))
                 }
             }
         } catch (e: Exception) {

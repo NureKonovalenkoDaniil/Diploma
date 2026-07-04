@@ -154,12 +154,12 @@ const dictionaries = {
     typeStorageRestored: 'Норма',
     typeLowStock: 'Запас',
     typeExpiry: 'Термін',
-    typeSystem: 'Система',
+    typeIncidentCreated: 'Інцидент',
     notificationTypeStorageViolation: 'Порушення',
     notificationTypeStorageRestored: 'Нормалізовано',
     notificationTypeExpiry: 'Термін',
     notificationTypeLowStock: 'Запас',
-    notificationTypeSystem: 'Система',
+    notificationTypeIncidentCreated: 'Новий інцидент',
     forRole: 'Для: {role}',
 
     // Notification Details
@@ -652,12 +652,12 @@ const dictionaries = {
     typeStorageRestored: 'Normal',
     typeLowStock: 'Stock',
     typeExpiry: 'Expiry',
-    typeSystem: 'System',
+    typeIncidentCreated: 'Incident',
     notificationTypeStorageViolation: 'Violation',
     notificationTypeStorageRestored: 'Normalized',
     notificationTypeExpiry: 'Expiry',
     notificationTypeLowStock: 'Stock',
-    notificationTypeSystem: 'System',
+    notificationTypeIncidentCreated: 'New Incident',
     forRole: 'For: {role}',
 
     // Notification Details

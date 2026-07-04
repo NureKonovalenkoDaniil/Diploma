@@ -42,7 +42,16 @@ class UserAdapter(
         fun bind(user: UserDto) {
             userEmail.text = user.email
             userName.text = user.userName ?: user.email.substringBefore('@')
-            userRole.text = user.roles.joinToString(", ").ifBlank { "User" }
+            val context = itemView.context
+            val displayRoles = user.roles.map { role ->
+                when (role.lowercase()) {
+                    "administrator" -> context.getString(R.string.role_administrator)
+                    "manager" -> context.getString(R.string.role_manager)
+                    "user" -> context.getString(R.string.role_user)
+                    else -> role
+                }
+            }.joinToString(", ").ifBlank { context.getString(R.string.role_user) }
+            userRole.text = displayRoles
             userStatus.text = user.id
             userOrganization.text = user.organizationId.ifBlank { "—" }
             

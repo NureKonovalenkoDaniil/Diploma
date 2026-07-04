@@ -57,6 +57,11 @@ class MedicineDetailsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_medicine_details)
 
+        val toolbar = findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        toolbar.setNavigationOnClickListener { finish() }
+
         val name = intent.getStringExtra("name")
         val type = intent.getStringExtra("type")
         val category = intent.getStringExtra("category")
@@ -197,7 +202,15 @@ class MedicineDetailsActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     response.body()?.let { medicine ->
                         currentMedicine = medicine
-                        detailStatus.text = getString(R.string.medicine_status_label) + ": ${medicine.status.ifBlank { "-" }}"
+                        val rawStatus = medicine.status.ifBlank { "Active" }
+                        val localizedStatus = when (rawStatus.lowercase()) {
+                            "active" -> getString(R.string.status_active)
+                            "expired" -> getString(R.string.status_expired)
+                            "disposed" -> getString(R.string.status_disposed)
+                            "recalled" -> getString(R.string.status_recalled)
+                            else -> rawStatus
+                        }
+                        detailStatus.text = getString(R.string.medicine_status_label) + ": $localizedStatus"
                         detailManufacturer.text = getString(R.string.medicine_manufacturer) + ": ${medicine.manufacturer ?: "-"}"
                         detailBatchNumber.text = getString(R.string.medicine_batch_number) + ": ${medicine.batchNumber ?: "-"}"
                         detailStorageLocation.text = getString(R.string.medicine_storage_location) + ": ${medicine.storageLocationName ?: "-"}"

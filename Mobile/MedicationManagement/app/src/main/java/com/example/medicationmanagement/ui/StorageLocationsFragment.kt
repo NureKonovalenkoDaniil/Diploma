@@ -70,6 +70,7 @@ class StorageLocationsFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         viewModel.fetchLocations()
+        viewModel.fetchDevices()
     }
 
     private fun setupRecyclerView() {
@@ -154,61 +155,15 @@ class StorageLocationsFragment : Fragment() {
     }
 
     private fun showLocationFormDialog(location: StorageLocationDto? = null) {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_storage_location_form, null)
-        val nameInput = dialogView.findViewById<EditText>(R.id.inputLocationName)
-        val addressInput = dialogView.findViewById<EditText>(R.id.inputLocationAddress)
-        val typeInput = dialogView.findViewById<EditText>(R.id.inputLocationType)
-        val deviceIdInput = dialogView.findViewById<EditText>(R.id.inputLocationDeviceId)
-
+        val intent = android.content.Intent(requireContext(), com.example.medicationmanagement.EditStorageLocationActivity::class.java)
         if (location != null) {
-            nameInput.setText(location.name)
-            addressInput.setText(location.address.orEmpty())
-            typeInput.setText(location.locationType)
-            deviceIdInput.setText(location.iotDeviceId.orEmpty())
+            intent.putExtra("locationId", location.locationId)
+            intent.putExtra("name", location.name)
+            intent.putExtra("address", location.address)
+            intent.putExtra("locationType", location.locationType)
+            intent.putExtra("iotDeviceId", location.iotDeviceId)
         }
-
-        val title = if (location == null) getString(R.string.storage_location_add_title) else getString(R.string.storage_location_edit_title)
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(title)
-            .setView(dialogView)
-            .setNegativeButton(R.string.cancel, null)
-            .setPositiveButton(if (location == null) R.string.create else R.string.save_changes) { _, _ ->
-                val name = nameInput.text.toString().trim()
-                val address = addressInput.text.toString().trim().ifBlank { null }
-                val type = typeInput.text.toString().trim()
-                val deviceId = deviceIdInput.text.toString().trim().ifBlank { null }
-
-                if (name.isBlank() || type.isBlank()) {
-                    Toast.makeText(requireContext(), R.string.storage_location_validation_error, Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
-                }
-
-                val payload = mapOf(
-                    "locationId" to (location?.locationId ?: 0),
-                    "name" to name,
-                    "address" to address,
-                    "locationType" to type,
-                    "ioTDeviceId" to deviceId,
-                    "ioTDeviceLocation" to null
-                )
-
-                lifecycleScope.launch {
-                    val ok = if (location == null) {
-                        viewModel.createLocation(payload)
-                    } else {
-                        viewModel.updateLocation(location.locationId, payload)
-                    }
-
-                    val msgRes = when {
-                        !ok -> R.string.storage_location_save_failed
-                        location == null -> R.string.storage_location_created
-                        else -> R.string.storage_location_updated
-                    }
-                    Toast.makeText(requireContext(), msgRes, Toast.LENGTH_SHORT).show()
-                }
-            }
-            .show()
+        startActivity(intent)
     }
 
     private fun confirmDeleteLocation(location: StorageLocationDto) {

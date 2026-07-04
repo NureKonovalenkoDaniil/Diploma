@@ -30,6 +30,11 @@ class AddMedicineActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_medicine)
 
+        val toolbar = findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        toolbar.setNavigationOnClickListener { finish() }
+
         val factory = AddMedicineViewModelFactory(this)
         viewModel = ViewModelProvider(this, factory)[AddMedicineViewModel::class.java]
 

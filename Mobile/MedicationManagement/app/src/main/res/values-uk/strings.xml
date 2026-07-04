@@ -70,7 +70,7 @@
     <string name="medicine_created_success">Препарат успішно додано</string>
     <string name="medicine_create_failed">Помилка: %1$d</string>
     <string name="medicine_create_network_error">Помилка мережі</string>
-    <string name="medicine_invalid_id">Invalid medicine ID</string>
+    <string name="medicine_invalid_id">Некоректний ID препарату</string>
     <string name="medicine_loading">Завантаження...</string>
     <string name="medicine_load_failed">Не вдалося завантажити</string>
     <string name="medicine_updating">Збереження...</string>
@@ -78,10 +78,13 @@
     <string name="medicine_update_failed">Помилка оновлення</string>
     <string name="medicine_update_network_error">Помилка мережі</string>
     <string name="search_hint">Пошук медикаменту...</string>
+    <string name="medicine_details_title">Деталі препарату</string>
     <string name="medicine_details_unknown">Невідомий медикамент</string>
     <string name="medicine_details_type_category">%1$s | %2$s</string>
     <string name="medicine_details_quantity">В наявності: %1$d шт.</string>
     <string name="medicine_details_expiry">Термін придатності: %1$s</string>
+    <string name="medicine_valid_until">Дійсний до: %1$s</string>
+    <string name="medicine_expired_uppercase">ПРОТЕРМІНОВАНО: %1$s</string>
     <string name="medicine_diary_load_failed">Не вдалося завантажити щоденник</string>
     <string name="medicine_lifecycle_title">Життєвий цикл медикаменту</string>
     <string name="medicine_lifecycle_empty">Поки що немає подій життєвого циклу.</string>
@@ -187,6 +190,7 @@
     <string name="change_user_role">Змінити роль користувача</string>
     <string name="create_manager">Створити менеджера</string>
     <string name="create_manager_validation_error">Введіть коректний email і пароль (мінімум 4 символи)</string>
+    <string name="no_audit_logs">Логів аудиту не знайдено</string>
     <string name="navigation_drawer_open">Відкрити бічне меню</string>
     <string name="navigation_drawer_close">Закрити бічне меню</string>
     <string name="nav_header_app_icon">Іконка додатка</string>
@@ -194,8 +198,10 @@
     <string name="notifications_title">Ваші сповіщення</string>
     <string name="notifications_mark_all_read">Прочитати всі</string>
     <string name="notifications_filter_all">Усі</string>
+    <string name="notifications_filter_violation">Порушення</string>
+    <string name="notifications_filter_restored">Норма</string>
     <string name="notifications_filter_expiry">Термін</string>
-    <string name="notifications_filter_incident">Інциденти</string>
+    <string name="notifications_filter_low_stock">Запас</string>
     <string name="notifications_empty_state">Немає нових сповіщень</string>
     <string name="notifications_all_read">Усі сповіщення позначено як прочитані</string>
     <string name="device_default_type_thermometer">Термометр</string>
@@ -204,6 +210,10 @@
     <string name="medicine_batch_number">Номер партії</string>
     <string name="medicine_description">Опис</string>
     <string name="medicine_status_label">Статус</string>
+    <string name="status_active">Активний</string>
+    <string name="status_expired">Протермінований</string>
+    <string name="status_disposed">Утилізований</string>
+    <string name="status_recalled">Відкликаний</string>
     <string name="medicine_storage_location">Локація зберігання</string>
     <string name="medicine_storage_temp_range">Діапазон температури зберігання</string>
     <string name="medicine_storage_humidity_range">Діапазон вологості зберігання</string>
@@ -256,9 +266,29 @@
     <string name="profile_title">Мій профіль</string>
     <string name="profile_email_label">Email</string>
     <string name="profile_role_label">Роль</string>
+    <string name="role_administrator">Адміністратор</string>
+    <string name="role_manager">Менеджер</string>
+    <string name="role_user">Користувач</string>
     <string name="profile_org_label">ID організації</string>
     <string name="profile_loading">Завантаження профілю…</string>
     <string name="profile_error">Не вдалося завантажити профіль</string>
+    <string name="error_loading">Помилка завантаження: %1$s</string>
+    <string name="error_network">Помилка мережі: %1$s</string>
+    <string name="error_generic">Помилка: %1$s</string>
+    <string name="error_org_id_missing">Не вдалося визначити ID організації</string>
+    <string name="error_create_manager_failed">Не вдалося створити менеджера: %1$s</string>
+    <string name="error_deactivate_user_failed">Не вдалося деактивувати користувача: %1$s</string>
+    <string name="error_create_location_failed">Помилка створення: %1$s</string>
+    <string name="error_update_location_failed">Помилка оновлення: %1$s</string>
+    <string name="error_delete_location_failed">Помилка видалення: %1$s</string>
+    <string name="error_resolve_incident_failed">Не вдалося розв\'язати інцидент: %1$s</string>
+    <string name="error_delete_incident_failed">Не вдалося видалити інцидент: %1$s</string>
+    <string name="error_toggle_device_failed">Не вдалося змінити статус пристрою: %1$s</string>
+    <string name="error_mark_notification_failed">Не вдалося позначити сповіщення прочитаним: %1$s</string>
+    <string name="error_issue_medicine_failed">Помилка вживання: %1$s</string>
+    <string name="error_receive_medicine_failed">Помилка видачі: %1$s</string>
+    <string name="error_dispose_medicine_failed">Помилка утилізації: %1$s</string>
+    <string name="error_delete_medicine_failed">Помилка видалення: %1$s</string>
 
     <!-- Medicine filters -->
     <string name="filter_all">Усі</string>
@@ -272,4 +302,19 @@
     <string name="incident_delete_confirm_msg">Ви впевнені, що хочете видалити цей інцидент?</string>
     <string name="incident_deleted">Інцидент видалено</string>
     <string name="incident_delete_error">Не вдалося видалити інцидент</string>
+
+    <!-- Audit filters -->
+    <string name="filters">Фільтри</string>
+    <string name="fromDate">З дати</string>
+    <string name="toDate">По дату</string>
+    <string name="apply">Застосувати</string>
+    <string name="reset">Скинути</string>
+    <string name="location_type_refrigerator">Холодильник</string>
+    <string name="location_type_shelf">Полиця</string>
+    <string name="location_type_warehouse">Склад</string>
+    <string name="location_type_cabinet">Шафа</string>
+    <string name="location_type_other">Інше</string>
+    <string name="no_device_option">Немає пристрою</string>
+    <string name="unassigned">Не призначено</string>
+    <string name="edit_device">Редагувати пристрій</string>
 </resources>

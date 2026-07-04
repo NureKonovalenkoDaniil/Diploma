@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.medicationmanagement.api.RetrofitClient
+import com.example.medicationmanagement.api.StorageLocationDto
 import com.example.medicationmanagement.model.IoTDevice
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,9 +13,13 @@ import kotlinx.coroutines.launch
 
 class EditDeviceViewModel(private val context: Context) : ViewModel() {
     private val iotDeviceApi = RetrofitClient.getIoTDeviceApi(context)
+    private val storageLocationApi = RetrofitClient.getStorageLocationApi(context)
 
     private val _device = MutableStateFlow<IoTDevice?>(null)
     val device = _device.asStateFlow()
+
+    private val _locations = MutableStateFlow<List<StorageLocationDto>>(emptyList())
+    val locations = _locations.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -27,6 +32,23 @@ class EditDeviceViewModel(private val context: Context) : ViewModel() {
 
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
+
+    init {
+        fetchLocations()
+    }
+
+    fun fetchLocations() {
+        viewModelScope.launch {
+            try {
+                val response = storageLocationApi.getAll()
+                if (response.isSuccessful) {
+                    _locations.value = response.body() ?: emptyList()
+                }
+            } catch (e: Exception) {
+                // Ignore or log error
+            }
+        }
+    }
 
     fun loadDevice(deviceId: String) {
         if (_device.value != null) return // Already loaded

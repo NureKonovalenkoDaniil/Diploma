@@ -5,12 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.medicationmanagement.api.RetrofitClient
+import com.example.medicationmanagement.api.StorageLocationDto
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class AddDeviceViewModel(private val context: Context) : ViewModel() {
     private val iotDeviceApi = RetrofitClient.getIoTDeviceApi(context)
+    private val storageLocationApi = RetrofitClient.getStorageLocationApi(context)
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -21,25 +23,48 @@ class AddDeviceViewModel(private val context: Context) : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error = _error.asStateFlow()
 
-    var deviceId: String = ""
-    var location: String = ""
+    private val _locations = MutableStateFlow<List<StorageLocationDto>>(emptyList())
+    val locations = _locations.asStateFlow()
 
-    fun addDevice(id: String, loc: String, defaultType: String) {
-        deviceId = id
-        location = loc
+    init {
+        fetchLocations()
+    }
+
+    fun fetchLocations() {
+        viewModelScope.launch {
+            try {
+                val response = storageLocationApi.getAll()
+                if (response.isSuccessful) {
+                    _locations.value = response.body() ?: emptyList()
+                }
+            } catch (e: Exception) {
+                // Ignore or log error
+            }
+        }
+    }
+
+    fun addDevice(
+        id: String,
+        loc: String,
+        type: String,
+        minTemp: Float,
+        maxTemp: Float,
+        minHum: Float,
+        maxHum: Float
+    ) {
         _isLoading.value = true
         _error.value = null
 
         val deviceData = mapOf(
-            "deviceID" to deviceId,
-            "location" to location,
-            "type" to defaultType,
+            "deviceID" to id,
+            "location" to loc,
+            "type" to type,
             "parameters" to "{}",
             "isActive" to true,
-            "minTemperature" to 2.0f,
-            "maxTemperature" to 8.0f,
-            "minHumidity" to 30.0f,
-            "maxHumidity" to 60.0f
+            "minTemperature" to minTemp,
+            "maxTemperature" to maxTemp,
+            "minHumidity" to minHum,
+            "maxHumidity" to maxHum
         )
 
         viewModelScope.launch {

@@ -39,51 +39,50 @@ class UsersViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     _users.value = response.body() ?: emptyList()
                 } else {
-                    _error.value = "Помилка завантаження: ${response.code()}"
+                    _error.value = context.getString(com.example.medicationmanagement.R.string.error_loading, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = "Помилка мережі: ${e.message}"
+                _error.value = context.getString(com.example.medicationmanagement.R.string.error_network, e.message ?: "")
             } finally {
                 _isLoading.value = false
             }
         }
-    }
-
-    fun createManager(email: String, password: String) {
-        val organizationId = RoleHelper.getOrganizationId(context)
-        if (organizationId.isNullOrBlank()) {
-            _error.value = "Не вдалося визначити OrganizationId з токена"
-            return
-        }
-
-        viewModelScope.launch {
-            try {
-                val response = authApi.createManager(CreateManagerRequest(email, password, organizationId))
-                if (response.isSuccessful) {
-                    fetchUsers()
-                } else {
-                    _error.value = "Не вдалося створити менеджера: ${response.code()}"
-                }
-            } catch (e: Exception) {
-                _error.value = "Помилка: ${e.message}"
-            }
-        }
-    }
-
-    fun deactivateUser(userId: String) {
-        viewModelScope.launch {
-            try {
-                val response = userApi.delete(userId)
-                if (response.isSuccessful) {
-                    fetchUsers()
-                } else {
-                    _error.value = "Не вдалося деактивувати користувача: ${response.code()}"
-                }
-            } catch (e: Exception) {
-                _error.value = "Помилка: ${e.message}"
-            }
-        }
-    }
+     }
+ 
+     fun createManager(email: String, password: String, organizationId: String) {
+         if (organizationId.isNullOrBlank()) {
+             _error.value = context.getString(com.example.medicationmanagement.R.string.error_org_id_missing)
+             return
+         }
+ 
+         viewModelScope.launch {
+             try {
+                 val response = authApi.createManager(CreateManagerRequest(email, password, organizationId))
+                 if (response.isSuccessful) {
+                     fetchUsers()
+                 } else {
+                     _error.value = context.getString(com.example.medicationmanagement.R.string.error_create_manager_failed, response.code().toString())
+                 }
+             } catch (e: Exception) {
+                 _error.value = context.getString(com.example.medicationmanagement.R.string.error_generic, e.message ?: "")
+             }
+         }
+     }
+ 
+     fun deactivateUser(userId: String) {
+         viewModelScope.launch {
+             try {
+                 val response = userApi.delete(userId)
+                 if (response.isSuccessful) {
+                     fetchUsers()
+                 } else {
+                     _error.value = context.getString(com.example.medicationmanagement.R.string.error_deactivate_user_failed, response.code().toString())
+                 }
+             } catch (e: Exception) {
+                 _error.value = context.getString(com.example.medicationmanagement.R.string.error_generic, e.message ?: "")
+             }
+         }
+     }
 }
 
 class UsersViewModelFactory(private val context: Context) : ViewModelProvider.Factory {

@@ -6,44 +6,129 @@
     android:background="?attr/android:colorBackground"
     android:orientation="vertical">
 
-    <com.google.android.material.chip.ChipGroup
-        android:id="@+id/audit_log_filters"
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
-        app:singleSelection="true">
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="0dp"
+        app:strokeColor="?attr/colorOutlineVariant"
+        app:strokeWidth="1dp">
 
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_medicine"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/medicines" />
+            android:orientation="vertical"
+            android:padding="12dp">
 
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_storage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/locations" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/filters"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
 
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_incident"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/conditions" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_device"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/devices" />
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/input_user_layout"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:hint="@string/log_user">
 
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_user"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/users" />
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/input_user"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textEmailAddress"
+                        android:maxLines="1"
+                        android:textSize="13sp" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-    </com.google.android.material.chip.ChipGroup>
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/input_action_layout"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:hint="@string/log_action">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/input_action"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:textSize="13sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_date_from"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:text="@string/fromDate"
+                    android:textSize="11sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_date_to"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:text="@string/toDate"
+                    android:textSize="11sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp"
+                android:gravity="end">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_reset"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/reset"
+                    android:textColor="?attr/colorError"
+                    android:layout_marginEnd="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_apply"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/apply" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
 
     <ProgressBar
         android:id="@+id/audit_log_loading"

@@ -5,6 +5,7 @@
 #include <Adafruit_Sensor.h>
 #include <ArduinoJson.h>
 #include <DHT.h>
+#include <Preferences.h> // <-- Енергонезалежна пам'ять NVS
 #include "config.h"  // <-- Всі чутливі константи тут (не в VCS)
 
 // DHT Pin and Type
@@ -23,7 +24,8 @@ const String claimUrl        = String(SERVER_BASE_URL) + "/api/iotdevice/claim";
 const String deviceID = DEVICE_ID;
 const int buzzerPin = 12; // GPIO-пін бузера
 
-String deviceSecret = DEVICE_SECRET;
+Preferences preferences; // Об'єкт для роботи з NVS
+String deviceSecret = "";
 String jwtToken = "";
 
 // Порогові значення — завантажуються з сервера via fetchDeviceConfig()
@@ -145,6 +147,16 @@ void setup() {
   ledcSetup(0, 800, 8);
   ledcAttachPin(buzzerPin, 0);
 
+  // Ініціалізація енергонезалежної пам'яті NVS
+  preferences.begin("device-config", false);
+  deviceSecret = preferences.getString("secret", DEVICE_SECRET);
+  if (!deviceSecret.isEmpty()) {
+    Serial.print("Loaded device secret from NVS: ");
+    Serial.println(deviceSecret);
+  } else {
+    Serial.println("No device secret in NVS.");
+  }
+
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   while (WiFi.status() != WL_CONNECTED) {
@@ -233,7 +245,8 @@ bool claimDeviceSecret() {
       }
       if (secret != nullptr) {
         deviceSecret = String(secret);
-        Serial.println("Device secret provisioned.");
+        preferences.putString("secret", deviceSecret); // Зберігаємо в NVS
+        Serial.println("Device secret provisioned and saved to NVS.");
         http.end();
         return true;
       }

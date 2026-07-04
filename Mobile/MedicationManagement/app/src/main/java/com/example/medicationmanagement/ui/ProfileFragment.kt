@@ -40,7 +40,15 @@ class ProfileFragment : Fragment() {
                 if (response.isSuccessful) {
                     val me = response.body()
                     emailView.text = me?.email ?: "—"
-                    roleView.text = me?.roles?.joinToString(", ") ?: "—"
+                    val displayRoles = me?.roles?.map { role ->
+                        when (role.lowercase()) {
+                            "administrator" -> getString(R.string.role_administrator)
+                            "manager" -> getString(R.string.role_manager)
+                            "user" -> getString(R.string.role_user)
+                            else -> role
+                        }
+                    }?.joinToString(", ") ?: "—"
+                    roleView.text = displayRoles
                     orgView.text = me?.organizationId ?: "—"
                 } else {
                     Toast.makeText(requireContext(), R.string.profile_error, Toast.LENGTH_SHORT).show()

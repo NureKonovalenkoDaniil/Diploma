@@ -99,6 +99,11 @@ class UsersFragment : Fragment() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_create_manager, null)
         val emailInput = dialogView.findViewById<EditText>(R.id.inputManagerEmail)
         val passwordInput = dialogView.findViewById<EditText>(R.id.inputManagerPassword)
+        val orgIdInput = dialogView.findViewById<EditText>(R.id.inputManagerOrgId)
+
+        // Заповнюємо OrganizationId за замовчуванням
+        val defaultOrgId = RoleHelper.getOrganizationId(requireContext())
+        orgIdInput.setText(defaultOrgId)
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.create_manager))
@@ -107,13 +112,14 @@ class UsersFragment : Fragment() {
             .setPositiveButton(getString(R.string.create)) { _, _ ->
                 val email = emailInput.text.toString().trim()
                 val password = passwordInput.text.toString().trim()
+                val orgId = orgIdInput.text.toString().trim()
 
-                if (email.isBlank() || password.length < 4) {
+                if (email.isBlank() || password.length < 4 || orgId.isBlank()) {
                     Toast.makeText(requireContext(), R.string.create_manager_validation_error, Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
 
-                viewModel.createManager(email, password)
+                viewModel.createManager(email, password, orgId)
             }
             .show()
     }

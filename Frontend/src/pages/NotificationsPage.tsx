@@ -9,7 +9,7 @@ import { Bell, Check, CheckCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { useLocale, translateNotification } from '@/contexts/LocaleContext';
 
-const NOTIFICATION_TYPES = ['StorageViolation', 'StorageRestored', 'Expiry', 'LowStock', 'System'];
+const NOTIFICATION_TYPES = ['StorageViolation', 'StorageRestored', 'Expiry', 'LowStock'];
 
 export default function NotificationsPage() {
   const qc = useQueryClient();
@@ -49,7 +49,7 @@ export default function NotificationsPage() {
       case 'StorageRestored': return t('notificationTypeStorageRestored');
       case 'Expiry': return t('notificationTypeExpiry');
       case 'LowStock': return t('notificationTypeLowStock');
-      case 'System': return t('notificationTypeSystem');
+      case 'IncidentCreated': return t('notificationTypeIncidentCreated');
       default: return type;
     }
   };
@@ -60,7 +60,7 @@ export default function NotificationsPage() {
       case 'StorageRestored': return 'success';
       case 'Expiry': return 'warning';
       case 'LowStock': return 'warning';
-      case 'System': return 'info';
+      case 'IncidentCreated': return 'destructive';
       default: return 'secondary';
     }
   };

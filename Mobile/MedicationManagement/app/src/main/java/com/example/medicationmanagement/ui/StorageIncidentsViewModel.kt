@@ -6,9 +6,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.medicationmanagement.api.RetrofitClient
 import com.example.medicationmanagement.api.StorageIncidentDto
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /**
@@ -36,10 +39,10 @@ class StorageIncidentsViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     _incidents.value = response.body() ?: emptyList()
                 } else {
-                    _error.value = "Помилка завантаження: ${response.code()}"
+                    _error.value = context.getString(com.example.medicationmanagement.R.string.error_loading, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = "Помилка мережі: ${e.message}"
+                _error.value = context.getString(com.example.medicationmanagement.R.string.error_network, e.message ?: "")
             } finally {
                 _isLoading.value = false
             }
@@ -53,10 +56,10 @@ class StorageIncidentsViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     fetchIncidents()
                 } else {
-                    _error.value = "Не вдалося розв'язати інцидент: ${response.code()}"
+                    _error.value = context.getString(com.example.medicationmanagement.R.string.error_resolve_incident_failed, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = "Помилка: ${e.message}"
+                _error.value = context.getString(com.example.medicationmanagement.R.string.error_generic, e.message ?: "")
             }
         }
     }
@@ -68,12 +71,44 @@ class StorageIncidentsViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     fetchIncidents()
                 } else {
-                    _error.value = "Не вдалося видалити інцидент: ${response.code()}"
+                    _error.value = context.getString(com.example.medicationmanagement.R.string.error_delete_incident_failed, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = "Помилка: ${e.message}"
+                _error.value = context.getString(com.example.medicationmanagement.R.string.error_generic, e.message ?: "")
             }
         }
+    }
+
+    private var pollingJob: Job? = null
+
+    fun startPolling() {
+        if (pollingJob != null && pollingJob!!.isActive) {
+            return
+        }
+        pollingJob = viewModelScope.launch {
+            while (isActive) {
+                try {
+                    val response = storageIncidentApi.getAll()
+                    if (response.isSuccessful) {
+                        _incidents.value = response.body() ?: emptyList()
+                        _error.value = null
+                    }
+                } catch (e: Exception) {
+                    // Ignore
+                }
+                delay(5000) // Опитування кожні 5 секунд
+            }
+        }
+    }
+
+    fun stopPolling() {
+        pollingJob?.cancel()
+        pollingJob = null
+    }
+
+    override fun onCleared() {
+        stopPolling()
+        super.onCleared()
     }
 }
 

@@ -38,10 +38,10 @@ class MedicinesViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     _medicines.value = response.body() ?: emptyList()
                 } else {
-                    _error.value = "Помилка завантаження: ${response.code()}"
+                    _error.value = context.getString(com.example.medicationmanagement.R.string.error_loading, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Помилка мережі"
+                _error.value = context.getString(com.example.medicationmanagement.R.string.error_network, e.message ?: "")
             } finally {
                 _isLoading.value = false
             }
@@ -58,10 +58,10 @@ class MedicinesViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     fetchMedicines() // Перезавантажити список
                 } else {
-                    _error.value = "Помилка вжиття: ${response.code()}"
+                    _error.value = context.getString(com.example.medicationmanagement.R.string.error_issue_medicine_failed, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = "Помилка: ${e.message}"
+                _error.value = context.getString(com.example.medicationmanagement.R.string.error_generic, e.message ?: "")
             }
         }
     }
@@ -76,10 +76,10 @@ class MedicinesViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     fetchMedicines()
                 } else {
-                    _error.value = "Помилка видачі: ${response.code()}"
+                    _error.value = context.getString(com.example.medicationmanagement.R.string.error_receive_medicine_failed, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = "Помилка: ${e.message}"
+                _error.value = context.getString(com.example.medicationmanagement.R.string.error_generic, e.message ?: "")
             }
         }
     }
@@ -94,10 +94,10 @@ class MedicinesViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     fetchMedicines()
                 } else {
-                    _error.value = "Помилка утилізації: ${response.code()}"
+                    _error.value = context.getString(com.example.medicationmanagement.R.string.error_dispose_medicine_failed, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = "Помилка: ${e.message}"
+                _error.value = context.getString(com.example.medicationmanagement.R.string.error_generic, e.message ?: "")
             }
         }
     }
@@ -109,10 +109,10 @@ class MedicinesViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     fetchMedicines()
                 } else {
-                    _error.value = "Помилка видалення: ${response.code()}"
+                    _error.value = context.getString(com.example.medicationmanagement.R.string.error_delete_medicine_failed, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = "Помилка: ${e.message}"
+                _error.value = context.getString(com.example.medicationmanagement.R.string.error_generic, e.message ?: "")
             }
         }
     }
@@ -130,10 +130,10 @@ class MedicinesViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     _medicines.value = response.body() ?: emptyList()
                 } else {
-                    _error.value = "Помилка завантаження: ${response.code()}"
+                    _error.value = context.getString(com.example.medicationmanagement.R.string.error_loading, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Помилка мережі"
+                _error.value = context.getString(com.example.medicationmanagement.R.string.error_network, e.message ?: "")
             } finally {
                 _isLoading.value = false
             }
@@ -149,10 +149,10 @@ class MedicinesViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     _medicines.value = response.body() ?: emptyList()
                 } else {
-                    _error.value = "Помилка завантаження: ${response.code()}"
+                    _error.value = context.getString(com.example.medicationmanagement.R.string.error_loading, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Помилка мережі"
+                _error.value = context.getString(com.example.medicationmanagement.R.string.error_network, e.message ?: "")
             } finally {
                 _isLoading.value = false
             }

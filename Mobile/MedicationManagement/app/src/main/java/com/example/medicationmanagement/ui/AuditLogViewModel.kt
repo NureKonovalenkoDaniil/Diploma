@@ -29,20 +29,24 @@ class AuditLogViewModel(private val context: Context) : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    private val _selectedFilter = MutableStateFlow<String?>(null)
-    val selectedFilter: StateFlow<String?> = _selectedFilter.asStateFlow()
-
-    private var allLogs: List<AuditLogDto> = emptyList()
-
-    fun fetchLogs() {
+    fun fetchLogs(
+        from: String? = null,
+        to: String? = null,
+        user: String? = null,
+        action: String? = null
+    ) {
         _isLoading.value = true
         _error.value = null
         viewModelScope.launch {
             try {
-                val response = auditLogApi.getAll()
+                val response = auditLogApi.getAll(
+                    from = if (from.isNullOrBlank()) null else from,
+                    to = if (to.isNullOrBlank()) null else to,
+                    user = if (user.isNullOrBlank()) null else user,
+                    action = if (action.isNullOrBlank()) null else action
+                )
                 if (response.isSuccessful) {
-                    allLogs = response.body()?.sortedByDescending { parseDate(it.timestamp) } ?: emptyList()
-                    applyFilter()
+                    _logs.value = response.body()?.sortedByDescending { parseDate(it.timestamp) } ?: emptyList()
                 } else {
                     _error.value = "Помилка завантаження: ${response.code()}"
                 }
@@ -51,25 +55,6 @@ class AuditLogViewModel(private val context: Context) : ViewModel() {
             } finally {
                 _isLoading.value = false
             }
-        }
-    }
-
-    fun filterByAction(entityType: String) {
-        _selectedFilter.value = entityType
-        applyFilter()
-    }
-
-    fun clearFilter() {
-        _selectedFilter.value = null
-        applyFilter()
-    }
-
-    private fun applyFilter() {
-        val filter = _selectedFilter.value
-        _logs.value = if (filter.isNullOrBlank()) {
-            allLogs
-        } else {
-            allLogs.filter { it.entityType?.equals(filter, ignoreCase = true) == true }
         }
     }
 

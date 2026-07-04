@@ -26,6 +26,10 @@ class DeviceDetailsActivity : AppCompatActivity() {
         binding = ActivityDeviceDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        binding.toolbar.setNavigationOnClickListener { finish() }
+
         deviceId = intent.getStringExtra("deviceID")
         if (deviceId == null) {
             Toast.makeText(this, R.string.device_not_found, Toast.LENGTH_SHORT).show()

@@ -38,7 +38,14 @@ class StorageLocationAdapter(
         fun bind(location: StorageLocationDto) {
             title.text = location.name
             address.text = location.address ?: itemView.context.getString(R.string.storage_location_no_address)
-            meta.text = location.locationType
+            val context = itemView.context
+            meta.text = when (location.locationType?.lowercase() ?: "") {
+                "refrigerator" -> context.getString(R.string.location_type_refrigerator)
+                "shelf" -> context.getString(R.string.location_type_shelf)
+                "warehouse" -> context.getString(R.string.location_type_warehouse)
+                "cabinet" -> context.getString(R.string.location_type_cabinet)
+                else -> context.getString(R.string.location_type_other)
+            }
             linkedDevice.text = location.iotDeviceId?.let {
                 itemView.context.getString(R.string.storage_location_linked_device, it)
             } ?: itemView.context.getString(R.string.storage_location_no_device)

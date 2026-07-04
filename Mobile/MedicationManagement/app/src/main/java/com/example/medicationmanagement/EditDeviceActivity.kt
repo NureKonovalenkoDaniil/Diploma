@@ -1,6 +1,8 @@
 package com.example.medicationmanagement
 
 import android.os.Bundle
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -9,15 +11,16 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.medicationmanagement.ui.EditDeviceViewModel
 import com.example.medicationmanagement.ui.EditDeviceViewModelFactory
+import com.google.android.material.appbar.MaterialToolbar
 import kotlinx.coroutines.launch
 
 class EditDeviceActivity : AppCompatActivity() {
 
     private lateinit var viewModel: EditDeviceViewModel
 
+    private lateinit var toolbar: MaterialToolbar
     private lateinit var typeInput: EditText
-    private lateinit var locationInput: EditText
-    private lateinit var parametersInput: EditText
+    private lateinit var locationSpinner: AutoCompleteTextView
     private lateinit var minTempInput: EditText
     private lateinit var maxTempInput: EditText
     private lateinit var minHumidityInput: EditText
@@ -33,9 +36,13 @@ class EditDeviceActivity : AppCompatActivity() {
         val factory = EditDeviceViewModelFactory(this)
         viewModel = ViewModelProvider(this, factory)[EditDeviceViewModel::class.java]
 
+        toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        toolbar.setNavigationOnClickListener { finish() }
+
         typeInput = findViewById(R.id.editDeviceType)
-        locationInput = findViewById(R.id.editDeviceLocation)
-        parametersInput = findViewById(R.id.editDeviceParams)
+        locationSpinner = findViewById(R.id.inputEditDeviceLocationSpinner)
         minTempInput = findViewById(R.id.editMinTemp)
         maxTempInput = findViewById(R.id.editMaxTemp)
         minHumidityInput = findViewById(R.id.editMinHumidity)
@@ -59,16 +66,37 @@ class EditDeviceActivity : AppCompatActivity() {
     }
 
     private fun setupObservers() {
+        // Observe locations and populate Spinner
+        lifecycleScope.launch {
+            viewModel.locations.collect { locations ->
+                val displayLocations = mutableListOf<String>()
+                displayLocations.add(getString(R.string.unassigned)) // first option is Unassigned
+
+                locations.forEach {
+                    displayLocations.add(it.name)
+                }
+
+                val adapter = ArrayAdapter(this@EditDeviceActivity, android.R.layout.simple_dropdown_item_1line, displayLocations)
+                locationSpinner.setAdapter(adapter)
+
+                // Set selection if device is already loaded
+                viewModel.device.value?.let { device ->
+                    selectSpinnerLocation(device.location)
+                }
+            }
+        }
+
         lifecycleScope.launch {
             viewModel.device.collect { device ->
                 if (device != null) {
                     typeInput.setText(device.type)
-                    locationInput.setText(device.location)
-                    parametersInput.setText(device.parameters)
                     minTempInput.setText(device.minTemperature.toString())
                     maxTempInput.setText(device.maxTemperature.toString())
                     minHumidityInput.setText(device.minHumidity.toString())
                     maxHumidityInput.setText(device.maxHumidity.toString())
+
+                    // Set selection in spinner
+                    selectSpinnerLocation(device.location)
                 }
             }
         }
@@ -83,7 +111,7 @@ class EditDeviceActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.success.collect { isSuccess ->
                 if (isSuccess) {
-                    Toast.makeText(this@EditDeviceActivity, "Device updated", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EditDeviceActivity, "Пристрій оновлено", Toast.LENGTH_SHORT).show()
                     finish()
                 }
             }
@@ -98,15 +126,33 @@ class EditDeviceActivity : AppCompatActivity() {
         }
     }
 
+    private fun selectSpinnerLocation(locationName: String) {
+        val adapter = locationSpinner.adapter ?: return
+        val textToSet = if (locationName == "Unassigned" || locationName.isEmpty()) {
+            getString(R.string.unassigned)
+        } else {
+            locationName
+        }
+
+        // Set the text of AutoCompleteTextView without filtering
+        locationSpinner.setText(textToSet, false)
+    }
+
     private fun sendPatchUpdate() {
+        val selectedLocText = locationSpinner.text.toString()
+        val location = if (selectedLocText != getString(R.string.unassigned)) {
+            selectedLocText
+        } else {
+            "Unassigned"
+        }
+
         val patch = listOf(
             mapOf("op" to "replace", "path" to "/type", "value" to typeInput.text.toString()),
-            mapOf("op" to "replace", "path" to "/location", "value" to locationInput.text.toString()),
-            mapOf("op" to "replace", "path" to "/parameters", "value" to parametersInput.text.toString()),
-            mapOf("op" to "replace", "path" to "/minTemperature", "value" to (minTempInput.text.toString().toDoubleOrNull() ?: 0.0)),
-            mapOf("op" to "replace", "path" to "/maxTemperature", "value" to (maxTempInput.text.toString().toDoubleOrNull() ?: 0.0)),
-            mapOf("op" to "replace", "path" to "/minHumidity", "value" to (minHumidityInput.text.toString().toDoubleOrNull() ?: 0.0)),
-            mapOf("op" to "replace", "path" to "/maxHumidity", "value" to (maxHumidityInput.text.toString().toDoubleOrNull() ?: 0.0))
+            mapOf("op" to "replace", "path" to "/location", "value" to location),
+            mapOf("op" to "replace", "path" to "/minTemperature", "value" to (minTempInput.text.toString().toDoubleOrNull() ?: 2.0)),
+            mapOf("op" to "replace", "path" to "/maxTemperature", "value" to (maxTempInput.text.toString().toDoubleOrNull() ?: 8.0)),
+            mapOf("op" to "replace", "path" to "/minHumidity", "value" to (minHumidityInput.text.toString().toDoubleOrNull() ?: 30.0)),
+            mapOf("op" to "replace", "path" to "/maxHumidity", "value" to (maxHumidityInput.text.toString().toDoubleOrNull() ?: 60.0))
         )
         viewModel.updateDevice(deviceId!!, patch)
     }

@@ -36,10 +36,10 @@ class SensorsViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     _devices.value = response.body() ?: emptyList()
                 } else {
-                    _error.value = "Помилка завантаження: ${response.code()}"
+                    _error.value = context.getString(com.example.medicationmanagement.R.string.error_loading, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = "Помилка мережі: ${e.message}"
+                _error.value = context.getString(com.example.medicationmanagement.R.string.error_network, e.message ?: "")
             } finally {
                 _isLoading.value = false
             }
@@ -53,10 +53,10 @@ class SensorsViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     fetchDevices() // Reload list
                 } else {
-                    _error.value = "Не вдалося змінити статус: ${response.code()}"
+                    _error.value = context.getString(com.example.medicationmanagement.R.string.error_toggle_device_failed, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = "Помилка мережі: ${e.message}"
+                _error.value = context.getString(com.example.medicationmanagement.R.string.error_network, e.message ?: "")
             }
         }
     }

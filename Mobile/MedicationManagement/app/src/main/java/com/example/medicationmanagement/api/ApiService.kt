@@ -124,7 +124,7 @@ interface IoTDeviceApi {
     suspend fun createDevice(@Body device: @JvmSuppressWildcards Map<String, Any>): Response<IoTDevice>
 
     @PATCH("api/iotdevice/setstatus/{id}")
-    suspend fun setDeviceStatus(@Path("id") deviceId: String, @Query("isActive") isActive: Boolean): Response<Any>
+    suspend fun setDeviceStatus(@Path("id") deviceId: String, @Query("isActive") isActive: Boolean): Response<okhttp3.ResponseBody>
 
     @PATCH("api/iotdevice/{id}")
     suspend fun patchDevice(@Path("id") id: String, @Body patchOperations: @JvmSuppressWildcards List<@JvmSuppressWildcards Map<String, Any?>>): Response<IoTDevice>

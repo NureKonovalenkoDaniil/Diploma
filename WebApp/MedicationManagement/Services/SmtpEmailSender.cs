@@ -42,7 +42,14 @@ namespace MedicationManagement.Services
                     : new NetworkCredential(_settings.SmtpUser, _settings.SmtpPass)
             };
 
-            await client.SendMailAsync(message);
+            try
+            {
+                await client.SendMailAsync(message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send email to {Email} with subject '{Subject}'", toEmail, subject);
+            }
         }
     }
 }

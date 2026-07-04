@@ -92,6 +92,17 @@ namespace MedicationManagement.BackgroundServices
 
             if (isViolation && activeIncident is null)
             {
+                // Перевірка, чи це показання вже було оброблене раніше
+                var lastIncident = await db.StorageIncidents
+                    .Where(i => i.DeviceId == device.DeviceID && i.IncidentType == IncidentType.TemperatureViolation)
+                    .OrderByDescending(i => i.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                if (lastIncident != null && condition.Timestamp <= lastIncident.CreatedAt)
+                {
+                    return; // Вже оброблено
+                }
+
                 // Нове порушення. OrganizationId береться з device (FIX multi-tenancy)
                 var incident = new StorageIncident
                 {
@@ -102,7 +113,7 @@ namespace MedicationManagement.BackgroundServices
                     ExpectedMin     = device.MinTemperature,
                     ExpectedMax     = device.MaxTemperature,
                     Status          = IncidentStatus.Active,
-                    StartTime       = DateTime.UtcNow,
+                    StartTime       = condition.Timestamp,
                     CreatedAt       = DateTime.UtcNow
                 };
                 db.StorageIncidents.Add(incident);
@@ -173,6 +184,17 @@ namespace MedicationManagement.BackgroundServices
 
             if (isViolation && activeIncident is null)
             {
+                // Перевірка, чи це показання вже було оброблене раніше
+                var lastIncident = await db.StorageIncidents
+                    .Where(i => i.DeviceId == device.DeviceID && i.IncidentType == IncidentType.HumidityViolation)
+                    .OrderByDescending(i => i.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                if (lastIncident != null && condition.Timestamp <= lastIncident.CreatedAt)
+                {
+                    return; // Вже оброблено
+                }
+
                 var incident = new StorageIncident
                 {
                     DeviceId        = device.DeviceID,
@@ -182,7 +204,7 @@ namespace MedicationManagement.BackgroundServices
                     ExpectedMin     = device.MinHumidity,
                     ExpectedMax     = device.MaxHumidity,
                     Status          = IncidentStatus.Active,
-                    StartTime       = DateTime.UtcNow,
+                    StartTime       = condition.Timestamp,
                     CreatedAt       = DateTime.UtcNow
                 };
                 db.StorageIncidents.Add(incident);

@@ -62,6 +62,20 @@
                     android:text="@string/notifications_filter_all" />
 
                 <com.google.android.material.chip.Chip
+                    android:id="@+id/chipViolation"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/notifications_filter_violation" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipRestored"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/notifications_filter_restored" />
+
+                <com.google.android.material.chip.Chip
                     android:id="@+id/chipExpiry"
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
@@ -69,11 +83,11 @@
                     android:text="@string/notifications_filter_expiry" />
 
                 <com.google.android.material.chip.Chip
-                    android:id="@+id/chipIncident"
+                    android:id="@+id/chipLowStock"
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/notifications_filter_incident" />
+                    android:text="@string/notifications_filter_low_stock" />
 
             </com.google.android.material.chip.ChipGroup>
 

@@ -48,10 +48,10 @@ class NotificationsViewModel(private val context: Context) : ViewModel() {
                         compareBy<Notification>({ it.isRead }, { -parseDate(it.createdAt) })
                     )
                 } else {
-                    _error.value = "Помилка завантаження: ${response.code()}"
+                    _error.value = context.getString(com.example.medicationmanagement.R.string.error_loading, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = "Помилка мережі: ${e.message}"
+                _error.value = context.getString(com.example.medicationmanagement.R.string.error_network, e.message ?: "")
             } finally {
                 _isLoading.value = false
             }
@@ -77,7 +77,7 @@ class NotificationsViewModel(private val context: Context) : ViewModel() {
                 } catch (e: Exception) {
                     // Ignore errors in polling to avoid spamming errors
                 }
-                delay(30000) // Poll every 30 seconds
+                delay(5000) // Poll every 5 seconds
             }
         }
     }
@@ -94,10 +94,10 @@ class NotificationsViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     fetchNotifications() // Перезавантажити список
                 } else {
-                    _error.value = "Помилка позначення: ${response.code()}"
+                    _error.value = context.getString(com.example.medicationmanagement.R.string.error_mark_notification_failed, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = "Помилка: ${e.message}"
+                _error.value = context.getString(com.example.medicationmanagement.R.string.error_generic, e.message ?: "")
             }
         }
     }
@@ -109,10 +109,10 @@ class NotificationsViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     fetchNotifications()
                 } else {
-                    _error.value = "Помилка позначення: ${response.code()}"
+                    _error.value = context.getString(com.example.medicationmanagement.R.string.error_mark_notification_failed, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = "Помилка: ${e.message}"
+                _error.value = context.getString(com.example.medicationmanagement.R.string.error_generic, e.message ?: "")
             }
         }
     }

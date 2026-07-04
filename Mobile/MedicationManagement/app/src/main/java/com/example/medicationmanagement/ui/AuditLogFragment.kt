@@ -14,8 +14,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medicationmanagement.R
 import com.example.medicationmanagement.ui.adapter.AuditLogAdapter
-import com.google.android.material.chip.ChipGroup
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class AuditLogFragment : Fragment() {
     private val viewModel: AuditLogViewModel by viewModels {
@@ -25,8 +30,17 @@ class AuditLogFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var progressBar: ProgressBar
     private lateinit var emptyState: TextView
-    private lateinit var filterChips: ChipGroup
     private lateinit var adapter: AuditLogAdapter
+
+    private lateinit var inputUser: TextInputEditText
+    private lateinit var inputAction: TextInputEditText
+    private lateinit var btnDateFrom: MaterialButton
+    private lateinit var btnDateTo: MaterialButton
+    private lateinit var btnApply: MaterialButton
+    private lateinit var btnReset: MaterialButton
+
+    private var selectedDateFrom: String? = null
+    private var selectedDateTo: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,30 +56,64 @@ class AuditLogFragment : Fragment() {
         recyclerView = view.findViewById(R.id.audit_log_list)
         progressBar = view.findViewById(R.id.audit_log_loading)
         emptyState = view.findViewById(R.id.audit_log_empty)
-        filterChips = view.findViewById(R.id.audit_log_filters)
+
+        inputUser = view.findViewById(R.id.input_user)
+        inputAction = view.findViewById(R.id.input_action)
+        btnDateFrom = view.findViewById(R.id.btn_date_from)
+        btnDateTo = view.findViewById(R.id.btn_date_to)
+        btnApply = view.findViewById(R.id.btn_apply)
+        btnReset = view.findViewById(R.id.btn_reset)
 
         adapter = AuditLogAdapter()
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 
-        // Setup filter chips
-        filterChips.setOnCheckedStateChangeListener { group, checkedIds ->
-            if (checkedIds.isEmpty()) {
-                viewModel.clearFilter()
-            } else {
-                val chipId = checkedIds.first()
-                val filterType = when (chipId) {
-                    R.id.chip_medicine -> "Medicine"
-                    R.id.chip_storage -> "StorageLocation"
-                    R.id.chip_incident -> "StorageIncident"
-                    R.id.chip_device -> "IoTDevice"
-                    R.id.chip_user -> "User"
-                    else -> null
-                }
-                if (filterType != null) {
-                    viewModel.filterByAction(filterType)
-                }
+        // Setup Date Pickers
+        btnDateFrom.setOnClickListener {
+            val datePicker = MaterialDatePicker.Builder.datePicker()
+                .setTitleText(getString(R.string.fromDate))
+                .build()
+            datePicker.addOnPositiveButtonClickListener { selection ->
+                val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                selectedDateFrom = sdf.format(Date(selection))
+                btnDateFrom.text = selectedDateFrom
             }
+            datePicker.show(parentFragmentManager, "DATE_PICKER_FROM")
+        }
+
+        btnDateTo.setOnClickListener {
+            val datePicker = MaterialDatePicker.Builder.datePicker()
+                .setTitleText(getString(R.string.toDate))
+                .build()
+            datePicker.addOnPositiveButtonClickListener { selection ->
+                val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                selectedDateTo = sdf.format(Date(selection))
+                btnDateTo.text = selectedDateTo
+            }
+            datePicker.show(parentFragmentManager, "DATE_PICKER_TO")
+        }
+
+        // Apply filters click
+        btnApply.setOnClickListener {
+            val user = inputUser.text?.toString()?.trim()
+            val action = inputAction.text?.toString()?.trim()
+            viewModel.fetchLogs(
+                from = selectedDateFrom,
+                to = selectedDateTo,
+                user = if (user.isNullOrBlank()) null else user,
+                action = if (action.isNullOrBlank()) null else action
+            )
+        }
+
+        // Reset filters click
+        btnReset.setOnClickListener {
+            inputUser.text = null
+            inputAction.text = null
+            selectedDateFrom = null
+            selectedDateTo = null
+            btnDateFrom.setText(R.string.fromDate)
+            btnDateTo.setText(R.string.toDate)
+            viewModel.fetchLogs()
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
