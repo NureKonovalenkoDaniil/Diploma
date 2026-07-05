@@ -105,6 +105,11 @@ class UsersFragment : Fragment() {
         val defaultOrgId = RoleHelper.getOrganizationId(requireContext())
         orgIdInput.setText(defaultOrgId)
 
+        val role = RoleHelper.getCurrentRole(requireContext())
+        if (role == "OrganizationAdmin") {
+            orgIdInput.isEnabled = false // Блокуємо зміну організації для адміна організації
+        }
+
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.create_manager))
             .setView(dialogView)

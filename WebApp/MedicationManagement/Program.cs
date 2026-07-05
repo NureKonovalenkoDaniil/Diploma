@@ -160,7 +160,7 @@ namespace MedicationManagement
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-            string[] roles = { "Administrator", "Manager", "User", "Device" };
+            string[] roles = { "Administrator", "OrganizationAdmin", "Manager", "User", "Device" };
             foreach (var role in roles)
             {
                 if (!await roleManager.RoleExistsAsync(role))

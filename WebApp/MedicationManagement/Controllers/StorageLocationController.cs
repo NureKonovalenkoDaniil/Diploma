@@ -43,7 +43,7 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Створити нову локацію зберігання</summary>
         [HttpPost]
-        [Authorize(Roles = "Administrator,Manager,User")]
+        [Authorize(Roles = "Administrator,OrganizationAdmin,Manager,User")]
         public async Task<IActionResult> Create([FromBody] StorageLocationDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -68,7 +68,7 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Оновити локацію зберігання</summary>
         [HttpPut("{id}")]
-        [Authorize(Roles = "Administrator,Manager,User")]
+        [Authorize(Roles = "Administrator,OrganizationAdmin,Manager,User")]
         public async Task<IActionResult> Update(int id, [FromBody] StorageLocationDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -94,7 +94,7 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Видалити локацію зберігання</summary>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Administrator,Manager,User")]
+        [Authorize(Roles = "Administrator,OrganizationAdmin,Manager,User")]
         public async Task<IActionResult> Delete(int id)
         {
             var success = await _locationService.Delete(id);

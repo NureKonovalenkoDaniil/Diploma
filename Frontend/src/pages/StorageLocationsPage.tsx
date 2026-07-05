@@ -56,7 +56,10 @@ function LocationForm({
   isLoading: boolean;
   devices: IoTDeviceDto[];
 }) {
-  const [form, setForm] = useState<Partial<FormData>>(initial ?? {});
+  const [form, setForm] = useState<Partial<FormData>>({
+    locationType: 'Refrigerator',
+    ...initial,
+  });
   const { t } = useLocale();
   const set = (k: keyof FormData, v: string | number | undefined) =>
     setForm((p) => ({ ...p, [k]: v }));

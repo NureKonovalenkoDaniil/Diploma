@@ -33,6 +33,7 @@ interface UserDto {
   userName: string;
   roles: string[];
   organizationId: string;
+  organizationName?: string;
 }
 
 interface CreateManagerForm {
@@ -40,12 +41,13 @@ interface CreateManagerForm {
   password: string;
   confirmPassword: string;
   organizationId: string;
+  role: string;
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 const usersApi = {
   getAll: () => api.get<UserDto[]>('/api/auth/users').then((r) => r.data),
-  createManager: (data: { email: string; password: string; organizationId: string }) =>
+  createManager: (data: { email: string; password: string; organizationId: string; role: string }) =>
     api.post('/api/auth/create-manager', data).then((r) => r.data),
   deleteUser: (id: string) => api.delete(`/api/auth/users/${id}`),
 };
@@ -58,6 +60,7 @@ function RoleBadge({ role }: { role: string }) {
     { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }
   > = {
     Administrator: { label: t('roleAdministrator'), variant: 'destructive' },
+    OrganizationAdmin: { label: t('roleOrganizationAdmin'), variant: 'outline' },
     Manager: { label: t('roleManager'), variant: 'default' },
     User: { label: t('roleUser'), variant: 'secondary' },
     Device: { label: t('roleDevice'), variant: 'outline' },
@@ -82,9 +85,18 @@ function CreateManagerDialog({
     password: '',
     confirmPassword: '',
     organizationId: user?.organizationId ?? '',
+    role: 'Manager',
   });
   const [errors, setErrors] = useState<Partial<CreateManagerForm & { server: string }>>({});
   const { t } = useLocale();
+
+  const isGlobalAdmin = user?.roles.includes('Administrator');
+
+  const { data: organizations = [] } = useQuery({
+    queryKey: ['organizations'],
+    queryFn: () => api.get<any[]>('/api/organization').then((r) => r.data),
+    enabled: open && isGlobalAdmin,
+  });
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -92,6 +104,7 @@ function CreateManagerDialog({
         email: form.email,
         password: form.password,
         organizationId: form.organizationId,
+        role: form.role,
       }),
     onSuccess: () => {
       onCreated(form.email);
@@ -101,6 +114,7 @@ function CreateManagerDialog({
         password: '',
         confirmPassword: '',
         organizationId: user?.organizationId ?? '',
+        role: 'Manager',
       });
       setErrors({});
     },
@@ -128,9 +142,13 @@ function CreateManagerDialog({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t('addManagerTitle')}</DialogTitle>
+          <DialogTitle>
+            {isGlobalAdmin ? 'Створити адміністратора або менеджера' : t('addManagerTitle')}
+          </DialogTitle>
           <DialogDescription>
-            {t('managerDescription')}
+            {isGlobalAdmin 
+              ? 'Глобальний адміністратор може створити адміністратора організації або менеджера.' 
+              : t('managerDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -147,7 +165,7 @@ function CreateManagerDialog({
               type="email"
               value={form.email}
               onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-              placeholder="manager@company.com"
+              placeholder="user@company.com"
               className={errors.email ? 'border-destructive' : ''}
             />
             {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
@@ -181,22 +199,71 @@ function CreateManagerDialog({
             )}
           </div>
 
+          {isGlobalAdmin && (
+            <div className="space-y-1.5">
+              <Label className='after:content-["*"] after:ml-0.5 after:text-destructive'>
+                Роль користувача
+              </Label>
+              <select
+                aria-label="Роль користувача"
+                className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                value={form.role}
+                onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}
+              >
+                <option value="Manager">Менеджер (Manager)</option>
+                <option value="OrganizationAdmin">Адміністратор організації (OrganizationAdmin)</option>
+              </select>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <Label className='after:content-["*"] after:ml-0.5 after:text-destructive'>
-              OrganizationId
+              {isGlobalAdmin ? 'Організація (Оберіть або введіть нову назву)' : 'OrganizationId'}
             </Label>
-            <Input
-              value={form.organizationId}
-              onChange={(e) => setForm((p) => ({ ...p, organizationId: e.target.value }))}
-              placeholder={t('managerEmailPlaceholder')}
-              className={errors.organizationId ? 'border-destructive' : ''}
-            />
+            {isGlobalAdmin ? (
+              <div className="space-y-2">
+                <select
+                  aria-label="Обрати існуючу організацію"
+                  className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  onChange={(e) => {
+                    if (e.target.value !== 'NEW') {
+                      setForm((p) => ({ ...p, organizationId: e.target.value }));
+                    } else {
+                      setForm((p) => ({ ...p, organizationId: '' }));
+                    }
+                  }}
+                >
+                  <option value="">-- Оберіть організацію --</option>
+                  {organizations.map((org: any) => (
+                    <option key={org.id} value={org.id}>
+                      {org.name}
+                    </option>
+                  ))}
+                  <option value="NEW">+ Створити нову організацію...</option>
+                </select>
+                <Input
+                  value={form.organizationId}
+                  onChange={(e) => setForm((p) => ({ ...p, organizationId: e.target.value }))}
+                  placeholder="Введіть UUID існуючої або назву нової організації"
+                  className={errors.organizationId ? 'border-destructive' : ''}
+                />
+              </div>
+            ) : (
+              <Input
+                value={form.organizationId}
+                onChange={(e) => setForm((p) => ({ ...p, organizationId: e.target.value }))}
+                placeholder={t('managerEmailPlaceholder')}
+                className={errors.organizationId ? 'border-destructive' : ''}
+              />
+            )}
             {errors.organizationId && (
               <p className="text-xs text-destructive">{errors.organizationId}</p>
             )}
-            <p className="text-xs text-muted-foreground">
-              {t('managerEmailHint')}
-            </p>
+            {!isGlobalAdmin && (
+              <p className="text-xs text-muted-foreground">
+                {t('managerEmailHint')}
+              </p>
+            )}
           </div>
         </div>
 
@@ -233,7 +300,10 @@ export default function UsersPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
   });
 
-  const roleOrder = ['Administrator', 'Manager', 'User', 'Device'];
+  const { user } = useAuth();
+  const isGlobalAdmin = user?.roles.includes('Administrator');
+
+  const roleOrder = ['Administrator', 'OrganizationAdmin', 'Manager', 'User', 'Device'];
   const sorted = [...users].sort((a, b) => {
     const ar = roleOrder.indexOf(a.roles[0] ?? 'User');
     const br = roleOrder.indexOf(b.roles[0] ?? 'User');
@@ -254,9 +324,9 @@ export default function UsersPage() {
 
   const managers = sorted.filter((u) => u.roles.includes('Manager'));
   const others = sorted.filter(
-    (u) => !u.roles.includes('Manager') && !u.roles.includes('Administrator'),
+    (u) => !u.roles.includes('Manager') && !u.roles.includes('Administrator') && !u.roles.includes('OrganizationAdmin'),
   );
-  const admins = sorted.filter((u) => u.roles.includes('Administrator'));
+  const admins = sorted.filter((u) => u.roles.includes('Administrator') || u.roles.includes('OrganizationAdmin'));
 
   return (
     <div className="space-y-6">
@@ -267,7 +337,7 @@ export default function UsersPage() {
           <p className="text-muted-foreground">{t('usersSubtitle')}</p>
         </div>
         <Button onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 mr-1" /> {t('addManager')}
+          <Plus className="h-4 w-4 mr-1" /> {isGlobalAdmin ? 'Створити користувача' : t('addManager')}
         </Button>
       </div>
 
@@ -312,7 +382,9 @@ export default function UsersPage() {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex-1">
               <CardTitle>{t('allUsersTitle')}</CardTitle>
-              <CardDescription>{t('onlyOrgUsersDesc')}</CardDescription>
+              <CardDescription>
+                {isGlobalAdmin ? 'Всі облікові записи в системі' : t('onlyOrgUsersDesc')}
+              </CardDescription>
             </div>
             <div className="relative min-w-48">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -332,6 +404,7 @@ export default function UsersPage() {
                 onChange={(e) => setRoleFilter(e.target.value)}>
                 <option value="all">{t('filterAll')}</option>
                 <option value="Administrator">{t('roleAdministrator')}</option>
+                <option value="OrganizationAdmin">{t('roleOrganizationAdmin')}</option>
                 <option value="Manager">{t('roleManager')}</option>
                 <option value="User">{t('roleUser')}</option>
                 <option value="Device">{t('roleDevice')}</option>
@@ -359,7 +432,7 @@ export default function UsersPage() {
                 <TableRow>
                   <TableHead>Email</TableHead>
                   <TableHead>{t('colRoles')}</TableHead>
-                  <TableHead>OrganizationId</TableHead>
+                  <TableHead>Організація</TableHead>
                   <TableHead className="text-right">{t('colActions')}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -374,8 +447,8 @@ export default function UsersPage() {
                         ))}
                       </div>
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground font-mono">
-                      {u.organizationId}
+                    <TableCell className="text-xs text-muted-foreground">
+                      {u.organizationName || u.organizationId || '-'}
                     </TableCell>
                     <TableCell className="text-right">
                       {!u.roles.includes('Administrator') && (

@@ -254,7 +254,8 @@ data class UserDto(
     val email: String,
     val userName: String?,
     val roles: List<String>,
-    val organizationId: String
+    val organizationId: String,
+    val organizationName: String? = null
 )
 
 data class UpdateUserRoleRequest(

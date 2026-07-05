@@ -13,7 +13,7 @@ interface AuthContextType {
   isAdmin: boolean
   isManager: boolean
   isUser: boolean
-  role: 'Administrator' | 'Manager' | 'User' | 'Device' | null
+  role: 'Administrator' | 'OrganizationAdmin' | 'Manager' | 'User' | 'Device' | null
   isLoading: boolean
 }
 
@@ -27,7 +27,7 @@ interface AuthProviderProps {
 export function AuthProvider({ children, queryClient }: AuthProviderProps) {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
-  const [role, setRole] = useState<'Administrator' | 'Manager' | 'User' | 'Device' | null>(null)
+  const [role, setRole] = useState<'Administrator' | 'OrganizationAdmin' | 'Manager' | 'User' | 'Device' | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   const parseAndSetRole = (jwtToken: string) => {
@@ -40,12 +40,13 @@ export function AuthProvider({ children, queryClient }: AuthProviderProps) {
       
       if (Array.isArray(parsedRole)) {
         if (parsedRole.includes('Administrator')) parsedRole = 'Administrator';
+        else if (parsedRole.includes('OrganizationAdmin')) parsedRole = 'OrganizationAdmin';
         else if (parsedRole.includes('Manager')) parsedRole = 'Manager';
         else if (parsedRole.includes('User')) parsedRole = 'User';
         else parsedRole = parsedRole[0];
       }
       
-      setRole(parsedRole as 'Administrator' | 'Manager' | 'User' | 'Device')
+      setRole(parsedRole as 'Administrator' | 'OrganizationAdmin' | 'Manager' | 'User' | 'Device')
     } catch {
       setRole(null)
     }
@@ -86,7 +87,7 @@ export function AuthProvider({ children, queryClient }: AuthProviderProps) {
     setRole(null)
   }
 
-  const isAdmin = role === 'Administrator'
+  const isAdmin = role === 'Administrator' || role === 'OrganizationAdmin'
   const isManager = role === 'Manager'
   const isUser = role === 'User'
 

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.medicationmanagement.R
 import com.example.medicationmanagement.api.RetrofitClient
 import com.example.medicationmanagement.api.AuditLogDto
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,10 +49,10 @@ class AuditLogViewModel(private val context: Context) : ViewModel() {
                 if (response.isSuccessful) {
                     _logs.value = response.body()?.sortedByDescending { parseDate(it.timestamp) } ?: emptyList()
                 } else {
-                    _error.value = "Помилка завантаження: ${response.code()}"
+                    _error.value = context.getString(R.string.error_loading, response.code().toString())
                 }
             } catch (e: Exception) {
-                _error.value = "Помилка мережі: ${e.message}"
+                _error.value = context.getString(R.string.error_network, e.message ?: "")
             } finally {
                 _isLoading.value = false
             }

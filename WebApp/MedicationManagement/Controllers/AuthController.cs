@@ -1,3 +1,4 @@
+using MedicationManagement.DBContext;
 using MedicationManagement.Models;
 using MedicationManagement.Models.DTOs;
 using MedicationManagement.Services;
@@ -26,6 +27,7 @@ namespace MedicationManagement.Controllers
         private readonly IServiceAuditLog _auditLogService;
         private readonly IServiceIoTDevice _ioTDeviceService;
         private readonly IEmailSender _emailSender;
+        private readonly MedicineStorageContext _context;
 
         public AuthController(UserManager<ApplicationUser> userManager,
                               SignInManager<ApplicationUser> signInManager,
@@ -34,7 +36,8 @@ namespace MedicationManagement.Controllers
                               ILogger<AuthController> logger,
                               IServiceAuditLog auditLogService,
                               IServiceIoTDevice ioTDeviceService,
-                              IEmailSender emailSender)
+                              IEmailSender emailSender,
+                              MedicineStorageContext context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -44,6 +47,7 @@ namespace MedicationManagement.Controllers
             _auditLogService = auditLogService;
             _ioTDeviceService = ioTDeviceService;
             _emailSender = emailSender;
+            _context = context;
         }
 
         [HttpPost("register")]
@@ -124,7 +128,7 @@ namespace MedicationManagement.Controllers
         }
 
         [HttpPost("create-manager")]
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Administrator,OrganizationAdmin")]
         public async Task<IActionResult> CreateManager([FromBody] CreateManagerDto model)
         {
             if (!ModelState.IsValid)
@@ -136,38 +140,89 @@ namespace MedicationManagement.Controllers
                 if (userExists != null)
                     return Conflict("User already exists!");
 
+                var currentUserRole = User.IsInRole("Administrator") ? "Administrator" : "OrganizationAdmin";
+                var currentUserOrgId = User.FindFirst("OrganizationId")?.Value;
+
+                string targetOrgId = model.OrganizationId;
+                string roleToAssign = model.Role;
+
+                if (currentUserRole == "OrganizationAdmin")
+                {
+                    // Адмін організації може створювати тільки менеджерів своєї організації
+                    targetOrgId = currentUserOrgId ?? string.Empty;
+                    roleToAssign = "Manager"; // Примусово Manager
+                }
+                else // Administrator
+                {
+                    // Дозволені ролі для призначення
+                    if (roleToAssign != "OrganizationAdmin" && roleToAssign != "Manager")
+                    {
+                        return BadRequest("Administrator can only assign OrganizationAdmin or Manager roles.");
+                    }
+
+                    // Перевіряємо/створюємо організацію
+                    if (string.IsNullOrWhiteSpace(targetOrgId))
+                    {
+                        return BadRequest("Organization is required.");
+                    }
+
+                    var org = await _context.Organizations.FirstOrDefaultAsync(o => o.Id == targetOrgId);
+                    if (org == null)
+                    {
+                        org = await _context.Organizations.FirstOrDefaultAsync(o => o.Name == targetOrgId);
+                    }
+
+                    if (org == null)
+                    {
+                        // Створюємо нову організацію з такою назвою
+                        org = new Organization
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            Name = targetOrgId,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        _context.Organizations.Add(org);
+                        await _context.SaveChangesAsync();
+                        
+                        await _auditLogService.LogAction("Create Organization", User.Identity?.Name ?? "Unknown", $"Auto-created organization: {org.Name} during user creation", false);
+                    }
+
+                    targetOrgId = org.Id;
+                }
+
                 var user = new ApplicationUser
                 {
                     UserName = model.Email,
                     Email = model.Email,
-                    EmailConfirmed = true, // Email підтверджується автоматично — адмін є довіреною особою
+                    EmailConfirmed = true, // Email підтверджується автоматично
                     SecurityStamp = Guid.NewGuid().ToString(),
-                    OrganizationId = model.OrganizationId
+                    OrganizationId = targetOrgId
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (!result.Succeeded)
                     return BadRequest(result.Errors);
 
-                await _userManager.AddToRoleAsync(user, "Manager");
+                await _userManager.AddToRoleAsync(user, roleToAssign);
 
-                // Відправляємо вітальний лист із даними для входу
+                // Відправляємо вітальний лист
+                string roleNameUk = roleToAssign == "OrganizationAdmin" ? "адміністратора організації" : "менеджера";
                 var welcomeBody = $"""
                     <p>Вітаємо!</p>
-                    <p>Адміністратор вашої організації створив для вас обліковий запис менеджера у системі <strong>MedStorage</strong>.</p>
+                    <p>Адміністратор створив для вас обліковий запис {roleNameUk} у системі <strong>MedStorage</strong>.</p>
                     <p><strong>Email для входу:</strong> {model.Email}</p>
                     <p>Увійдіть у систему за посиланням: <a href="{_configuration["Frontend:BaseUrl"]}/login">{_configuration["Frontend:BaseUrl"]}/login</a></p>
                     <p><em>Якщо ви не очікували цього повідомлення — проігноруйте його.</em></p>
                     """;
-                await _emailSender.SendAsync(model.Email, "Ваш обліковий запис менеджера створено", welcomeBody);
+                await _emailSender.SendAsync(model.Email, $"Ваш обліковий запис {roleNameUk} створено", welcomeBody);
 
-                await _auditLogService.LogAction("CreateManager", User.Identity?.Name ?? "Unknown", $"Created manager {model.Email} for org {model.OrganizationId}.", false);
+                await _auditLogService.LogAction("CreateUser", User.Identity?.Name ?? "Unknown", $"Created user {model.Email} with role {roleToAssign} for org {targetOrgId}.", false);
 
-                return Ok("Manager created successfully!");
+                return Ok(new { message = "User created successfully!", role = roleToAssign, organizationId = targetOrgId });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating manager");
+                _logger.LogError(ex, "Error creating user");
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -331,29 +386,40 @@ namespace MedicationManagement.Controllers
             }
         }
 
-        /// <summary>Отримати список усіх користувачів (тільки Administrator)</summary>
+        /// <summary>Отримати список користувачів (Administrator та OrganizationAdmin)</summary>
         [HttpGet("users")]
-        [Authorize(Roles = "Administrator", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Roles = "Administrator,OrganizationAdmin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> GetUsers()
         {
             try
             {
+                var isGlobalAdmin = User.IsInRole("Administrator");
                 var adminOrgId = User.FindFirst("OrganizationId")?.Value;
-                var users = await _userManager.Users
-                    .Where(u => u.OrganizationId == adminOrgId)
-                    .ToListAsync();
+
+                var query = _userManager.Users.AsQueryable();
+                if (!isGlobalAdmin)
+                {
+                    query = query.Where(u => u.OrganizationId == adminOrgId);
+                }
+
+                var users = await query.ToListAsync();
+
+                // Отримуємо словник організацій
+                var orgs = await _context.Organizations.ToDictionaryAsync(o => o.Id, o => o.Name);
 
                 var result = new List<object>();
                 foreach (var u in users)
                 {
                     var roles = await _userManager.GetRolesAsync(u);
+                    orgs.TryGetValue(u.OrganizationId, out var orgName);
                     result.Add(new
                     {
                         u.Id,
                         u.Email,
                         u.UserName,
                         Roles = roles,
-                        u.OrganizationId
+                        u.OrganizationId,
+                        OrganizationName = orgName ?? (u.Email == "admin@medstorage.com" ? "Глобальний Адміністратор" : "Unknown Organization")
                     });
                 }
 
@@ -366,20 +432,32 @@ namespace MedicationManagement.Controllers
             }
         }
 
-        /// <summary>Видалити користувача (тільки Administrator)</summary>
+        /// <summary>Видалити користувача (Administrator та OrganizationAdmin)</summary>
         [HttpDelete("users/{id}")]
-        [Authorize(Roles = "Administrator", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(Roles = "Administrator,OrganizationAdmin", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> DeleteUser(string id)
         {
             try
             {
+                var isGlobalAdmin = User.IsInRole("Administrator");
                 var adminOrgId = User.FindFirst("OrganizationId")?.Value;
+
                 var user = await _userManager.FindByIdAsync(id);
                 if (user == null) return NotFound();
-                if (user.OrganizationId != adminOrgId) return Forbid();
+
+                if (!isGlobalAdmin)
+                {
+                    // Адмін організації може видаляти тільки користувачів своєї організації
+                    if (user.OrganizationId != adminOrgId)
+                        return Forbid();
+                }
 
                 var roles = await _userManager.GetRolesAsync(user);
-                if (roles.Contains("Administrator")) return BadRequest("Неможливо видалити адміністратора.");
+                if (roles.Contains("Administrator"))
+                    return BadRequest("Неможливо видалити супер-адміністратора.");
+
+                if (!isGlobalAdmin && roles.Contains("OrganizationAdmin"))
+                    return BadRequest("Адміністратор організації не може видалити іншого адміністратора організації.");
 
                 var result = await _userManager.DeleteAsync(user);
                 if (!result.Succeeded) return BadRequest(result.Errors);

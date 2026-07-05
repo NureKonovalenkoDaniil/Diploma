@@ -188,6 +188,7 @@ const dictionaries = {
     usersSectionOthers: 'Інші користувачі',
     usersSectionAdmins: 'Адміністратори',
     roleAdministrator: 'Адміністратор',
+    roleOrganizationAdmin: 'Адміністратор організації',
     roleManager: 'Менеджер',
     roleUser: 'Користувач',
     roleDevice: 'Пристрій',
@@ -255,6 +256,11 @@ const dictionaries = {
     colEntity: 'Сутність',
     colLevel: 'Рівень',
     noRecordsFound: 'Записів не знайдено',
+    auditActionMedicine: 'Дії над препаратами (будь-які)',
+    auditActionLocation: 'Дії над локаціями (будь-які)',
+    auditActionIncident: 'Створення, закриття інцидентів',
+    auditActionDevice: 'Дії над девайсами (будь-які)',
+    auditActionUser: 'Дії над користувачами (вхід, менеджери тощо)',
 
     // Global Filter UI
     filterAll: 'Всі',
@@ -686,6 +692,7 @@ const dictionaries = {
     usersSectionOthers: 'Other users',
     usersSectionAdmins: 'Administrators',
     roleAdministrator: 'Administrator',
+    roleOrganizationAdmin: 'Organization Administrator',
     roleManager: 'Manager',
     roleUser: 'User',
     roleDevice: 'Device',
@@ -753,6 +760,11 @@ const dictionaries = {
     colEntity: 'Entity',
     colLevel: 'Level',
     noRecordsFound: 'No records found',
+    auditActionMedicine: 'Medicine actions (any)',
+    auditActionLocation: 'Location actions (any)',
+    auditActionIncident: 'Storage incident events',
+    auditActionDevice: 'IoT device actions (any)',
+    auditActionUser: 'User/auth actions (any)',
 
     // Global Filter UI
     filterAll: 'All',

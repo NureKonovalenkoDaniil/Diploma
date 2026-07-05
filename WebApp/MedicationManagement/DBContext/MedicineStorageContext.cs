@@ -17,6 +17,7 @@ namespace MedicationManagement.DBContext
         public DbSet<StorageIncident> StorageIncidents { get; set; }
         public DbSet<MedicineLifecycleEvent> MedicineLifecycleEvents { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Organization> Organizations { get; set; }
 
         public MedicineStorageContext(DbContextOptions<MedicineStorageContext> options) : base(options)
         {

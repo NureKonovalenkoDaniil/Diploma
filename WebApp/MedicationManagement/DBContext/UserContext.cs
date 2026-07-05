@@ -6,6 +6,8 @@ namespace MedicationManagement.DBContext
 {
     public class UserContext : IdentityDbContext<ApplicationUser>
     {
+        public DbSet<Organization> Organizations { get; set; }
+
         public UserContext(DbContextOptions<UserContext> options) : base(options)
         {
         }

@@ -267,6 +267,7 @@
     <string name="profile_email_label">Email</string>
     <string name="profile_role_label">Роль</string>
     <string name="role_administrator">Адміністратор</string>
+    <string name="role_organization_admin">Адміністратор організації</string>
     <string name="role_manager">Менеджер</string>
     <string name="role_user">Користувач</string>
     <string name="profile_org_label">ID організації</string>
@@ -309,6 +310,11 @@
     <string name="toDate">По дату</string>
     <string name="apply">Застосувати</string>
     <string name="reset">Скинути</string>
+    <string name="audit_action_medicine">Дії над препаратами (будь-які)</string>
+    <string name="audit_action_location">Дії над локаціями (будь-які)</string>
+    <string name="audit_action_incident">Створення, закриття інцидентів</string>
+    <string name="audit_action_device">Дії над девайсами (будь-які)</string>
+    <string name="audit_action_user">Дії над користувачами</string>
     <string name="location_type_refrigerator">Холодильник</string>
     <string name="location_type_shelf">Полиця</string>
     <string name="location_type_warehouse">Склад</string>

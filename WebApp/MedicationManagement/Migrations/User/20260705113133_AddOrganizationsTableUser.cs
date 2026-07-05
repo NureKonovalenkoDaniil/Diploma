@@ -6,18 +6,18 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MedicationManagement.Migrations.User
 {
     /// <inheritdoc />
-    public partial class DropIdentityColumns : Migration
+    public partial class AddOrganizationsTableUser : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Columns are already dropped by the RemoveUnusedIdentityUserColumns migration in the MedicineStorageContext
+            // Table already created by MedicineStorageContext migration
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            // Columns are restored by the RemoveUnusedIdentityUserColumns migration in the MedicineStorageContext
+            // Table managed by MedicineStorageContext migration
         }
     }
 }

@@ -17,6 +17,8 @@ import com.example.medicationmanagement.ui.adapter.AuditLogAdapter
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.textfield.TextInputEditText
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -33,12 +35,13 @@ class AuditLogFragment : Fragment() {
     private lateinit var adapter: AuditLogAdapter
 
     private lateinit var inputUser: TextInputEditText
-    private lateinit var inputAction: TextInputEditText
+    private lateinit var inputAction: AutoCompleteTextView
     private lateinit var btnDateFrom: MaterialButton
     private lateinit var btnDateTo: MaterialButton
     private lateinit var btnApply: MaterialButton
     private lateinit var btnReset: MaterialButton
 
+    private var selectedAction: String? = null
     private var selectedDateFrom: String? = null
     private var selectedDateTo: String? = null
 
@@ -68,6 +71,29 @@ class AuditLogFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 
+        // Setup Actions Dropdown
+        val actionsList = listOf(
+            "medicine_actions",
+            "location_actions",
+            "incident_actions",
+            "device_actions",
+            "user_actions"
+        ).sortedBy { getActionDisplayName(it) }
+
+        val allLabel = getString(R.string.filter_all)
+        val options = listOf(AuditActionOption(null, allLabel)) + actionsList.map {
+            AuditActionOption(it, getActionDisplayName(it))
+        }
+
+        val arrayAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, options)
+        inputAction.setAdapter(arrayAdapter)
+        inputAction.setText(allLabel, false)
+
+        inputAction.setOnItemClickListener { parent, _, position, _ ->
+            val selected = parent.getItemAtPosition(position) as AuditActionOption
+            selectedAction = selected.apiValue
+        }
+
         // Setup Date Pickers
         btnDateFrom.setOnClickListener {
             val datePicker = MaterialDatePicker.Builder.datePicker()
@@ -96,19 +122,19 @@ class AuditLogFragment : Fragment() {
         // Apply filters click
         btnApply.setOnClickListener {
             val user = inputUser.text?.toString()?.trim()
-            val action = inputAction.text?.toString()?.trim()
             viewModel.fetchLogs(
                 from = selectedDateFrom,
                 to = selectedDateTo,
                 user = if (user.isNullOrBlank()) null else user,
-                action = if (action.isNullOrBlank()) null else action
+                action = selectedAction
             )
         }
 
         // Reset filters click
         btnReset.setOnClickListener {
             inputUser.text = null
-            inputAction.text = null
+            inputAction.setText(allLabel, false)
+            selectedAction = null
             selectedDateFrom = null
             selectedDateTo = null
             btnDateFrom.setText(R.string.fromDate)
@@ -138,5 +164,20 @@ class AuditLogFragment : Fragment() {
         }
 
         viewModel.fetchLogs()
+    }
+
+    private fun getActionDisplayName(action: String): String {
+        return when (action) {
+            "medicine_actions" -> getString(R.string.audit_action_medicine)
+            "location_actions" -> getString(R.string.audit_action_location)
+            "incident_actions" -> getString(R.string.audit_action_incident)
+            "device_actions" -> getString(R.string.audit_action_device)
+            "user_actions" -> getString(R.string.audit_action_user)
+            else -> action
+        }
+    }
+
+    data class AuditActionOption(val apiValue: String?, val displayName: String) {
+        override fun toString(): String = displayName
     }
 }

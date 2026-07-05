@@ -14,5 +14,7 @@ namespace MedicationManagement.Models.DTOs
 
         [Required]
         public string OrganizationId { get; set; } = string.Empty;
+
+        public string Role { get; set; } = "Manager";
     }
 }

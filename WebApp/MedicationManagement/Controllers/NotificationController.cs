@@ -37,7 +37,7 @@ namespace MedicationManagement.Controllers
 
         /// <summary>Створити сповіщення</summary>
         [HttpPost]
-        [Authorize(Roles = "Administrator,Manager,User")]
+        [Authorize(Roles = "Administrator,OrganizationAdmin,Manager,User")]
         public async Task<IActionResult> Create([FromBody] CreateNotificationDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);

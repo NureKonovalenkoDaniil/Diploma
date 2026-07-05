@@ -267,6 +267,7 @@
     <string name="profile_email_label">Email</string>
     <string name="profile_role_label">Role</string>
     <string name="role_administrator">Administrator</string>
+    <string name="role_organization_admin">Organization Administrator</string>
     <string name="role_manager">Manager</string>
     <string name="role_user">User</string>
     <string name="profile_org_label">Organization ID</string>
@@ -309,6 +310,11 @@
     <string name="toDate">To Date</string>
     <string name="apply">Apply</string>
     <string name="reset">Reset</string>
+    <string name="audit_action_medicine">Medicine actions (any)</string>
+    <string name="audit_action_location">Location actions (any)</string>
+    <string name="audit_action_incident">Storage incident events</string>
+    <string name="audit_action_device">IoT device actions (any)</string>
+    <string name="audit_action_user">User/auth actions (any)</string>
     <string name="location_type_refrigerator">Refrigerator</string>
     <string name="location_type_shelf">Shelf</string>
     <string name="location_type_warehouse">Warehouse</string>

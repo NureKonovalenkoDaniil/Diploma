@@ -44,7 +44,8 @@ namespace MedicationManagement.Models.DTOs
                 MaxStorageTemp = dto.MaxStorageTemp,
                 MinStorageHumidity = dto.MinStorageHumidity,
                 MaxStorageHumidity = dto.MaxStorageHumidity,
-                StorageLocationId = dto.StorageLocationId
+                StorageLocationId = dto.StorageLocationId,
+                OrganizationId = dto.OrganizationId ?? string.Empty
             };
         }
 
@@ -59,7 +60,8 @@ namespace MedicationManagement.Models.DTOs
                 d.MinTemperature,
                 d.MaxTemperature,
                 d.MinHumidity,
-                d.MaxHumidity
+                d.MaxHumidity,
+                d.OrganizationId
             );
         }
 
@@ -83,7 +85,8 @@ namespace MedicationManagement.Models.DTOs
                 MinTemperature = d.MinTemperature,
                 MaxTemperature = d.MaxTemperature,
                 MinHumidity = d.MinHumidity,
-                MaxHumidity = d.MaxHumidity
+                MaxHumidity = d.MaxHumidity,
+                OrganizationId = d.OrganizationId ?? string.Empty
             };
         }
 
@@ -95,7 +98,8 @@ namespace MedicationManagement.Models.DTOs
                 l.Address,
                 l.LocationType.ToString(),
                 l.IoTDeviceId,
-                l.IoTDevice?.Location
+                l.IoTDevice?.Location,
+                l.OrganizationId
             );
         }
 

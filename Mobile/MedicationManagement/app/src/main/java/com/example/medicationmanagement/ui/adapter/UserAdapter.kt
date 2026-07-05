@@ -46,6 +46,7 @@ class UserAdapter(
             val displayRoles = user.roles.map { role ->
                 when (role.lowercase()) {
                     "administrator" -> context.getString(R.string.role_administrator)
+                    "organizationadmin" -> context.getString(R.string.role_organization_admin)
                     "manager" -> context.getString(R.string.role_manager)
                     "user" -> context.getString(R.string.role_user)
                     else -> role
@@ -53,7 +54,7 @@ class UserAdapter(
             }.joinToString(", ").ifBlank { context.getString(R.string.role_user) }
             userRole.text = displayRoles
             userStatus.text = user.id
-            userOrganization.text = user.organizationId.ifBlank { "—" }
+            userOrganization.text = user.organizationName ?: user.organizationId.ifBlank { "—" }
             
             btnDelete.setOnClickListener {
                 onDeleteClick(user)

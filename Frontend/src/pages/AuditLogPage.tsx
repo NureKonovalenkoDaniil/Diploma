@@ -21,6 +21,14 @@ import { format } from 'date-fns';
 
 type Filters = { from: string; to: string; user: string; action: string };
 
+const AUDIT_ACTIONS = [
+  'medicine_actions',
+  'location_actions',
+  'incident_actions',
+  'device_actions',
+  'user_actions',
+];
+
 const severityVariant = (s: string): 'destructive' | 'warning' | 'info' => {
   if (s === 'Error') return 'destructive';
   if (s === 'Warning') return 'warning';
@@ -28,6 +36,12 @@ const severityVariant = (s: string): 'destructive' | 'warning' | 'info' => {
 };
 
 function translateAuditAction(action: string, t: (key: string) => string): string {
+  if (action === 'medicine_actions') return t('auditActionMedicine');
+  if (action === 'location_actions') return t('auditActionLocation');
+  if (action === 'incident_actions') return t('auditActionIncident');
+  if (action === 'device_actions') return t('auditActionDevice');
+  if (action === 'user_actions') return t('auditActionUser');
+
   const normalized = action.replace(/\s+/g, '').replace(/_/g, '').replace(/-/g, '');
   const key = `auditAction${normalized}`;
   const translated = t(key);
@@ -244,11 +258,17 @@ export default function AuditLogPage() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">{t('actionSearch')}</Label>
-              <Input
-                placeholder="Create Medicine"
+              <select
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 value={filters.action}
-                onChange={(e) => f('action', e.target.value)}
-              />
+                onChange={(e) => f('action', e.target.value)}>
+                <option value="">{t('filterAll')}</option>
+                {AUDIT_ACTIONS.map((act) => (
+                  <option key={act} value={act}>
+                    {translateAuditAction(act, t)}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           <div className="mt-3 flex gap-2">

@@ -99,7 +99,56 @@ namespace MedicationManagement.Services
                 query = query.Where(log => log.User.Contains(user));
 
             if (!string.IsNullOrWhiteSpace(action))
-                query = query.Where(log => log.Action.Contains(action));
+            {
+                if (action == "medicine_actions")
+                {
+                    query = query.Where(log => 
+                        log.Action.Contains("Medicine") || 
+                        log.Action.Contains("Expired") || 
+                        log.Action.Contains("Lifecycle") || 
+                        log.Action.Contains("Receive") || 
+                        log.Action.Contains("Issue") || 
+                        log.Action.Contains("Move") || 
+                        log.Action.Contains("Dispose") || 
+                        log.EntityType == "Medicine" || 
+                        log.EntityType == "MedicineLifecycleEvent");
+                }
+                else if (action == "location_actions")
+                {
+                    query = query.Where(log => 
+                        log.Action.Contains("Location") || 
+                        log.EntityType == "StorageLocation");
+                }
+                else if (action == "incident_actions")
+                {
+                    query = query.Where(log => 
+                        log.Action.Contains("Incident") || 
+                        log.EntityType == "StorageIncident");
+                }
+                else if (action == "device_actions")
+                {
+                    query = query.Where(log => 
+                        log.Action.Contains("Device") || 
+                        log.Action.Contains("Sensor") || 
+                        log.EntityType == "IoTDevice");
+                }
+                else if (action == "user_actions")
+                {
+                    query = query.Where(log => 
+                        log.Action.Contains("User") || 
+                        log.Action.Contains("Manager") || 
+                        log.Action.Contains("Login") || 
+                        log.Action.Contains("Register") || 
+                        log.Action.Contains("Email") || 
+                        log.Action.Contains("Password") || 
+                        log.Action.Contains("Role") ||
+                        log.EntityType == "ApplicationUser");
+                }
+                else
+                {
+                    query = query.Where(log => log.Action.Contains(action));
+                }
+            }
 
             return await query.OrderByDescending(log => log.Timestamp).ToListAsync();
         }

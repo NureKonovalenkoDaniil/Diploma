@@ -43,6 +43,7 @@ class ProfileFragment : Fragment() {
                     val displayRoles = me?.roles?.map { role ->
                         when (role.lowercase()) {
                             "administrator" -> getString(R.string.role_administrator)
+                            "organizationadmin" -> getString(R.string.role_organization_admin)
                             "manager" -> getString(R.string.role_manager)
                             "user" -> getString(R.string.role_user)
                             else -> role

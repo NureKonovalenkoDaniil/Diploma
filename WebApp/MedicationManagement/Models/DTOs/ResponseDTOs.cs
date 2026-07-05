@@ -31,7 +31,8 @@ namespace MedicationManagement.Models.DTOs
         float MinTemperature,
         float MaxTemperature,
         float MinHumidity,
-        float MaxHumidity
+        float MaxHumidity,
+        string? OrganizationId = null
     );
 
     /// <summary>DTO для створення IoT-пристрою з поверненням device secret.</summary>
@@ -46,7 +47,8 @@ namespace MedicationManagement.Models.DTOs
         string? Address,
         string LocationType,
         string? IoTDeviceId,
-        string? IoTDeviceLocation
+        string? IoTDeviceLocation,
+        string? OrganizationId = null
     );
 
     public record StorageIncidentDto(
@@ -132,7 +134,8 @@ namespace MedicationManagement.Models.DTOs
         float? MaxStorageTemp,
         float? MinStorageHumidity,
         float? MaxStorageHumidity,
-        int? StorageLocationId
+        int? StorageLocationId,
+        string? OrganizationId = null
     );
 
     public record CreateStorageIncidentDto(

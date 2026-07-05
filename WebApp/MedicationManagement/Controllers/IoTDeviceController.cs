@@ -42,7 +42,7 @@ namespace MedicationManagement.Controllers
         }
 
         [HttpPatch("setstatus/{deviceId}")]
-        [Authorize(Roles = "Administrator,Manager,User")]
+        [Authorize(Roles = "Administrator,OrganizationAdmin,Manager,User")]
         public async Task<IActionResult> SetSensorStatus(string deviceId, bool isActive)
         {
             try
@@ -78,7 +78,7 @@ namespace MedicationManagement.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Administrator,Manager,User")]
+        [Authorize(Roles = "Administrator,OrganizationAdmin,Manager,User")]
         public async Task<IActionResult> Create([FromBody] IoTDeviceDto iotDeviceDto)
         {
             if (!ModelState.IsValid)
@@ -137,7 +137,7 @@ namespace MedicationManagement.Controllers
         }
 
         [HttpPatch("{id}")]
-        [Authorize(Roles = "Administrator,Manager,User")]
+        [Authorize(Roles = "Administrator,OrganizationAdmin,Manager,User")]
         public async Task<IActionResult> Update(string id, [FromBody] JsonPatchDocument<IoTDevice> patchDoc)
         {
             if (patchDoc == null)
@@ -160,7 +160,7 @@ namespace MedicationManagement.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Administrator,Manager,User")]
+        [Authorize(Roles = "Administrator,OrganizationAdmin,Manager,User")]
         public async Task<IActionResult> Delete(string id)
         {
             try
