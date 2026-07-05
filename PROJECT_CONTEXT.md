@@ -1587,5 +1587,23 @@ Optional-функції не повинні шкодити реалізації 
     - Додано локалізацію для ролі `role_organization_admin` українською та англійською мовами у файли `strings.xml`.
 - **Статус:** ✅ Нова ієрархія адміністрування успішно реалізована для бекенду, веб-інтерфейсу та мобільного застосунку, збірка всіх частин проекту успішна.
 
+### Запис 36 — Інтеграція Microsoft Azure Communication Services для розсилки email (виконано 2026-07-05)
+
+- **Дата:** 2026-07-05
+- **Завдання:**
+  1. Замінити відправку пошти через SendGrid SMTP на інтеграцію з Microsoft Azure Communication Services (ACS).
+  2. Забезпечити підтримку гнучкого перемикання або резервного SMTP-каналу (якщо рядок підключення Azure не налаштовано).
+- **Переглянуті файли / модулі:**
+  - Backend: `EmailSender.cs` (створено), `SmtpEmailSender.cs` (видалено), `EmailSettings.cs`, `Program.cs`, `MedicationManagement.csproj`, `appsettings.json`.
+- **Основні зміни:**
+  - **NuGet-пакети:** Інстальовано пакет `Azure.Communication.Email` (версія `1.1.0`).
+  - **Код:**
+    - Оновлено `EmailSettings.cs`: додано властивість `AzureConnectionString`.
+    - Створено єдиний `EmailSender.cs`, який перевіряє наявність налаштованого Azure Connection String. Якщо рядок є, пошта відправляється через Azure ACS (`EmailClient`), інакше використовується традиційний SMTP клієнт.
+    - Видалено застарілий `SmtpEmailSender.cs`.
+    - У `Program.cs` зареєстровано `EmailSender` для інтерфейсу `IEmailSender`.
+  - **Конфігурація:** З `appsettings.json` повністю видалено конфігурації, ключі та ліміти SendGrid. Залишено параметри підключення до Azure ACS (Connection String, FromEmail) та плейсхолдери для Azure SMTP.
+- **Статус:** ✅ Інтеграція з Azure ACS успішно завершена, конфігурація очищена від SendGrid, проект бекенду успішно компілюється.
+
 
 

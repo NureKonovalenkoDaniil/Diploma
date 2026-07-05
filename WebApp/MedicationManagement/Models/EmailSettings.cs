@@ -9,5 +9,8 @@ namespace MedicationManagement.Models
         public string FromEmail { get; set; } = string.Empty;
         public string FromName { get; set; } = "MedicationManagement";
         public bool UseSsl { get; set; } = true;
+        
+        // Azure Communication Services
+        public string AzureConnectionString { get; set; } = string.Empty;
     }
 }
