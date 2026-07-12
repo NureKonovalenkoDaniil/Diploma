@@ -256,13 +256,13 @@ namespace MedicationManagement.Controllers
 
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user is null)
-                return Ok("If the account exists, a confirmation email was sent.");
+                return Ok(new { message = "If the account exists, a confirmation email was sent." });
 
             if (user.EmailConfirmed)
-                return Ok("Email is already confirmed.");
+                return Ok(new { message = "Email is already confirmed." });
 
             await GenerateAndSendCodeAsync(user, "EmailConfirmation", "Підтвердження email", "<p>Ваш код підтвердження: <strong>{0}</strong></p>");
-            return Ok("Confirmation email sent.");
+            return Ok(new { message = "Confirmation email sent." });
         }
 
         [HttpPost("forgot-password")]
@@ -273,10 +273,10 @@ namespace MedicationManagement.Controllers
 
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null || !user.EmailConfirmed)
-                return Ok("If the account exists, a reset email was sent.");
+                return Ok(new { message = "If the account exists, a reset email was sent." });
 
             await GenerateAndSendCodeAsync(user, "PasswordReset", "Відновлення пароля", "<p>Ваш код відновлення: <strong>{0}</strong></p>");
-            return Ok("Reset email sent.");
+            return Ok(new { message = "Reset email sent." });
         }
 
         [HttpPost("reset-password")]
@@ -287,11 +287,11 @@ namespace MedicationManagement.Controllers
 
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
-                return BadRequest("Invalid reset request");
+                return BadRequest(new { message = "Invalid reset request" });
 
             var storedCode = await _userManager.GetAuthenticationTokenAsync(user, "MedicationApp", "PasswordReset");
             if (storedCode == null || storedCode != model.Code)
-                return BadRequest("Невірний або прострочений код");
+                return BadRequest(new { message = "Невірний або прострочений код" });
 
             var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
             var result = await _userManager.ResetPasswordAsync(user, resetToken, model.NewPassword);
@@ -301,7 +301,7 @@ namespace MedicationManagement.Controllers
             await _userManager.RemoveAuthenticationTokenAsync(user, "MedicationApp", "PasswordReset");
 
             await _auditLogService.LogAction("ResetPassword", user.Email ?? "Unknown", "Password reset completed.", false);
-            return Ok("Password reset successful");
+            return Ok(new { message = "Password reset successful" });
         }
 
         [HttpPost("device-login")]

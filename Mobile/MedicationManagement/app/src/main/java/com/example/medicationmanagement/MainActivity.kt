@@ -239,22 +239,38 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     // Перевірка наявності нових сповіщень для виведення в шторку Android
+                    val userSubject = com.example.medicationmanagement.utils.RoleHelper.getUserSubject(this@MainActivity) ?: "anonymous"
+                    val prefKey = "last_notified_id_$userSubject"
                     val sharedPrefs = getSharedPreferences("app_notifications", Context.MODE_PRIVATE)
-                    val lastNotifiedId = sharedPrefs.getInt("last_notified_id", 0)
+                    val lastNotifiedId = sharedPrefs.getInt(prefKey, 0)
 
-                    var maxId = lastNotifiedId
-                    var hasNew = false
-                    for (notif in unreadNotifications) {
-                        if (notif.notificationId > lastNotifiedId) {
-                            showSystemNotification(notif.title, notif.message, notif.notificationId)
-                            if (notif.notificationId > maxId) {
-                                maxId = notif.notificationId
+                    if (lastNotifiedId == 0) {
+                        // Перший запуск або новий користувач: просто ініціалізуємо lastNotifiedId найбільшим поточним ID
+                        val maxIdFromServer = unreadNotifications.maxOfOrNull { it.notificationId } ?: 0
+                        sharedPrefs.edit().putInt(prefKey, maxIdFromServer).apply()
+                    } else {
+                        val newNotifications = unreadNotifications.filter { it.notificationId > lastNotifiedId }
+                        if (newNotifications.isNotEmpty()) {
+                            if (newNotifications.size > 3) {
+                                // Замість спаму десятками сповіщень показуємо одне сумарне
+                                val maxId = newNotifications.maxOf { it.notificationId }
+                                showSystemNotification(
+                                    getString(R.string.new_notifications_title, newNotifications.size),
+                                    getString(R.string.new_notifications_desc, newNotifications.size),
+                                    maxId
+                                )
+                                sharedPrefs.edit().putInt(prefKey, maxId).apply()
+                            } else {
+                                var maxId = lastNotifiedId
+                                for (notif in newNotifications) {
+                                    showSystemNotification(notif.title, notif.message, notif.notificationId)
+                                    if (notif.notificationId > maxId) {
+                                        maxId = notif.notificationId
+                                    }
+                                }
+                                sharedPrefs.edit().putInt(prefKey, maxId).apply()
                             }
-                            hasNew = true
                         }
-                    }
-                    if (hasNew) {
-                        sharedPrefs.edit().putInt("last_notified_id", maxId).apply()
                     }
                 }
             } catch (_: Exception) {

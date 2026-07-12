@@ -40,11 +40,11 @@ class AuditLogAdapter : RecyclerView.Adapter<AuditLogAdapter.AuditLogViewHolder>
 
         fun bind(log: AuditLogDto) {
             logAction.text = log.action?.let { translateAction(it) } ?: "—"
-            val entityType = if (log.entityType.isNullOrBlank()) "—" else log.entityType
+            val entityType = log.entityType?.takeIf { it.trim().isNotEmpty() } ?: "—"
             logEntity.text = "$entityType (ID: ${log.entityId?.toString() ?: "—"})"
-            logUser.text = if (log.user.isNullOrBlank()) "System" else log.user
+            logUser.text = log.user?.takeIf { it.trim().isNotEmpty() } ?: "System"
             logTimestamp.text = formatDate(log.timestamp)
-            logDetails.text = if (log.details.isNullOrBlank()) "—" else log.details
+            logDetails.text = log.details?.takeIf { it.trim().isNotEmpty() } ?: "—"
         }
 
         private fun translateAction(action: String): String {

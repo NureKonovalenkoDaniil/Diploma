@@ -196,6 +196,8 @@
     <string name="nav_header_app_icon">Іконка додатка</string>
     <string name="nav_header_default_email">user@example.com</string>
     <string name="notifications_title">Ваші сповіщення</string>
+    <string name="new_notifications_title">Нові сповіщення (%1$d)</string>
+    <string name="new_notifications_desc">Отримано %1$d нових сповіщень про умови зберігання</string>
     <string name="notifications_mark_all_read">Прочитати всі</string>
     <string name="notifications_filter_all">Усі</string>
     <string name="notifications_filter_violation">Порушення</string>
@@ -277,6 +279,12 @@
     <string name="error_network">Помилка мережі: %1$s</string>
     <string name="error_generic">Помилка: %1$s</string>
     <string name="error_org_id_missing">Не вдалося визначити ID організації</string>
+    <string name="create_new_org_hint">UUID або назва нової</string>
+    <string name="select_organization">Оберіть організацію</string>
+    <string name="create_new_org_option">+ Створити нову організацію…</string>
+    <string name="select_org_default">-- Оберіть організацію --</string>
+    <string name="input_org_name_hint">Введіть назву нової організації або її UUID</string>
+    <string name="input_org_uuid_hint">UUID організації</string>
     <string name="error_create_manager_failed">Не вдалося створити менеджера: %1$s</string>
     <string name="error_deactivate_user_failed">Не вдалося деактивувати користувача: %1$s</string>
     <string name="error_create_location_failed">Помилка створення: %1$s</string>

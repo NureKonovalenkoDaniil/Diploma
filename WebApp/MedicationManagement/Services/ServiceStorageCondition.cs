@@ -91,11 +91,7 @@ namespace MedicationManagement.Services
                     return null;
                 }
 
-                var orgId = CurrentOrgId;
-                if (!string.IsNullOrEmpty(orgId))
-                {
-                    storageCondition.OrganizationId = orgId;
-                }
+                storageCondition.OrganizationId = device.OrganizationId ?? string.Empty;
                 storageCondition.Timestamp = DateTime.UtcNow;
                 await _context.StorageConditions.AddAsync(storageCondition);
                 await _context.SaveChangesAsync();

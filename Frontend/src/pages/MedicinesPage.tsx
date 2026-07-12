@@ -97,7 +97,14 @@ function MedicineForm({
   const handleSave = () => {
     // позначити всі обов'язкові поля як торкнуті
     setTouched({ name: true, type: true, category: true, quantity: true, expiryDate: true });
-    if (isValid) onSave(form);
+    if (isValid) {
+      const cleanedForm = {
+        ...form,
+        minStorageTemp: form.minStorageTemp !== undefined && (form.minStorageTemp as any) !== '' && (form.minStorageTemp as any) !== '-' ? Number(form.minStorageTemp) : undefined,
+        maxStorageTemp: form.maxStorageTemp !== undefined && (form.maxStorageTemp as any) !== '' && (form.maxStorageTemp as any) !== '-' ? Number(form.maxStorageTemp) : undefined,
+      };
+      onSave(cleanedForm);
+    }
   };
 
   return (
@@ -182,12 +189,15 @@ function MedicineForm({
           'minStorageTemp',
           false,
           <Input
-            type="number"
-            step="0.1"
+            type="text"
             value={form.minStorageTemp ?? ''}
-            onChange={(e) =>
-              set('minStorageTemp', e.target.value ? Number(e.target.value) : undefined)
-            }
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === '' || val === '-' || val === '.' || val === '-.' || !isNaN(Number(val))) {
+                set('minStorageTemp', val);
+              }
+            }}
+            placeholder="0.0"
           />,
         )}
         {field(
@@ -195,12 +205,15 @@ function MedicineForm({
           'maxStorageTemp',
           false,
           <Input
-            type="number"
-            step="0.1"
+            type="text"
             value={form.maxStorageTemp ?? ''}
-            onChange={(e) =>
-              set('maxStorageTemp', e.target.value ? Number(e.target.value) : undefined)
-            }
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === '' || val === '-' || val === '.' || val === '-.' || !isNaN(Number(val))) {
+                set('maxStorageTemp', val);
+              }
+            }}
+            placeholder="0.0"
           />,
         )}
         {field(

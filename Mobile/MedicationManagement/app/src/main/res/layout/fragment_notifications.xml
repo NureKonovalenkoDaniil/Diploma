@@ -55,7 +55,7 @@
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipAll"
-                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="true"
@@ -63,28 +63,28 @@
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipViolation"
-                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/notifications_filter_violation" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipRestored"
-                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/notifications_filter_restored" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipExpiry"
-                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/notifications_filter_expiry" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chipLowStock"
-                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/notifications_filter_low_stock" />

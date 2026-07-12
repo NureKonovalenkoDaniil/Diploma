@@ -38,4 +38,17 @@ object RoleHelper {
     fun hasFullAccess(role: String?): Boolean = role == "Administrator" || role == "OrganizationAdmin" || role == "Manager" || role == "User"
 
     fun canManageMedicines(role: String?): Boolean = hasFullAccess(role)
+
+    fun getUserSubject(context: Context): String? {
+        val token = TokenManager.getInstance(context).getToken() ?: return null
+        return try {
+            val decodedToken = JWT.decode(token)
+            decodedToken.subject 
+                ?: decodedToken.getClaim("email").asString() 
+                ?: decodedToken.getClaim("unique_name").asString()
+                ?: decodedToken.getClaim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name").asString()
+        } catch (_: Exception) {
+            null
+        }
+    }
 }

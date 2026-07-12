@@ -42,10 +42,9 @@ class StorageIncidentAdapter(
         val context = holder.itemView.context
         val item = items[position]
 
-        // Довгий клік — видалення (тільки для менеджерів/адмінів)
         val role = RoleHelper.getCurrentRole(context)
-        val isManager = RoleHelper.isManager(role)
-        if (isManager) {
+        val isUser = RoleHelper.isUser(role)
+        if (isUser) {
             holder.itemView.setOnLongClickListener {
                 onLongClickListener?.invoke(item)
                 true
@@ -75,10 +74,11 @@ class StorageIncidentAdapter(
         }
 
         // Translate / display incident type
-        holder.type.text = when (incidentType.lowercase()) {
+        val incidentTypeLower = (incidentType ?: "").lowercase()
+        holder.type.text = when (incidentTypeLower) {
             "temperaturedeviation", "temperature", "temperatureviolation" -> context.getString(R.string.incident_type_temp)
             "humiditydeviation", "humidity", "humidityviolation" -> context.getString(R.string.incident_type_humidity)
-            else -> incidentType
+            else -> incidentType ?: ""
         }
 
         holder.description.text = description
@@ -93,22 +93,22 @@ class StorageIncidentAdapter(
         }
 
         // Severity styling
-        holder.severityChip.text = when (severity.lowercase()) {
+        val severityLower = (severity ?: "warning").lowercase()
+        holder.severityChip.text = when (severityLower) {
             "critical" -> context.getString(R.string.incident_severity_critical)
             "warning" -> context.getString(R.string.incident_severity_warning)
-            else -> severity
+            else -> severity ?: "warning"
         }
 
-        val chipColorRes = when (severity.lowercase()) {
+        val chipColorRes = when (severityLower) {
             "critical" -> android.R.color.holo_red_dark
             "warning" -> android.R.color.holo_orange_dark
             else -> android.R.color.darker_gray
         }
         holder.severityChip.setTextColor(context.getColor(chipColorRes))
 
-        // Resolution status and button visibility
         val roleForBtn = RoleHelper.getCurrentRole(context)
-        val isManagerForBtn = RoleHelper.isManager(roleForBtn)
+        val isUserForBtn = RoleHelper.isUser(roleForBtn)
 
         if (isResolved) {
             holder.btnResolve.visibility = View.GONE
@@ -124,7 +124,7 @@ class StorageIncidentAdapter(
             holder.resolvedLabel.text = context.getString(R.string.resolved_incident_at, resolvedTime)
         } else {
             holder.resolvedLabel.visibility = View.GONE
-            if (isManagerForBtn) {
+            if (isUserForBtn) {
                 holder.btnResolve.visibility = View.VISIBLE
                 holder.btnResolve.setOnClickListener {
                     onResolveClick(item)

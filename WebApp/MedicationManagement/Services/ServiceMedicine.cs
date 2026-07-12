@@ -210,7 +210,38 @@ namespace MedicationManagement.Services
                     return null;
                 }
 
+                var oldStatus = medicineToUpdate.Status;
                 patchDocument.ApplyTo(medicineToUpdate);
+
+                // Перераховуємо статус залежно від ExpiryDate (якщо статус не є Disposed)
+                if (medicineToUpdate.Status != MedicineStatus.Disposed)
+                {
+                    var newStatus = medicineToUpdate.ExpiryDate <= DateTime.UtcNow
+                        ? MedicineStatus.Expired
+                        : MedicineStatus.Active;
+
+                    if (oldStatus != newStatus)
+                    {
+                        medicineToUpdate.Status = newStatus;
+
+                        if (newStatus == MedicineStatus.Expired)
+                        {
+                            var evt = new MedicineLifecycleEvent
+                            {
+                                MedicineId = medicineToUpdate.MedicineID,
+                                OrganizationId = medicineToUpdate.OrganizationId,
+                                EventType = LifecycleEventType.Expired,
+                                Quantity = null,
+                                PerformedBy = _httpContextAccessor.HttpContext?.User.Identity?.Name ?? "System",
+                                PerformedAt = DateTime.UtcNow,
+                                RelatedLocationId = medicineToUpdate.StorageLocationId,
+                                Description = $"Термін придатності змінено на прострочений: {medicineToUpdate.ExpiryDate:yyyy-MM-dd}"
+                            };
+                            _context.MedicineLifecycleEvents.Add(evt);
+                        }
+                    }
+                }
+
                 await _context.SaveChangesAsync();
                 return medicineToUpdate;
             }

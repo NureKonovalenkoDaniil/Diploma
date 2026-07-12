@@ -106,6 +106,10 @@ object RetrofitClient {
         return (mockApis[AuditLogApi::class.java] as? AuditLogApi) ?: getRetrofit(context).create(AuditLogApi::class.java)
     }
 
+    fun getOrganizationApi(context: Context): OrganizationApi {
+        return (mockApis[OrganizationApi::class.java] as? OrganizationApi) ?: getRetrofit(context).create(OrganizationApi::class.java)
+    }
+
     fun setRetrofitForTesting(retrofitInstance: Retrofit?) {
         retrofit = retrofitInstance
     }

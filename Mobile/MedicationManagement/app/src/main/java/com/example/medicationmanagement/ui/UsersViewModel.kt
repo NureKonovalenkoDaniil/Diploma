@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.medicationmanagement.api.CreateManagerRequest
+import com.example.medicationmanagement.api.OrganizationDto
 import com.example.medicationmanagement.api.RetrofitClient
 import com.example.medicationmanagement.api.UserDto
 import com.example.medicationmanagement.utils.RoleHelper
@@ -20,15 +21,32 @@ class UsersViewModel(private val context: Context) : ViewModel() {
 
     private val userApi = RetrofitClient.getUserApi(context)
     private val authApi = RetrofitClient.getAuthApi(context)
+    private val organizationApi = RetrofitClient.getOrganizationApi(context)
 
     private val _users = MutableStateFlow<List<UserDto>>(emptyList())
     val users: StateFlow<List<UserDto>> = _users.asStateFlow()
+
+    private val _organizations = MutableStateFlow<List<OrganizationDto>>(emptyList())
+    val organizations: StateFlow<List<OrganizationDto>> = _organizations.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+
+    fun fetchOrganizations() {
+        viewModelScope.launch {
+            try {
+                val response = organizationApi.getOrganizations()
+                if (response.isSuccessful) {
+                    _organizations.value = response.body() ?: emptyList()
+                }
+            } catch (_: Exception) {
+                // Ignore
+            }
+        }
+    }
 
     fun fetchUsers() {
         _isLoading.value = true
@@ -49,7 +67,7 @@ class UsersViewModel(private val context: Context) : ViewModel() {
         }
      }
  
-     fun createManager(email: String, password: String, organizationId: String) {
+     fun createManager(email: String, password: String, organizationId: String, role: String = "Manager") {
          if (organizationId.isNullOrBlank()) {
              _error.value = context.getString(com.example.medicationmanagement.R.string.error_org_id_missing)
              return
@@ -57,7 +75,7 @@ class UsersViewModel(private val context: Context) : ViewModel() {
  
          viewModelScope.launch {
              try {
-                 val response = authApi.createManager(CreateManagerRequest(email, password, organizationId))
+                 val response = authApi.createManager(CreateManagerRequest(email, password, organizationId, role))
                  if (response.isSuccessful) {
                      fetchUsers()
                  } else {

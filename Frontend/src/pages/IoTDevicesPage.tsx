@@ -211,19 +211,25 @@ export default function IoTDevicesPage() {
                   <Label className="text-right">{t('deviceTempLabel')}</Label>
                   <div className="col-span-3 flex gap-2">
                     <Input
-                      type="number"
+                      type="text"
                       value={newDevice.minTemp}
-                      onChange={(e) =>
-                        setNewDevice({ ...newDevice, minTemp: Number(e.target.value) })
-                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '' || val === '-' || val === '.' || val === '-.' || !isNaN(Number(val))) {
+                          setNewDevice({ ...newDevice, minTemp: val as any });
+                        }
+                      }}
                       placeholder="Min"
                     />
                     <Input
-                      type="number"
+                      type="text"
                       value={newDevice.maxTemp}
-                      onChange={(e) =>
-                        setNewDevice({ ...newDevice, maxTemp: Number(e.target.value) })
-                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '' || val === '-' || val === '.' || val === '-.' || !isNaN(Number(val))) {
+                          setNewDevice({ ...newDevice, maxTemp: val as any });
+                        }
+                      }}
                       placeholder="Max"
                     />
                   </div>
@@ -260,8 +266,8 @@ export default function IoTDevicesPage() {
                       deviceID: newDevice.deviceID,
                       location: newDevice.location,
                       type: newDevice.type,
-                      minTemperature: newDevice.minTemp,
-                      maxTemperature: newDevice.maxTemp,
+                      minTemperature: (newDevice.minTemp as any) !== '' && (newDevice.minTemp as any) !== '-' ? Number(newDevice.minTemp) : 0,
+                      maxTemperature: (newDevice.maxTemp as any) !== '' && (newDevice.maxTemp as any) !== '-' ? Number(newDevice.maxTemp) : 0,
                       minHumidity: newDevice.minHum,
                       maxHumidity: newDevice.maxHum,
                       isActive: true,
@@ -521,21 +527,25 @@ export default function IoTDevicesPage() {
                 <Label className="text-right">{t('deviceTempLabel')}</Label>
                 <div className="col-span-3 flex gap-2">
                   <Input
-                    type="number"
-                    step="0.1"
+                    type="text"
                     value={editingDevice.minTemperature}
-                    onChange={(e) =>
-                      setEditingDevice({ ...editingDevice, minTemperature: Number(e.target.value) })
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || val === '-' || val === '.' || val === '-.' || !isNaN(Number(val))) {
+                        setEditingDevice({ ...editingDevice, minTemperature: val as any });
+                      }
+                    }}
                     placeholder="Min"
                   />
                   <Input
-                    type="number"
-                    step="0.1"
+                    type="text"
                     value={editingDevice.maxTemperature}
-                    onChange={(e) =>
-                      setEditingDevice({ ...editingDevice, maxTemperature: Number(e.target.value) })
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || val === '-' || val === '.' || val === '-.' || !isNaN(Number(val))) {
+                        setEditingDevice({ ...editingDevice, maxTemperature: val as any });
+                      }
+                    }}
                     placeholder="Max"
                   />
                 </div>
@@ -575,8 +585,8 @@ export default function IoTDevicesPage() {
                     data: {
                       location: editingDevice.location,
                       type: editingDevice.type,
-                      minTemperature: editingDevice.minTemperature,
-                      maxTemperature: editingDevice.maxTemperature,
+                      minTemperature: (editingDevice.minTemperature as any) !== '' && (editingDevice.minTemperature as any) !== '-' ? Number(editingDevice.minTemperature) : 0,
+                      maxTemperature: (editingDevice.maxTemperature as any) !== '' && (editingDevice.maxTemperature as any) !== '-' ? Number(editingDevice.maxTemperature) : 0,
                       minHumidity: editingDevice.minHumidity,
                       maxHumidity: editingDevice.maxHumidity,
                     },

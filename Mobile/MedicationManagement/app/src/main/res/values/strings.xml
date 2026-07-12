@@ -196,6 +196,8 @@
     <string name="nav_header_app_icon">App Icon</string>
     <string name="nav_header_default_email">user@example.com</string>
     <string name="notifications_title">Your Notifications</string>
+    <string name="new_notifications_title">New Notifications (%1$d)</string>
+    <string name="new_notifications_desc">Received %1$d new storage condition notifications</string>
     <string name="notifications_mark_all_read">Mark All Read</string>
     <string name="notifications_filter_all">All</string>
     <string name="notifications_filter_violation">Violation</string>
@@ -277,6 +279,12 @@
     <string name="error_network">Network error: %1$s</string>
     <string name="error_generic">Error: %1$s</string>
     <string name="error_org_id_missing">Failed to determine Organization ID</string>
+    <string name="create_new_org_hint">UUID or new name</string>
+    <string name="select_organization">Select Organization</string>
+    <string name="create_new_org_option">+ Create new organization…</string>
+    <string name="select_org_default">-- Select organization --</string>
+    <string name="input_org_name_hint">Enter name of new organization or UUID</string>
+    <string name="input_org_uuid_hint">Organization UUID</string>
     <string name="error_create_manager_failed">Failed to create manager: %1$s</string>
     <string name="error_deactivate_user_failed">Failed to deactivate user: %1$s</string>
     <string name="error_create_location_failed">Failed to create location: %1$s</string>

@@ -81,17 +81,10 @@ namespace MedicationManagement.BackgroundServices
 
             foreach (var medicine in expired)
             {
-                // Оновлюємо статус, якщо він ще Active та створюємо подію життєвого циклу
-                var alreadyHasExpiredEvent = await db.MedicineLifecycleEvents.AnyAsync(e =>
-                    e.MedicineId == medicine.MedicineID &&
-                    e.EventType == LifecycleEventType.Expired);
-
-                if (!alreadyHasExpiredEvent)
+                // Оновлюємо статус на Expired та створюємо подію, якщо препарат був Active
+                if (medicine.Status == MedicineStatus.Active)
                 {
-                    if (medicine.Status == MedicineStatus.Active)
-                    {
-                        medicine.Status = MedicineStatus.Expired;
-                    }
+                    medicine.Status = MedicineStatus.Expired;
 
                     var evt = new MedicineLifecycleEvent
                     {

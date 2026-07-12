@@ -60,8 +60,6 @@ namespace MedicationManagement.Controllers
                 var result = await _storageConditionService.Create(storageCondition);
                 if (result != null)
                 {
-                    string source = User.Identity?.Name ?? $"Sensor {dto.DeviceID}";
-                    await _auditLogService.LogAction("Create Condition", source, $"Created Condition: {result.ConditionID}.", false);
                     return Ok(result.ToDto());
                 }
                 return BadRequest("Could not create condition");

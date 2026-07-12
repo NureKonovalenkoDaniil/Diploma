@@ -16,7 +16,7 @@ data class LoginResponse(val token: String)
 data class RegisterRequest(val email: String, val password: String)
 data class ConfirmEmailRequest(val email: String, val code: String)
 data class ResendConfirmationRequest(val email: String)
-data class CreateManagerRequest(val email: String, val password: String, val organizationId: String)
+data class CreateManagerRequest(val email: String, val password: String, val organizationId: String, val role: String = "Manager")
 data class ForgotPasswordRequest(val email: String)
 data class ResetPasswordRequest(val email: String, val code: String, val newPassword: String)
 
@@ -331,4 +331,18 @@ interface MedicineActionsApi {
 
     @POST("api/medicine/{id}/move")
     suspend fun move(@Path("id") id: Int, @Body request: MoveRequest): Response<Medicine>
+}
+
+// ──────────────────────────────────────────
+// Organization API
+// ──────────────────────────────────────────
+data class OrganizationDto(
+    val id: String,
+    val name: String,
+    val createdAt: String? = null
+)
+
+interface OrganizationApi {
+    @GET("api/organization")
+    suspend fun getOrganizations(): Response<List<OrganizationDto>>
 }

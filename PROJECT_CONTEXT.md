@@ -1605,5 +1605,127 @@ Optional-функції не повинні шкодити реалізації 
   - **Конфігурація:** З `appsettings.json` повністю видалено конфігурації, ключі та ліміти SendGrid. Залишено параметри підключення до Azure ACS (Connection String, FromEmail) та плейсхолдери для Azure SMTP.
 - **Статус:** ✅ Інтеграція з Azure ACS успішно завершена, конфігурація очищена від SendGrid, проект бекенду успішно компілюється.
 
+### Запис 37 — Виправлення помилки 401 Unauthorized для ферми IoT-емуляторів (виконано 2026-07-06)
+
+- **Дата:** 2026-07-06
+- **Завдання:**
+  - Усунути помилку 401 Unauthorized при авторизації девайсів (`device-login`) у симуляторі `device_farm_simulator.js`.
+- **Основні зміни:**
+  - **Аналіз:** База даних була перестворена/очищена, внаслідок чого поле `DeviceSecretHash` у таблиці `IoTDevices` для девайсів (`WOKWI-SENSOR-*`) виявилося пустим (очікує процедури Claim). Проте симулятор мав локальний файл `farm_secrets.json` зі старими секретами, через що пропускав етап Claim та одразу намагався увійти зі застарілими токенами.
+  - **Рішення:** Очищено локальний файл `farm_secrets.json` (`{}`). Тепер при запуску симулятора девайси спочатку виконають запит `/api/iotdevice/claim`, отримають нові легітимні секрети, збережуть їх локально та в БД, після чого авторизація пройде успішно.
+- **Статус:** ✅ Секрети скинуто, симулятор готовий до повторного Claim та успішної роботи.
+
+### Запис 38 — Виправлення життєвого циклу препаратів, локалізації та спаму в журналі аудиту (виконано 2026-07-06)
+
+- **Дата:** 2026-07-06
+- **Завдання:**
+  1. Виправити оновлення статусу та створення подій життєвого циклу препарату при зміні терміну придатності (ExpiryDate) на прострочений та навпаки.
+  2. Локалізувати колонку очікуваних показників у таблиці інцидентів зберігання на українську мову (замість "Norm").
+  3. Усунути спам пристроїв у журналі аудиту при створенні показників (`Create Condition`).
+- **Основні зміни:**
+  - **Бекенд (Життєвий цикл):**
+    - В `ServiceMedicine.cs` у методі `Update` додано перерахунок статусу препарату (`Active` / `Expired`) на основі `ExpiryDate` після накладання латки. Якщо статус змінюється на `Expired`, автоматично додається відповідна подія `MedicineLifecycleEvent` з логуванням імені користувача (або `System`).
+    - В `ExpiryNotificationService.cs` видалено залежність від `alreadyHasExpiredEvent` при авто-простроченні. Тепер фонова служба оновлює статус та створює подію лише якщо поточний статус є `Active`, що усуває блокування повторної перевірки застарілими подіями при ручній зміні дат.
+  - **Фронтенд (Локалізація):**
+    - У [LocaleContext.tsx](file:///d:/Learning/Diploma/Frontend/src/contexts/LocaleContext.tsx) виправлено переклад ключа `incidentNorm` з `'Norm'` на `'Нормативні показники'`.
+  - **Бекенд (Аудит лог):**
+    - У [StorageConditionController.cs](file:///d:/Learning/Diploma/WebApp/MedicationManagement/Controllers/StorageConditionController.cs) у методі `Create` повністю вилучено виклик `_auditLogService.LogAction("Create Condition", ...)`. Рутинна телеметрія більше не засмічує журнал аудиту (залишено збереження виключно в таблиці телеметрії).
+- **Статус:** ✅ Усі баги успішно виправлено, проект скомпільовано, працездатність відновлено.
+
+### Запис 39 — Додавання можливості створення організацій та адмінів у мобільному додатку (виконано 2026-07-06)
+
+- **Дата:** 2026-07-06
+- **Завдання:**
+  - Реалізувати можливість вибору існуючої організації або створення нової при створенні `OrganizationAdmin` (або `Manager`) у мобільному додатку Android для користувачів із роллю `Administrator` (Global Admin).
+- **Основні зміни:**
+  - **Мобільний додаток (API):**
+    - В [ApiService.kt](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/java/com/example/medicationmanagement/api/ApiService.kt) додано `OrganizationDto` та інтерфейс `OrganizationApi` для отримання списку організацій (`GET /api/organization`).
+    - В [RetrofitClient.kt](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/java/com/example/medicationmanagement/api/RetrofitClient.kt) додано метод `getOrganizationApi` для доступу до сервісу.
+  - **Мобільний додаток (UI & ViewModel):**
+    - В [UsersViewModel.kt](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/java/com/example/medicationmanagement/ui/UsersViewModel.kt) інтегровано `fetchOrganizations()` та flow `organizations` для збереження списку існуючих організацій.
+    - В [dialog_create_manager.xml](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/res/layout/dialog_create_manager.xml) додано друге Material3 Exposed Dropdown Menu (`selectOrganization` в `layoutSelectOrganization`) для вибору існуючих організацій.
+    - В [UsersFragment.kt](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/java/com/example/medicationmanagement/ui/UsersFragment.kt):
+      - Для `Administrator` завантажується список організацій через API. У діалозі пропонується:
+        1. `"-- Оберіть організацію --"` або `"+ Створити нову організацію..."` — поле вводу `layoutManagerOrgId` активується й очищується, щоб користувач міг ввести назву нової організації або довільний UUID.
+        2. Обрати існуючу організацію — у поле `inputManagerOrgId` автоматично підставляється UUID обраної організації, а саме поле стає неактивним для запобігання помилкам редагування.
+      - Для `OrganizationAdmin` усі меню вибору організацій приховуються, а поле `inputManagerOrgId` заповнюється за замовчуванням та блокується.
+  - **Мобільний додаток (Локалізація):**
+    - Додано переклади для елементів випадного списку організацій: `select_organization`, `create_new_org_option`, `select_org_default`, `input_org_name_hint`, `input_org_uuid_hint`.
+- **Статус:** ✅ Новий RBAC функціонал з вибором організацій успішно реалізовано у мобільному додатку, проект успішно проходить збірку (`BUILD SUCCESSFUL`).
 
 
+### Запис 40 — Усунення рантайм помилок та крашів у мобільному додатку (виконано 2026-07-08)
+
+- **Дата:** 2026-07-08
+- **Завдання:**
+  - Виправити виявлені в логах рантайм краші додатку (NPE у списках та помилку інфлейту макету).
+- **Основні зміни:**
+  - **Мобільний додаток (UI & XML):**
+    - У [fragment_notifications.xml](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/res/layout/fragment_notifications.xml) замінено застарілі та несумісні стилі Chip `style="@style/Widget.MaterialComponents.Chip.Filter"` на сумісні з Material3 `style="@style/Widget.Material3.Chip.Filter"`. Це вирішило помилку `UnsupportedOperationException: Binary XML file line #59: You must supply a layout_width attribute` під час ініціалізації фрагменту сповіщень.
+  - **Мобільний додаток (Код):**
+    - У [AuditLogAdapter.kt](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/java/com/example/medicationmanagement/ui/adapter/AuditLogAdapter.kt) виправлено потенційні NullPointerException при роботі з десеріалізованими з JSON `null` полями шляхом переходу на безпечні Kotlin-конструкції `log.entityType?.takeIf { it.trim().isNotEmpty() }` замість `isNullOrBlank()`.
+    - У [StorageIncidentAdapter.kt](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/java/com/example/medicationmanagement/StorageIncidentAdapter.kt) додано безпечну обробку nullable полів `incidentType` та `severity` перед викликом методу `.lowercase()`, що усунуло критичні збої `NullPointerException` при відображенні списку інцидентів.
+- **Статус:** ✅ Усі виявлені помилки успішно виправлено, додаток успішно компілюється та готовий до роботи.
+
+### Запис 41 — Усунення спаму системних сповіщень у мобільному додатку (виконано 2026-07-08)
+
+- **Дата:** 2026-07-08
+- **Завдання:**
+  - Усунути проблему масового виклику (`NotifAttentionHelper` / `NotificationService` muting & limit 50 notifications) системних сповіщень при першому запуску додатку або зміні користувачів.
+- **Основні зміни:**
+  - **Мобільний додаток (Код):**
+    - У [RoleHelper.kt](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/java/com/example/medicationmanagement/utils/RoleHelper.kt) реалізовано метод `getUserSubject()`, який отримує унікальний ідентифікатор (Email/Subject) з JWT-токена.
+    - У [MainActivity.kt](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/java/com/example/medicationmanagement/MainActivity.kt) змінено логіку ініціалізації та порівняння `last_notified_id`:
+      - Тепер ключ у `SharedPreferences` формується індивідуально для кожного користувача: `last_notified_id_{userSubject}`. Це запобігає перетинанню лімітів між різними акаунтами.
+      - Якщо додаток запускається вперше для користувача (`lastNotifiedId == 0`), шторка сповіщень Android не засмічується старими накопиченими на сервері сповіщеннями — замість цього `lastNotifiedId` просто ініціалізується найбільшим наявним на сервері ідентифікатором сповіщення.
+      - Якщо під час роботи приходить велика кількість нових сповіщень (> 3), замість десятків окремих вікон збуджується одне сумарне сповіщення про нові події, що запобігає блокуванню та приглушенню звуку операційною системою Android.
+  - **Мобільний додаток (Локалізація):**
+    - Додано нові рядкові ресурси `new_notifications_title` та `new_notifications_desc` для сумарного повідомлення в українську ([strings.xml](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/res/values-uk/strings.xml)) та англійську ([strings.xml](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/res/values/strings.xml)) локалі.
+- **Статус:** ✅ Проблема спаму та блокування сповіщень системою повністю вирішена. Додаток збирається успішно.
+
+### Запис 42 — Дозвіл та зручне введення від'ємних температур (виконано 2026-07-08)
+
+- **Дата:** 2026-07-08
+- **Завдання:**
+  - Надати можливість та спростити введення від'ємних температур (мінусової температури) у мобільному додатку та веб-інтерфейсі.
+- **Основні зміни:**
+  - **Мобільний додаток (UI & XML):**
+    - У файлах макетів:
+      - [activity_add_medicine.xml](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/res/layout/activity_add_medicine.xml)
+      - [activity_edit_medicine.xml](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/res/layout/activity_edit_medicine.xml)
+      - [activity_add_device.xml](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/res/layout/activity_add_device.xml)
+      - [activity_edit_device.xml](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/res/layout/activity_edit_device.xml)
+      змінено `android:inputType="numberDecimal"` для температурних полів введення на `android:inputType="numberDecimal|numberSigned"`. Це відкриває можливість вводити знак мінус на віртуальній клавіатурі Android.
+  - **Веб-інтерфейс (React/TypeScript):**
+    - У [MedicinesPage.tsx](file:///d:/Learning/Diploma/Frontend/src/pages/MedicinesPage.tsx) та [IoTDevicesPage.tsx](file:///d:/Learning/Diploma/Frontend/src/pages/IoTDevicesPage.tsx) змінено тип температурних полів введення (`Input`) з `type="number"` на `type="text"`.
+    - Додано інтелектуальні обробники `onChange`, які дозволяють безперешкодно вводити мінус (`-`) першим символом, крапки/коми та десяткові дроби (оскільки звичайне перетворення `Number(e.target.value)` на льоту скидає стан через `NaN` під час введення одного лише символу `-`).
+    - Реалізовано безпечний парсинг і очищення значень перед відправленням мутацій (`onSave`, `registerMutation`, `updateMutation`).
+- **Статус:** ✅ Введення від'ємних температур повністю підтримується на обох клієнтських платформах. Мобільний додаток успішно проходить збірку (`BUILD SUCCESSFUL`).
+
+### Запис 43 — Виправлення прав доступу та відображення графіків для звичайних користувачів (виконано 2026-07-08)
+
+- **Дата:** 2026-07-08
+- **Завдання:**
+  1. Виправити проблему відсутності кнопки "Вирішити" (Resolve) та довгого кліку видалення інцидентів у звичайних користувачів (роль `User`) у мобільному додатку.
+  2. Вирішити проблему "Немає даних для графіка" на фронтенді та мобільному клієнті для звичайних користувачів.
+- **Основні зміни:**
+  - **Мобільний додаток (Код):**
+    - У [StorageIncidentAdapter.kt](file:///d:/Learning/Diploma/Mobile/MedicationManagement/app/src/main/java/com/example/medicationmanagement/StorageIncidentAdapter.kt) перевірку прав доступу `RoleHelper.isManager` замінено на `RoleHelper.isUser`. Це дало користувачам із роллю `User` права переглядати, видаляти та вирішувати інциденти у межах своєї організації на рівні з менеджерами.
+  - **Бекенд (Код):**
+    - У [ServiceStorageCondition.cs](file:///d:/Learning/Diploma/WebApp/MedicationManagement/Services/ServiceStorageCondition.cs) змінено логіку призначення організації при створенні умов зберігання (`StorageCondition`). Тепер `OrganizationId` для нового показника береться безпосередньо з пристрою в базі даних (`device.OrganizationId`), а не з сесії авторизації (`CurrentOrgId`), що виключило розсинхронізацію та помилки мультитенантності пристроїв під час зміни організацій чи сесій.
+  - **База даних:**
+    - Виправлено `OrganizationId` для всіх 422 історичних показників у таблиці `StorageConditions`, які раніше належали до іншої організації через застарілі JWT-токени симулятора. Дані тепер відображаються коректно на графіках обох платформ.
+- **Статус:** ✅ Доступи звичайних користувачів узгоджено, відображення графіків та робота з інцидентами повністю функціонують, мобільний додаток успішно перезібрано.
+
+### Запис 44 — Виправлення помилки відновлення пароля та підтвердження на мобільному клієнті (виконано 2026-07-08)
+
+- **Дата:** 2026-07-08
+- **Завдання:**
+  - Усунути краш/помилку `MalformedJsonException` (повідомлення `Use JsonReader.setLenient(true) to accept malformed JSON`) при виклику відновлення пароля (`forgot-password`) та повторної відправки підтвердження (`resend-confirmation`) з мобільного клієнта Android.
+- **Основні зміни:**
+  - **Бекенд (Код):**
+    - У [AuthController.cs](file:///d:/Learning/Diploma/WebApp/MedicationManagement/Controllers/AuthController.cs) змінено тип успішних відповідей у методах `ResendConfirmation`, `ForgotPassword` та `ResetPassword`. Замість передачі сирих текстових рядків `return Ok("Text")` (які Kestrel повертав як `text/plain`), тепер повертаються JSON-об'єкти `return Ok(new { message = "Text" })` (з типом `application/json`).
+    - Це дозволяє Retrofit/Gson на мобільному додатку безперешкодно десеріалізувати відповіді типу `Response<Any>` без виникнення винятків синтаксису JSON.
+  - **Компільованість:**
+    - Бекенд перекомпільовано та перезапущено. Мобільний додаток Android перевірено та успішно зібрано через Gradle (`BUILD SUCCESSFUL`).
+- **Статус:** ✅ Помилку парсингу відповіді відновлення пароля повністю усунено, користувач тепер безперешкодно перенаправляється на екран введення коду.

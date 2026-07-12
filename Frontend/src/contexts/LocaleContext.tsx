@@ -130,7 +130,7 @@ const dictionaries = {
     incidentDevice: 'Пристрій',
     incidentType: 'Тип порушення',
     incidentDetectedValue: 'Показник',
-    incidentNorm: 'Norm',
+    incidentNorm: 'Нормативні показники',
     incidentStatus: 'Статус',
     incidentStart: 'Початок',
     incidentEnd: 'Кінець',

@@ -101,7 +101,7 @@
                         android:id="@+id/inputMinTemp"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="numberDecimal"
+                        android:inputType="numberDecimal|numberSigned"
                         android:text="2.0" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -120,7 +120,7 @@
                         android:id="@+id/inputMaxTemp"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="numberDecimal"
+                        android:inputType="numberDecimal|numberSigned"
                         android:text="8.0" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>

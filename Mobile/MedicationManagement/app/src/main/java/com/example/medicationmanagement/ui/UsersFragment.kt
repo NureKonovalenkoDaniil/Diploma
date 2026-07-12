@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AutoCompleteTextView
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -56,6 +57,9 @@ class UsersFragment : Fragment() {
         if (RoleHelper.isAdmin(role)) {
             fabCreateManager.visibility = View.VISIBLE
             fabCreateManager.setOnClickListener { showCreateManagerDialog() }
+            if (role == "Administrator") {
+                viewModel.fetchOrganizations()
+            }
         } else {
             fabCreateManager.visibility = View.GONE
         }
@@ -99,15 +103,90 @@ class UsersFragment : Fragment() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_create_manager, null)
         val emailInput = dialogView.findViewById<EditText>(R.id.inputManagerEmail)
         val passwordInput = dialogView.findViewById<EditText>(R.id.inputManagerPassword)
+
+        val orgSelectLayout = dialogView.findViewById<View>(R.id.layoutSelectOrganization)
+        val orgSelectInput = dialogView.findViewById<AutoCompleteTextView>(R.id.selectOrganization)
+
+        val orgIdLayout = dialogView.findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.layoutManagerOrgId)
         val orgIdInput = dialogView.findViewById<EditText>(R.id.inputManagerOrgId)
+
+        val roleLayout = dialogView.findViewById<View>(R.id.layoutManagerRole)
+        val roleInput = dialogView.findViewById<AutoCompleteTextView>(R.id.inputManagerRole)
+
+        val currentUserRole = RoleHelper.getCurrentRole(requireContext())
+        var selectedRole = "Manager"
 
         // Заповнюємо OrganizationId за замовчуванням
         val defaultOrgId = RoleHelper.getOrganizationId(requireContext())
         orgIdInput.setText(defaultOrgId)
 
-        val role = RoleHelper.getCurrentRole(requireContext())
-        if (role == "OrganizationAdmin") {
+        if (currentUserRole == "Administrator") {
+            roleLayout.visibility = View.VISIBLE
+            orgSelectLayout.visibility = View.VISIBLE
+            orgIdLayout.visibility = View.VISIBLE
+            orgIdLayout.hint = getString(R.string.input_org_name_hint)
+
+            // Налаштування вибору ролі
+            val roleOptions = listOf(
+                getString(R.string.role_manager) to "Manager",
+                getString(R.string.role_organization_admin) to "OrganizationAdmin"
+            )
+            val roleAdapter = android.widget.ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_dropdown_item_1line,
+                roleOptions.map { it.first }
+            )
+            roleInput.setAdapter(roleAdapter)
+            roleInput.setText(roleOptions[0].first, false)
+
+            roleInput.setOnItemClickListener { _, _, position, _ ->
+                selectedRole = roleOptions[position].second
+            }
+
+            // Налаштування вибору організації
+            val orgList = viewModel.organizations.value
+            val orgOptions = mutableListOf<String>()
+            orgOptions.add(getString(R.string.select_org_default)) // "-- Оберіть організацію --"
+            orgOptions.addAll(orgList.map { it.name })
+            orgOptions.add(getString(R.string.create_new_org_option)) // "+ Створити нову організацію..."
+
+            val orgAdapter = android.widget.ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_dropdown_item_1line,
+                orgOptions
+            )
+            orgSelectInput.setAdapter(orgAdapter)
+            orgSelectInput.setText(orgOptions[0], false)
+
+            orgSelectInput.setOnItemClickListener { _, _, position, _ ->
+                when (position) {
+                    0 -> {
+                        // "-- Оберіть організацію --"
+                        orgIdInput.setText("")
+                        orgIdInput.isEnabled = true
+                        orgIdLayout.hint = getString(R.string.input_org_name_hint)
+                    }
+                    orgOptions.size - 1 -> {
+                        // "+ Створити нову організацію..."
+                        orgIdInput.setText("")
+                        orgIdInput.isEnabled = true
+                        orgIdLayout.hint = getString(R.string.input_org_name_hint)
+                    }
+                    else -> {
+                        // Конкретна існуюча організація
+                        val selectedOrg = orgList[position - 1]
+                        orgIdInput.setText(selectedOrg.id)
+                        orgIdInput.isEnabled = false
+                        orgIdLayout.hint = getString(R.string.input_org_uuid_hint)
+                    }
+                }
+            }
+        } else {
+            roleLayout.visibility = View.GONE
+            orgSelectLayout.visibility = View.GONE
+            orgIdLayout.visibility = View.VISIBLE
             orgIdInput.isEnabled = false // Блокуємо зміну організації для адміна організації
+            selectedRole = "Manager"
         }
 
         MaterialAlertDialogBuilder(requireContext())
@@ -124,7 +203,7 @@ class UsersFragment : Fragment() {
                     return@setPositiveButton
                 }
 
-                viewModel.createManager(email, password, orgId)
+                viewModel.createManager(email, password, orgId, selectedRole)
             }
             .show()
     }
